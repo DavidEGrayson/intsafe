@@ -67,16 +67,6 @@ typedef long HRESULT;
  * of the original value.
  */
 #ifndef INTSAFE_E_ARITHMETIC_OVERFLOW
-/*
- * Google gives me this link:
- *   http://social.msdn.microsoft.com/Forums/en/windowssdk/thread/
- *   d622e124-a08e-46f6-8fbc-b058b619ead9
- *
- * which says that INTSAFE_E_ARITHMETIC_OVERFLOW is also set to ((HRESULT) -1)
- * in comutil.h header.
- *
- * FIXME: which value is correct ?
- */
 #   define INTSAFE_E_ARITHMETIC_OVERFLOW ((HRESULT)0x80070216L)
 #endif
 
