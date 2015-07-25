@@ -9,6 +9,7 @@ then
 fi
 echo "intsafe version: $VER"
 
+count=0
 FUNC_NAMES=($(<test/function_names.txt))
 for func in "${FUNC_NAMES[@]}"
 do
@@ -16,5 +17,10 @@ do
     then
         continue
     fi
-    grep -r $func $VER
+    (grep -r $func $VER 2>&1 > /dev/null)
+    if [ $? -ne 0 ]
+    then
+        count=$((count + 1))
+        echo "$count: missing $func"
+    fi
 done
