@@ -210,12 +210,14 @@ typedef long HRESULT;
  */
 #if 1
 extern void _assert(const char* exp, const char* file, unsigned line);
-extern int snprintf(char* buf, size_t buf_size, const char* fmt, ...);
+extern
+  __attribute__((__format__ (gnu_printf, 3, 4))) __MINGW_ATTRIB_NONNULL(3)
+  int __cdecl __mingw_snprintf(char * __restrict__ s, size_t n, const char * __restrict__  format, ...);
 
 #   define __MINGW_INTSAFE_NULLPTR_ASSERT(fn, ptr) \
     if (!ptr) { \
         char expr[512] = { 0 }; \
-        snprintf(expr, sizeof(expr),"in function \"%s\":" \
+        __mingw_snprintf(expr, sizeof(expr),"in function \"%s\":" \
             " null pointer detected", fn); \
         _assert(expr, __FILE__, __LINE__); \
     }
