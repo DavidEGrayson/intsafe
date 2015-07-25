@@ -9,7 +9,7 @@ This is [Microsoft's implementation from coreclr](https://github.com/dotnet/core
 
 * License: MIT
 * Lines: 1621
-* Functions missing: 88
+* Functions missing: 67
 
 ## tta
 
@@ -17,7 +17,7 @@ This implementation was originally [posted](https://sourceforge.net/p/mingw-w64/
 
 * License: Public domain
 * Lines: 5587
-* Functions missing: 21 (just the *_1 functions)
+* Functions missing: 0
 
 ## reactos
 
@@ -25,7 +25,7 @@ This version is [ReactOS's version of intsafe.h](https://code.google.com/p/react
 
 * License: Public domain
 * Lines: 770
-* Functions missing: 144
+* Functions missing: 123
 
 ## sdk10
 
