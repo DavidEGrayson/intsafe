@@ -50,7 +50,7 @@ Types64 = [
   CNumberType['DWORD', 'DWord', 4],
   CNumberType['DWORD_PTR', 'DWordPtr', 8],
   CNumberType['INT', 'Int', -4],
-  #CNumberType['INT64', 'Int64', -8],
+  CNumberType['INT64', 'Int64', -8],
 ]
 
 Indent = "    "
@@ -116,7 +116,7 @@ end
 def nice_num_str(num)
   case
   when num.is_a?(String) then num
-  when num < 0 then '-' + nice_num_str(-num)
+  when num < 0 then '-' + nice_num_str(-num) + 'LL'
   else '%#x' % num
   end
 end
@@ -197,5 +197,5 @@ end
 untested_functions = FunctionNames - TestedFunctions
 if untested_functions.size > 0
   puts "warning: #{untested_functions.size} functions do not have tests yet"
-  puts "  for example: #{untested_functions[0]}"
+  puts "  for example: #{untested_functions.first}"
 end
