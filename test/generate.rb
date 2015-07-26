@@ -45,13 +45,25 @@ class CNumberType < Struct.new(:name, :camel_name, :type_id)
   end
 end
 
-
+pointer_size = 8
 Types64 = [
   CNumberType['DWORD', 'DWord', 4],
-  CNumberType['DWORD_PTR', 'DWordPtr', 8],
+  CNumberType['DWORD_PTR', 'DWordPtr', pointer_size],
   CNumberType['INT', 'Int', -4],
   CNumberType['INT64', 'Int64', -8],
-  CNumberType['INT_PTR', 'IntrPtr', -8],
+  CNumberType['INT_PTR', 'IntPtr', -pointer_size],
+  CNumberType['LONG', 'Long', -4],
+  CNumberType['LONG_PTR', 'LongPtr', -pointer_size],
+  CNumberType['ptrdiff_t', 'PtrdiffT', -pointer_size],
+  CNumberType['SSIZE_T', 'SSIZET', -pointer_size],
+  CNumberType['UINT', 'UInt', 4],
+  CNumberType['UINT_PTR', 'UIntPtr', pointer_size],
+  CNumberType['ULONG', 'ULong', 4],
+  CNumberType['BYTE', 'Byte', 1],
+  CNumberType['CHAR', 'Char', -1],
+  CNumberType['SHORT', 'Short', -2],
+  CNumberType['UCHAR', 'UChar', 1],
+  # CNumberType['USHORT', 'UShort', 2],
 ]
 
 Indent = "    "
@@ -105,7 +117,7 @@ def write_type_tests(io, types)
     write_test io, "#{type} is the same as #{type.c99_name}" do |test|
       test.puts "REQUIRE(sizeof(#{type}) == #{type.byte_count});"
       test.puts "#{type} x = 0;"
-      test.puts "REQUIRE(x - 1 #{comparison} x);"
+      test.puts "REQUIRE((#{type})(x - 1) #{comparison} x);"
       test.puts "REQUIRE_FALSE(std::is_pointer<#{type}>::value);"
     end
   end
