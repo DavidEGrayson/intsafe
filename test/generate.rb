@@ -3,6 +3,7 @@
 Dir.chdir(File.dirname(__FILE__))
 
 FunctionNames = File.readlines('function_names.txt').map(&:strip).reject(&:empty?)
+TestedFunctions = []
 
 class CNumberType < Struct.new(:name, :camel_name, :type_id)
   def byte_count
@@ -48,6 +49,8 @@ end
 Types64 = [
   CNumberType['DWORD', 'DWord', 4],
   CNumberType['DWORD_PTR', 'DWordPtr', 8],
+  CNumberType['INT', 'Int', -4],
+  #CNumberType['INT64', 'Int64', -8],
 ]
 
 Indent = "    "
@@ -113,6 +116,7 @@ end
 def nice_num_str(num)
   case
   when num.is_a?(String) then num
+  when num < 0 then '-' + nice_num_str(-num)
   else '%#x' % num
   end
 end
@@ -154,21 +158,23 @@ def write_conversion_test(output, type_src, type_dest)
     end
 
     write_section(test, "converts the maximum value") do |section|
-      write_require_conversion(section, func_name, max);
+      write_require_conversion(section, func_name, max)
     end
+
+    write_section(test, "converts the minimum value") do |section|
+      write_require_conversion(section, func_name, min)
+    end if min != 0
 
     write_section(test, "rejects maximum value + 1") do |section|
       write_require_conversion_error(section, func_name, type_dest.max + 1);
     end if type_src.max > type_dest.max
 
-    if min != 0
-      raise "we should test they can convert the minimum value successfully"
-    end
-
     write_section(test, "rejects minimum value - 1") do |section|
       write_require_conversion_error(section, func_name, type_dest.min - 1);
     end if type_src.min < type_dest.min
   end
+
+  TestedFunctions << func_name
 end
 
 def write_conversion_tests(output, types)
@@ -186,4 +192,10 @@ File.open('generated_tests.cpp', 'w') do |output|
   write_header(output)
   write_type_tests(output, types)
   write_conversion_tests(output, types)
+end
+
+untested_functions = FunctionNames - TestedFunctions
+if untested_functions.size > 0
+  puts "warning: #{untested_functions.size} functions do not have tests yet"
+  puts "  for example: #{untested_functions[0]}"
 end
