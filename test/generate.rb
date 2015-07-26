@@ -51,6 +51,7 @@ Types64 = [
   CNumberType['DWORD_PTR', 'DWordPtr', 8],
   CNumberType['INT', 'Int', -4],
   CNumberType['INT64', 'Int64', -8],
+  CNumberType['INT_PTR', 'IntrPtr', -8],
 ]
 
 Indent = "    "
@@ -105,10 +106,7 @@ def write_type_tests(io, types)
       test.puts "REQUIRE(sizeof(#{type}) == #{type.byte_count});"
       test.puts "#{type} x = 0;"
       test.puts "REQUIRE(x - 1 #{comparison} x);"
-
-      # It's odd that this test did not work; it says DWORD is different from
-      # DWORD_PTR.
-      # "REQUIRE((std::is_same<#{type}, #{type.c99_name)}>::value));"
+      test.puts "REQUIRE_FALSE(std::is_pointer<#{type}>::value);"
     end
   end
 end

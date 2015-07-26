@@ -9,6 +9,7 @@ TEST_CASE("DWORD is the same as uint32_t")
     REQUIRE(sizeof(DWORD) == 4);
     DWORD x = 0;
     REQUIRE(x - 1 > x);
+    REQUIRE_FALSE(std::is_pointer<DWORD>::value);
 }
 
 TEST_CASE("DWORD_PTR is the same as uint64_t")
@@ -16,6 +17,7 @@ TEST_CASE("DWORD_PTR is the same as uint64_t")
     REQUIRE(sizeof(DWORD_PTR) == 8);
     DWORD_PTR x = 0;
     REQUIRE(x - 1 > x);
+    REQUIRE_FALSE(std::is_pointer<DWORD_PTR>::value);
 }
 
 TEST_CASE("INT is the same as int32_t")
@@ -23,6 +25,7 @@ TEST_CASE("INT is the same as int32_t")
     REQUIRE(sizeof(INT) == 4);
     INT x = 0;
     REQUIRE(x - 1 < x);
+    REQUIRE_FALSE(std::is_pointer<INT>::value);
 }
 
 TEST_CASE("INT64 is the same as int64_t")
@@ -30,6 +33,15 @@ TEST_CASE("INT64 is the same as int64_t")
     REQUIRE(sizeof(INT64) == 8);
     INT64 x = 0;
     REQUIRE(x - 1 < x);
+    REQUIRE_FALSE(std::is_pointer<INT64>::value);
+}
+
+TEST_CASE("INT_PTR is the same as int64_t")
+{
+    REQUIRE(sizeof(INT_PTR) == 8);
+    INT_PTR x = 0;
+    REQUIRE(x - 1 < x);
+    REQUIRE_FALSE(std::is_pointer<INT_PTR>::value);
 }
 
 TEST_CASE("DWordToInt")
