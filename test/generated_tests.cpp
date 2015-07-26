@@ -20,7 +20,7 @@ TEST_CASE("DWordPtrToDWord")
 {
     SECTION("has the right type")
     {
-        REQUIRE((std::is_same<decltype(DWordPtrToDWord), HRESULT (*)(_In_ DWORD_PTR, _Out_ DWORD *)>::value));
+        REQUIRE((std::is_same<decltype(&DWordPtrToDWord), HRESULT (*)(_In_ DWORD_PTR, _Out_ DWORD *)>::value));
     }
 
 }

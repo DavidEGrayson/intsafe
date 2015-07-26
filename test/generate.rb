@@ -103,7 +103,7 @@ def write_conversion_test(output, type_src, type_dest)
   write_test(output, func_name) do |test|
     write_section(test, "has the right type") do |section|
       type_signature = "HRESULT (*)(_In_ #{type_src.name}, _Out_ #{type_dest} *)"
-      section.puts "REQUIRE((std::is_same<decltype(#{func_name}), #{type_signature}>::value));"
+      section.puts "REQUIRE((std::is_same<decltype(&#{func_name}), #{type_signature}>::value));"
     end
   end
 end
