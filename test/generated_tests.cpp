@@ -16,3 +16,12 @@ TEST_CASE("DWORD_PTR is the same as uint64_t")
     REQUIRE(x - 1 > x);
 }
 
+TEST_CASE("DWordPtrToDWord")
+{
+    SECTION("has the right type")
+    {
+        REQUIRE((std::is_same<decltype(DWordPtrToDWord), HRESULT (*)(_In_ DWORD_PTR, _Out_ DWORD *)>::value));
+    }
+
+}
+
