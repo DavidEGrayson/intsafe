@@ -60,10 +60,10 @@ Types64 = [
   CNumberType['UINT_PTR', 'UIntPtr', pointer_size],
   CNumberType['ULONG', 'ULong', 4],
   CNumberType['BYTE', 'Byte', 1],
-  CNumberType['CHAR', 'Char', -1],
+  CNumberType['WCHAR', 'Char', 2],
   CNumberType['SHORT', 'Short', -2],
   CNumberType['UCHAR', 'UChar', 1],
-  # CNumberType['USHORT', 'UShort', 2],
+  CNumberType['USHORT', 'UShort', 2],
 ]
 
 Indent = "    "
