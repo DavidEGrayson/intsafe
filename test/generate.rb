@@ -252,6 +252,7 @@ end
 
 File.open('generated_tests.cpp', 'w') do |output|
   output.puts File.read('test.cpp')
+  output.puts
 
   output.puts "#ifdef _WIN64"
 
