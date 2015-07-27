@@ -1216,7 +1216,7 @@ __MINGW_INTSAFE_CONV_MAPPING(
 #   else
 __MINGW_INTSAFE_CONV_MAPPING(
     UShortToChar, USHORT, CHAR,
-    UInt16ToUInt8, uint16_t, uint8_t
+    UInt16ToInt8, uint16_t, int8_t
 )
 #   endif
 
