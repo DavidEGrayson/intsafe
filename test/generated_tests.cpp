@@ -108,12 +108,12 @@ TEST_CASE("BYTE is the same as uint8_t")
     REQUIRE_FALSE(std::is_pointer<BYTE>::value);
 }
 
-TEST_CASE("WCHAR is the same as uint16_t")
+TEST_CASE("CHAR is the same as int8_t")
 {
-    REQUIRE(sizeof(WCHAR) == 2);
-    WCHAR x = 0;
-    REQUIRE((WCHAR)(x - 1) > x);
-    REQUIRE_FALSE(std::is_pointer<WCHAR>::value);
+    REQUIRE(sizeof(CHAR) == 1);
+    CHAR x = 0;
+    REQUIRE((CHAR)(x - 1) < x);
+    REQUIRE_FALSE(std::is_pointer<CHAR>::value);
 }
 
 TEST_CASE("SHORT is the same as int16_t")
@@ -364,11 +364,11 @@ TEST_CASE("DWordToByte")
 
 TEST_CASE("DWordToChar")
 {
-    WCHAR out = INITIAL_VALUE;
+    CHAR out = INITIAL_VALUE;
 
     SECTION("has the right type")
     {
-        REQUIRE((std::is_same<decltype(&DWordToChar), HRESULT (*)(_In_ DWORD, _Out_ WCHAR *)>::value));
+        REQUIRE((std::is_same<decltype(&DWordToChar), HRESULT (*)(_In_ DWORD, _Out_ CHAR *)>::value));
     }
 
     SECTION("converts 0 to 0")
@@ -379,13 +379,13 @@ TEST_CASE("DWordToChar")
 
     SECTION("converts the maximum value")
     {
-        REQUIRE_FALSE(DWordToChar(0xffff, &out));
-        REQUIRE(out == 0xffff);
+        REQUIRE_FALSE(DWordToChar(0x7f, &out));
+        REQUIRE(out == 0x7f);
     }
 
     SECTION("rejects maximum value + 1")
     {
-        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == DWordToChar(0x10000, &out));
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == DWordToChar(0x80, &out));
     }
 
 }
@@ -952,11 +952,11 @@ TEST_CASE("IntToByte")
 
 TEST_CASE("IntToChar")
 {
-    WCHAR out = INITIAL_VALUE;
+    CHAR out = INITIAL_VALUE;
 
     SECTION("has the right type")
     {
-        REQUIRE((std::is_same<decltype(&IntToChar), HRESULT (*)(_In_ INT, _Out_ WCHAR *)>::value));
+        REQUIRE((std::is_same<decltype(&IntToChar), HRESULT (*)(_In_ INT, _Out_ CHAR *)>::value));
     }
 
     SECTION("converts 0 to 0")
@@ -967,18 +967,24 @@ TEST_CASE("IntToChar")
 
     SECTION("converts the maximum value")
     {
-        REQUIRE_FALSE(IntToChar(0xffff, &out));
-        REQUIRE(out == 0xffff);
+        REQUIRE_FALSE(IntToChar(0x7f, &out));
+        REQUIRE(out == 0x7f);
+    }
+
+    SECTION("converts the minimum value")
+    {
+        REQUIRE_FALSE(IntToChar(-0x80LL, &out));
+        REQUIRE(out == -0x80LL);
     }
 
     SECTION("rejects maximum value + 1")
     {
-        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == IntToChar(0x10000, &out));
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == IntToChar(0x80, &out));
     }
 
     SECTION("rejects minimum value - 1")
     {
-        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == IntToChar(-0x1LL, &out));
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == IntToChar(-0x81LL, &out));
     }
 
 }
@@ -1932,11 +1938,11 @@ TEST_CASE("LongToByte")
 
 TEST_CASE("LongToChar")
 {
-    WCHAR out = INITIAL_VALUE;
+    CHAR out = INITIAL_VALUE;
 
     SECTION("has the right type")
     {
-        REQUIRE((std::is_same<decltype(&LongToChar), HRESULT (*)(_In_ LONG, _Out_ WCHAR *)>::value));
+        REQUIRE((std::is_same<decltype(&LongToChar), HRESULT (*)(_In_ LONG, _Out_ CHAR *)>::value));
     }
 
     SECTION("converts 0 to 0")
@@ -1947,18 +1953,24 @@ TEST_CASE("LongToChar")
 
     SECTION("converts the maximum value")
     {
-        REQUIRE_FALSE(LongToChar(0xffff, &out));
-        REQUIRE(out == 0xffff);
+        REQUIRE_FALSE(LongToChar(0x7f, &out));
+        REQUIRE(out == 0x7f);
+    }
+
+    SECTION("converts the minimum value")
+    {
+        REQUIRE_FALSE(LongToChar(-0x80LL, &out));
+        REQUIRE(out == -0x80LL);
     }
 
     SECTION("rejects maximum value + 1")
     {
-        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == LongToChar(0x10000, &out));
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == LongToChar(0x80, &out));
     }
 
     SECTION("rejects minimum value - 1")
     {
-        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == LongToChar(-0x1LL, &out));
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == LongToChar(-0x81LL, &out));
     }
 
 }
@@ -3003,11 +3015,11 @@ TEST_CASE("UIntToByte")
 
 TEST_CASE("UIntToChar")
 {
-    WCHAR out = INITIAL_VALUE;
+    CHAR out = INITIAL_VALUE;
 
     SECTION("has the right type")
     {
-        REQUIRE((std::is_same<decltype(&UIntToChar), HRESULT (*)(_In_ UINT, _Out_ WCHAR *)>::value));
+        REQUIRE((std::is_same<decltype(&UIntToChar), HRESULT (*)(_In_ UINT, _Out_ CHAR *)>::value));
     }
 
     SECTION("converts 0 to 0")
@@ -3018,13 +3030,13 @@ TEST_CASE("UIntToChar")
 
     SECTION("converts the maximum value")
     {
-        REQUIRE_FALSE(UIntToChar(0xffff, &out));
-        REQUIRE(out == 0xffff);
+        REQUIRE_FALSE(UIntToChar(0x7f, &out));
+        REQUIRE(out == 0x7f);
     }
 
     SECTION("rejects maximum value + 1")
     {
-        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == UIntToChar(0x10000, &out));
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == UIntToChar(0x80, &out));
     }
 
 }
@@ -3589,11 +3601,11 @@ TEST_CASE("ULongToByte")
 
 TEST_CASE("ULongToChar")
 {
-    WCHAR out = INITIAL_VALUE;
+    CHAR out = INITIAL_VALUE;
 
     SECTION("has the right type")
     {
-        REQUIRE((std::is_same<decltype(&ULongToChar), HRESULT (*)(_In_ ULONG, _Out_ WCHAR *)>::value));
+        REQUIRE((std::is_same<decltype(&ULongToChar), HRESULT (*)(_In_ ULONG, _Out_ CHAR *)>::value));
     }
 
     SECTION("converts 0 to 0")
@@ -3604,13 +3616,13 @@ TEST_CASE("ULongToChar")
 
     SECTION("converts the maximum value")
     {
-        REQUIRE_FALSE(ULongToChar(0xffff, &out));
-        REQUIRE(out == 0xffff);
+        REQUIRE_FALSE(ULongToChar(0x7f, &out));
+        REQUIRE(out == 0x7f);
     }
 
     SECTION("rejects maximum value + 1")
     {
-        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == ULongToChar(0x10000, &out));
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == ULongToChar(0x80, &out));
     }
 
 }
@@ -3734,11 +3746,11 @@ TEST_CASE("ShortToByte")
 
 TEST_CASE("ShortToChar")
 {
-    WCHAR out = INITIAL_VALUE;
+    CHAR out = INITIAL_VALUE;
 
     SECTION("has the right type")
     {
-        REQUIRE((std::is_same<decltype(&ShortToChar), HRESULT (*)(_In_ SHORT, _Out_ WCHAR *)>::value));
+        REQUIRE((std::is_same<decltype(&ShortToChar), HRESULT (*)(_In_ SHORT, _Out_ CHAR *)>::value));
     }
 
     SECTION("converts 0 to 0")
@@ -3749,13 +3761,24 @@ TEST_CASE("ShortToChar")
 
     SECTION("converts the maximum value")
     {
-        REQUIRE_FALSE(ShortToChar(0x7fff, &out));
-        REQUIRE(out == 0x7fff);
+        REQUIRE_FALSE(ShortToChar(0x7f, &out));
+        REQUIRE(out == 0x7f);
+    }
+
+    SECTION("converts the minimum value")
+    {
+        REQUIRE_FALSE(ShortToChar(-0x80LL, &out));
+        REQUIRE(out == -0x80LL);
+    }
+
+    SECTION("rejects maximum value + 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == ShortToChar(0x80, &out));
     }
 
     SECTION("rejects minimum value - 1")
     {
-        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == ShortToChar(-0x1LL, &out));
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == ShortToChar(-0x81LL, &out));
     }
 
 }
@@ -3851,11 +3874,11 @@ TEST_CASE("UShortToByte")
 
 TEST_CASE("UShortToChar")
 {
-    WCHAR out = INITIAL_VALUE;
+    CHAR out = INITIAL_VALUE;
 
     SECTION("has the right type")
     {
-        REQUIRE((std::is_same<decltype(&UShortToChar), HRESULT (*)(_In_ USHORT, _Out_ WCHAR *)>::value));
+        REQUIRE((std::is_same<decltype(&UShortToChar), HRESULT (*)(_In_ USHORT, _Out_ CHAR *)>::value));
     }
 
     SECTION("converts 0 to 0")
@@ -3866,8 +3889,13 @@ TEST_CASE("UShortToChar")
 
     SECTION("converts the maximum value")
     {
-        REQUIRE_FALSE(UShortToChar(0xffff, &out));
-        REQUIRE(out == 0xffff);
+        REQUIRE_FALSE(UShortToChar(0x7f, &out));
+        REQUIRE(out == 0x7f);
+    }
+
+    SECTION("rejects maximum value + 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == UShortToChar(0x80, &out));
     }
 
 }
