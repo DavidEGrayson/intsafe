@@ -243,6 +243,6 @@ end
 
 untested_functions = FunctionNames - TestedFunctions
 if untested_functions.size > 0
-  puts "warning: #{untested_functions.size} functions do not have tests yet"
-  puts "  for example: #{untested_functions.first}"
+  puts "warning: #{untested_functions.size} functions do not have tests yet, " \
+    "for example: #{untested_functions.first}"
 end

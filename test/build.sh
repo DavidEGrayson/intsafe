@@ -1,4 +1,4 @@
-cd `dirname $0`
+cd $(dirname $0)
 
 if [ -z "$VER" ]
 then
@@ -17,16 +17,16 @@ ruby generate.rb
 # TODO: add -Wall and fix all warnings
 CXXARGS="--std=gnu++11 -I../$VER generated_tests.cpp"
 
+test_config () {
+  echo "Testing ${machine}, ${extra_args}, C++"
+  g++ $CXXARGS ${extra_args} -o run_test
+  ./run_test
+}
+
 test_machine () {
-  local machine=`g++ -dumpmachine`
-
-  echo "Testing ${machine}, signed char, C++"
-  g++ $CXXARGS -fno-unsigned-char -o run_test
-  ./run_test
-
-  echo "Testing ${machine}, unsigned char, C++"
-  g++ $CXXARGS -funsigned-char -o run_test
-  ./run_test
+  machine=$(g++ -dumpmachine)
+  extra_args="-fno-unsigned-char" test_config
+  extra_args="-funsigned-char" test_config
 }
 
 PATH=/mingw32/bin:$PATH test_machine
