@@ -20,7 +20,7 @@ CARGS="-I../$VER generated_tests.cpp"
 test_config () {
   echo "Testing $language, $(gcc -dumpmachine), ${extra_args}"
   if [ "$language" = "c++" ]; then
-    compiler="g++ --std=gnu++11"
+    compiler="g++ -x c++ --std=gnu++11"
   else
     compiler="gcc -x c"
   fi
