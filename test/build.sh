@@ -15,22 +15,28 @@ echo "Generating tests"
 ruby generate.rb
 
 # TODO: add -Wall and fix all warnings
-CXXARGS="--std=gnu++11 -I../$VER generated_tests.cpp"
+CARGS="-I../$VER generated_tests.cpp"
 
 test_config () {
-  echo "Testing $(gcc -dumpmachine), ${extra_args}, C++"
-  g++ $CXXARGS ${extra_args} -o run_test
+  echo "Testing $language, $(gcc -dumpmachine), ${extra_args}"
+  if [ "$language" = "c++" ]; then
+    compiler="g++ --std=gnu++11"
+  else
+    compiler="gcc -x c"
+  fi
+  $compiler $CARGS ${extra_args} -o run_test
   ./run_test
 }
 
 test_machine () {
-  extra_args="-fno-unsigned-char" test_config
-  extra_args="-funsigned-char" test_config
+  language=c extra_args="-fno-unsigned-char" test_config
+  language=c extra_args="-funsigned-char" test_config
+  language=c++ extra_args="-fno-unsigned-char" test_config
+  language=c++ extra_args="-funsigned-char" test_config
 }
 
-# Uncomment this to just test your default environment, which allows
-# for a faster development cycle.
-# extra_args= test_config && exit
+# Uncomment to just test your default C++ environment and skip others:
+# compiler=g++ extra_args= test_config; exit
 
 PATH=/mingw32/bin:$PATH test_machine
 PATH=/mingw64/bin:$PATH test_machine

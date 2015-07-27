@@ -1,3 +1,4 @@
+#ifdef __cplusplus
 #include <intsafe.h>
 #include <wtypesbase.h>
 #define CATCH_CONFIG_MAIN
@@ -22874,4 +22875,12 @@ TEST_CASE("SSIZETToIntPtr")
 }
 
 #endif
+#endif
+#else
+#include <stdio.h>
+int main()
+{
+  printf("The tests have not been ported to the C language yet.\n");
+  return 0;
+}
 #endif

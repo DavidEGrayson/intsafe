@@ -217,8 +217,9 @@ def write_tests(output, types)
 end
 
 File.open('generated_tests.cpp', 'w') do |output|
-  write_header(output)
+  output.puts "#ifdef __cplusplus"
 
+  write_header(output)
   output.write File.read('test.cpp')
   output.puts
 
@@ -237,6 +238,19 @@ File.open('generated_tests.cpp', 'w') do |output|
   output.puts "#else"
   write_tests output, generate_types(4, true)
   output.puts "#endif"
+
+  output.puts "#endif"
+
+  output.puts "#else"
+
+  output.puts <<END
+#include <stdio.h>
+int main()
+{
+  printf("The tests have not been ported to the C language yet.\\n");
+  return 0;
+}
+END
 
   output.puts "#endif"
 end
