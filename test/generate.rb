@@ -56,6 +56,7 @@ Types64 = [
   CNumberType['LONG_PTR', 'LongPtr', -pointer_size],
   CNumberType['ptrdiff_t', 'PtrdiffT', -pointer_size],
   CNumberType['SSIZE_T', 'SSIZET', -pointer_size],
+  CNumberType['size_t', 'SizeT', pointer_size],
   CNumberType['UINT', 'UInt', 4],
   CNumberType['UINT_PTR', 'UIntPtr', pointer_size],
   CNumberType['ULONG', 'ULong', 4],
@@ -64,6 +65,7 @@ Types64 = [
   CNumberType['SHORT', 'Short', -2],
   CNumberType['UCHAR', 'UChar', 1],
   CNumberType['USHORT', 'UShort', 2],
+  CNumberType['WORD', 'Word', 2],
 ]
 
 Indent = "    "
@@ -119,6 +121,9 @@ def write_type_tests(io, types)
       test.puts "#{type} x = 0;"
       test.puts "REQUIRE((#{type})(x - 1) #{comparison} x);"
       test.puts "REQUIRE_FALSE(std::is_pointer<#{type}>::value);"
+
+      # If we are using C, we could do:
+      # test.puts "REQUIRE(__builtin_types_compatible_p(#{type}, #{type.c99_name}));";
     end
   end
 end

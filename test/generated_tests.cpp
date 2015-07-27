@@ -76,6 +76,14 @@ TEST_CASE("SSIZE_T is the same as int64_t")
     REQUIRE_FALSE(std::is_pointer<SSIZE_T>::value);
 }
 
+TEST_CASE("size_t is the same as uint64_t")
+{
+    REQUIRE(sizeof(size_t) == 8);
+    size_t x = 0;
+    REQUIRE((size_t)(x - 1) > x);
+    REQUIRE_FALSE(std::is_pointer<size_t>::value);
+}
+
 TEST_CASE("UINT is the same as uint32_t")
 {
     REQUIRE(sizeof(UINT) == 4);
@@ -138,6 +146,14 @@ TEST_CASE("USHORT is the same as uint16_t")
     USHORT x = 0;
     REQUIRE((USHORT)(x - 1) > x);
     REQUIRE_FALSE(std::is_pointer<USHORT>::value);
+}
+
+TEST_CASE("WORD is the same as uint16_t")
+{
+    REQUIRE(sizeof(WORD) == 2);
+    WORD x = 0;
+    REQUIRE((WORD)(x - 1) > x);
+    REQUIRE_FALSE(std::is_pointer<WORD>::value);
 }
 
 TEST_CASE("DWordToInt")
@@ -470,6 +486,34 @@ TEST_CASE("DWordToUShort")
     SECTION("rejects maximum value + 1")
     {
         REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == DWordToUShort(0x10000, &out));
+    }
+
+}
+
+TEST_CASE("DWordToWord")
+{
+    WORD out = INITIAL_VALUE;
+
+    SECTION("has the right type")
+    {
+        REQUIRE((std::is_same<decltype(&DWordToWord), HRESULT (*)(_In_ DWORD, _Out_ WORD *)>::value));
+    }
+
+    SECTION("converts 0 to 0")
+    {
+        REQUIRE_FALSE(DWordToWord(0, &out));
+        REQUIRE(out == 0);
+    }
+
+    SECTION("converts the maximum value")
+    {
+        REQUIRE_FALSE(DWordToWord(0xffff, &out));
+        REQUIRE(out == 0xffff);
+    }
+
+    SECTION("rejects maximum value + 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == DWordToWord(0x10000, &out));
     }
 
 }
@@ -833,6 +877,34 @@ TEST_CASE("IntToDWordPtr")
 
 }
 
+TEST_CASE("IntToSizeT")
+{
+    size_t out = INITIAL_VALUE;
+
+    SECTION("has the right type")
+    {
+        REQUIRE((std::is_same<decltype(&IntToSizeT), HRESULT (*)(_In_ INT, _Out_ size_t *)>::value));
+    }
+
+    SECTION("converts 0 to 0")
+    {
+        REQUIRE_FALSE(IntToSizeT(0, &out));
+        REQUIRE(out == 0);
+    }
+
+    SECTION("converts the maximum value")
+    {
+        REQUIRE_FALSE(IntToSizeT(0x7fffffff, &out));
+        REQUIRE(out == 0x7fffffff);
+    }
+
+    SECTION("rejects minimum value - 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == IntToSizeT(-0x1LL, &out));
+    }
+
+}
+
 TEST_CASE("IntToUInt")
 {
     UINT out = INITIAL_VALUE;
@@ -1094,6 +1166,39 @@ TEST_CASE("IntToUShort")
 
 }
 
+TEST_CASE("IntToWord")
+{
+    WORD out = INITIAL_VALUE;
+
+    SECTION("has the right type")
+    {
+        REQUIRE((std::is_same<decltype(&IntToWord), HRESULT (*)(_In_ INT, _Out_ WORD *)>::value));
+    }
+
+    SECTION("converts 0 to 0")
+    {
+        REQUIRE_FALSE(IntToWord(0, &out));
+        REQUIRE(out == 0);
+    }
+
+    SECTION("converts the maximum value")
+    {
+        REQUIRE_FALSE(IntToWord(0xffff, &out));
+        REQUIRE(out == 0xffff);
+    }
+
+    SECTION("rejects maximum value + 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == IntToWord(0x10000, &out));
+    }
+
+    SECTION("rejects minimum value - 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == IntToWord(-0x1LL, &out));
+    }
+
+}
+
 TEST_CASE("Int64ToDWord")
 {
     DWORD out = INITIAL_VALUE;
@@ -1349,6 +1454,34 @@ TEST_CASE("Int64ToSSIZET")
 
 }
 
+TEST_CASE("Int64ToSizeT")
+{
+    size_t out = INITIAL_VALUE;
+
+    SECTION("has the right type")
+    {
+        REQUIRE((std::is_same<decltype(&Int64ToSizeT), HRESULT (*)(_In_ INT64, _Out_ size_t *)>::value));
+    }
+
+    SECTION("converts 0 to 0")
+    {
+        REQUIRE_FALSE(Int64ToSizeT(0, &out));
+        REQUIRE(out == 0);
+    }
+
+    SECTION("converts the maximum value")
+    {
+        REQUIRE_FALSE(Int64ToSizeT(0x7fffffffffffffff, &out));
+        REQUIRE(out == 0x7fffffffffffffff);
+    }
+
+    SECTION("rejects minimum value - 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == Int64ToSizeT(-0x1LL, &out));
+    }
+
+}
+
 TEST_CASE("Int64ToUInt")
 {
     UINT out = INITIAL_VALUE;
@@ -1578,6 +1711,34 @@ TEST_CASE("IntPtrToLong")
     SECTION("rejects minimum value - 1")
     {
         REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == IntPtrToLong(-0x80000001LL, &out));
+    }
+
+}
+
+TEST_CASE("IntPtrToSizeT")
+{
+    size_t out = INITIAL_VALUE;
+
+    SECTION("has the right type")
+    {
+        REQUIRE((std::is_same<decltype(&IntPtrToSizeT), HRESULT (*)(_In_ INT_PTR, _Out_ size_t *)>::value));
+    }
+
+    SECTION("converts 0 to 0")
+    {
+        REQUIRE_FALSE(IntPtrToSizeT(0, &out));
+        REQUIRE(out == 0);
+    }
+
+    SECTION("converts the maximum value")
+    {
+        REQUIRE_FALSE(IntPtrToSizeT(0x7fffffffffffffff, &out));
+        REQUIRE(out == 0x7fffffffffffffff);
+    }
+
+    SECTION("rejects minimum value - 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == IntPtrToSizeT(-0x1LL, &out));
     }
 
 }
@@ -1815,6 +1976,34 @@ TEST_CASE("LongToPtrdiffT")
     {
         REQUIRE_FALSE(LongToPtrdiffT(-0x80000000LL, &out));
         REQUIRE(out == -0x80000000LL);
+    }
+
+}
+
+TEST_CASE("LongToSizeT")
+{
+    size_t out = INITIAL_VALUE;
+
+    SECTION("has the right type")
+    {
+        REQUIRE((std::is_same<decltype(&LongToSizeT), HRESULT (*)(_In_ LONG, _Out_ size_t *)>::value));
+    }
+
+    SECTION("converts 0 to 0")
+    {
+        REQUIRE_FALSE(LongToSizeT(0, &out));
+        REQUIRE(out == 0);
+    }
+
+    SECTION("converts the maximum value")
+    {
+        REQUIRE_FALSE(LongToSizeT(0x7fffffff, &out));
+        REQUIRE(out == 0x7fffffff);
+    }
+
+    SECTION("rejects minimum value - 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == LongToSizeT(-0x1LL, &out));
     }
 
 }
@@ -2080,6 +2269,39 @@ TEST_CASE("LongToUShort")
 
 }
 
+TEST_CASE("LongToWord")
+{
+    WORD out = INITIAL_VALUE;
+
+    SECTION("has the right type")
+    {
+        REQUIRE((std::is_same<decltype(&LongToWord), HRESULT (*)(_In_ LONG, _Out_ WORD *)>::value));
+    }
+
+    SECTION("converts 0 to 0")
+    {
+        REQUIRE_FALSE(LongToWord(0, &out));
+        REQUIRE(out == 0);
+    }
+
+    SECTION("converts the maximum value")
+    {
+        REQUIRE_FALSE(LongToWord(0xffff, &out));
+        REQUIRE(out == 0xffff);
+    }
+
+    SECTION("rejects maximum value + 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == LongToWord(0x10000, &out));
+    }
+
+    SECTION("rejects minimum value - 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == LongToWord(-0x1LL, &out));
+    }
+
+}
+
 TEST_CASE("LongPtrToDWord")
 {
     DWORD out = INITIAL_VALUE;
@@ -2244,6 +2466,34 @@ TEST_CASE("LongPtrToLong")
     SECTION("rejects minimum value - 1")
     {
         REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == LongPtrToLong(-0x80000001LL, &out));
+    }
+
+}
+
+TEST_CASE("LongPtrToSizeT")
+{
+    size_t out = INITIAL_VALUE;
+
+    SECTION("has the right type")
+    {
+        REQUIRE((std::is_same<decltype(&LongPtrToSizeT), HRESULT (*)(_In_ LONG_PTR, _Out_ size_t *)>::value));
+    }
+
+    SECTION("converts 0 to 0")
+    {
+        REQUIRE_FALSE(LongPtrToSizeT(0, &out));
+        REQUIRE(out == 0);
+    }
+
+    SECTION("converts the maximum value")
+    {
+        REQUIRE_FALSE(LongPtrToSizeT(0x7fffffffffffffff, &out));
+        REQUIRE(out == 0x7fffffffffffffff);
+    }
+
+    SECTION("rejects minimum value - 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == LongPtrToSizeT(-0x1LL, &out));
     }
 
 }
@@ -2477,6 +2727,34 @@ TEST_CASE("PtrdiffTToLong")
     SECTION("rejects minimum value - 1")
     {
         REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == PtrdiffTToLong(-0x80000001LL, &out));
+    }
+
+}
+
+TEST_CASE("PtrdiffTToSizeT")
+{
+    size_t out = INITIAL_VALUE;
+
+    SECTION("has the right type")
+    {
+        REQUIRE((std::is_same<decltype(&PtrdiffTToSizeT), HRESULT (*)(_In_ ptrdiff_t, _Out_ size_t *)>::value));
+    }
+
+    SECTION("converts 0 to 0")
+    {
+        REQUIRE_FALSE(PtrdiffTToSizeT(0, &out));
+        REQUIRE(out == 0);
+    }
+
+    SECTION("converts the maximum value")
+    {
+        REQUIRE_FALSE(PtrdiffTToSizeT(0x7fffffffffffffff, &out));
+        REQUIRE(out == 0x7fffffffffffffff);
+    }
+
+    SECTION("rejects minimum value - 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == PtrdiffTToSizeT(-0x1LL, &out));
     }
 
 }
@@ -2743,6 +3021,34 @@ TEST_CASE("SSIZETToLong")
 
 }
 
+TEST_CASE("SSIZETToSizeT")
+{
+    size_t out = INITIAL_VALUE;
+
+    SECTION("has the right type")
+    {
+        REQUIRE((std::is_same<decltype(&SSIZETToSizeT), HRESULT (*)(_In_ SSIZE_T, _Out_ size_t *)>::value));
+    }
+
+    SECTION("converts 0 to 0")
+    {
+        REQUIRE_FALSE(SSIZETToSizeT(0, &out));
+        REQUIRE(out == 0);
+    }
+
+    SECTION("converts the maximum value")
+    {
+        REQUIRE_FALSE(SSIZETToSizeT(0x7fffffffffffffff, &out));
+        REQUIRE(out == 0x7fffffffffffffff);
+    }
+
+    SECTION("rejects minimum value - 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == SSIZETToSizeT(-0x1LL, &out));
+    }
+
+}
+
 TEST_CASE("SSIZETToUInt")
 {
     UINT out = INITIAL_VALUE;
@@ -2833,6 +3139,286 @@ TEST_CASE("SSIZETToULong")
     SECTION("rejects minimum value - 1")
     {
         REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == SSIZETToULong(-0x1LL, &out));
+    }
+
+}
+
+TEST_CASE("SizeTToDWord")
+{
+    DWORD out = INITIAL_VALUE;
+
+    SECTION("has the right type")
+    {
+        REQUIRE((std::is_same<decltype(&SizeTToDWord), HRESULT (*)(_In_ size_t, _Out_ DWORD *)>::value));
+    }
+
+    SECTION("converts 0 to 0")
+    {
+        REQUIRE_FALSE(SizeTToDWord(0, &out));
+        REQUIRE(out == 0);
+    }
+
+    SECTION("converts the maximum value")
+    {
+        REQUIRE_FALSE(SizeTToDWord(0xffffffff, &out));
+        REQUIRE(out == 0xffffffff);
+    }
+
+    SECTION("rejects maximum value + 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == SizeTToDWord(0x100000000, &out));
+    }
+
+}
+
+TEST_CASE("SizeTToInt")
+{
+    INT out = INITIAL_VALUE;
+
+    SECTION("has the right type")
+    {
+        REQUIRE((std::is_same<decltype(&SizeTToInt), HRESULT (*)(_In_ size_t, _Out_ INT *)>::value));
+    }
+
+    SECTION("converts 0 to 0")
+    {
+        REQUIRE_FALSE(SizeTToInt(0, &out));
+        REQUIRE(out == 0);
+    }
+
+    SECTION("converts the maximum value")
+    {
+        REQUIRE_FALSE(SizeTToInt(0x7fffffff, &out));
+        REQUIRE(out == 0x7fffffff);
+    }
+
+    SECTION("rejects maximum value + 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == SizeTToInt(0x80000000, &out));
+    }
+
+}
+
+TEST_CASE("SizeTToInt64")
+{
+    INT64 out = INITIAL_VALUE;
+
+    SECTION("has the right type")
+    {
+        REQUIRE((std::is_same<decltype(&SizeTToInt64), HRESULT (*)(_In_ size_t, _Out_ INT64 *)>::value));
+    }
+
+    SECTION("converts 0 to 0")
+    {
+        REQUIRE_FALSE(SizeTToInt64(0, &out));
+        REQUIRE(out == 0);
+    }
+
+    SECTION("converts the maximum value")
+    {
+        REQUIRE_FALSE(SizeTToInt64(0x7fffffffffffffff, &out));
+        REQUIRE(out == 0x7fffffffffffffff);
+    }
+
+    SECTION("rejects maximum value + 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == SizeTToInt64(0x8000000000000000, &out));
+    }
+
+}
+
+TEST_CASE("SizeTToIntPtr")
+{
+    INT_PTR out = INITIAL_VALUE;
+
+    SECTION("has the right type")
+    {
+        REQUIRE((std::is_same<decltype(&SizeTToIntPtr), HRESULT (*)(_In_ size_t, _Out_ INT_PTR *)>::value));
+    }
+
+    SECTION("converts 0 to 0")
+    {
+        REQUIRE_FALSE(SizeTToIntPtr(0, &out));
+        REQUIRE(out == 0);
+    }
+
+    SECTION("converts the maximum value")
+    {
+        REQUIRE_FALSE(SizeTToIntPtr(0x7fffffffffffffff, &out));
+        REQUIRE(out == 0x7fffffffffffffff);
+    }
+
+    SECTION("rejects maximum value + 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == SizeTToIntPtr(0x8000000000000000, &out));
+    }
+
+}
+
+TEST_CASE("SizeTToLong")
+{
+    LONG out = INITIAL_VALUE;
+
+    SECTION("has the right type")
+    {
+        REQUIRE((std::is_same<decltype(&SizeTToLong), HRESULT (*)(_In_ size_t, _Out_ LONG *)>::value));
+    }
+
+    SECTION("converts 0 to 0")
+    {
+        REQUIRE_FALSE(SizeTToLong(0, &out));
+        REQUIRE(out == 0);
+    }
+
+    SECTION("converts the maximum value")
+    {
+        REQUIRE_FALSE(SizeTToLong(0x7fffffff, &out));
+        REQUIRE(out == 0x7fffffff);
+    }
+
+    SECTION("rejects maximum value + 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == SizeTToLong(0x80000000, &out));
+    }
+
+}
+
+TEST_CASE("SizeTToLongPtr")
+{
+    LONG_PTR out = INITIAL_VALUE;
+
+    SECTION("has the right type")
+    {
+        REQUIRE((std::is_same<decltype(&SizeTToLongPtr), HRESULT (*)(_In_ size_t, _Out_ LONG_PTR *)>::value));
+    }
+
+    SECTION("converts 0 to 0")
+    {
+        REQUIRE_FALSE(SizeTToLongPtr(0, &out));
+        REQUIRE(out == 0);
+    }
+
+    SECTION("converts the maximum value")
+    {
+        REQUIRE_FALSE(SizeTToLongPtr(0x7fffffffffffffff, &out));
+        REQUIRE(out == 0x7fffffffffffffff);
+    }
+
+    SECTION("rejects maximum value + 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == SizeTToLongPtr(0x8000000000000000, &out));
+    }
+
+}
+
+TEST_CASE("SizeTToPtrdiffT")
+{
+    ptrdiff_t out = INITIAL_VALUE;
+
+    SECTION("has the right type")
+    {
+        REQUIRE((std::is_same<decltype(&SizeTToPtrdiffT), HRESULT (*)(_In_ size_t, _Out_ ptrdiff_t *)>::value));
+    }
+
+    SECTION("converts 0 to 0")
+    {
+        REQUIRE_FALSE(SizeTToPtrdiffT(0, &out));
+        REQUIRE(out == 0);
+    }
+
+    SECTION("converts the maximum value")
+    {
+        REQUIRE_FALSE(SizeTToPtrdiffT(0x7fffffffffffffff, &out));
+        REQUIRE(out == 0x7fffffffffffffff);
+    }
+
+    SECTION("rejects maximum value + 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == SizeTToPtrdiffT(0x8000000000000000, &out));
+    }
+
+}
+
+TEST_CASE("SizeTToSSIZET")
+{
+    SSIZE_T out = INITIAL_VALUE;
+
+    SECTION("has the right type")
+    {
+        REQUIRE((std::is_same<decltype(&SizeTToSSIZET), HRESULT (*)(_In_ size_t, _Out_ SSIZE_T *)>::value));
+    }
+
+    SECTION("converts 0 to 0")
+    {
+        REQUIRE_FALSE(SizeTToSSIZET(0, &out));
+        REQUIRE(out == 0);
+    }
+
+    SECTION("converts the maximum value")
+    {
+        REQUIRE_FALSE(SizeTToSSIZET(0x7fffffffffffffff, &out));
+        REQUIRE(out == 0x7fffffffffffffff);
+    }
+
+    SECTION("rejects maximum value + 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == SizeTToSSIZET(0x8000000000000000, &out));
+    }
+
+}
+
+TEST_CASE("SizeTToUInt")
+{
+    UINT out = INITIAL_VALUE;
+
+    SECTION("has the right type")
+    {
+        REQUIRE((std::is_same<decltype(&SizeTToUInt), HRESULT (*)(_In_ size_t, _Out_ UINT *)>::value));
+    }
+
+    SECTION("converts 0 to 0")
+    {
+        REQUIRE_FALSE(SizeTToUInt(0, &out));
+        REQUIRE(out == 0);
+    }
+
+    SECTION("converts the maximum value")
+    {
+        REQUIRE_FALSE(SizeTToUInt(0xffffffff, &out));
+        REQUIRE(out == 0xffffffff);
+    }
+
+    SECTION("rejects maximum value + 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == SizeTToUInt(0x100000000, &out));
+    }
+
+}
+
+TEST_CASE("SizeTToULong")
+{
+    ULONG out = INITIAL_VALUE;
+
+    SECTION("has the right type")
+    {
+        REQUIRE((std::is_same<decltype(&SizeTToULong), HRESULT (*)(_In_ size_t, _Out_ ULONG *)>::value));
+    }
+
+    SECTION("converts 0 to 0")
+    {
+        REQUIRE_FALSE(SizeTToULong(0, &out));
+        REQUIRE(out == 0);
+    }
+
+    SECTION("converts the maximum value")
+    {
+        REQUIRE_FALSE(SizeTToULong(0xffffffff, &out));
+        REQUIRE(out == 0xffffffff);
+    }
+
+    SECTION("rejects maximum value + 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == SizeTToULong(0x100000000, &out));
     }
 
 }
@@ -3121,6 +3707,34 @@ TEST_CASE("UIntToUShort")
     SECTION("rejects maximum value + 1")
     {
         REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == UIntToUShort(0x10000, &out));
+    }
+
+}
+
+TEST_CASE("UIntToWord")
+{
+    WORD out = INITIAL_VALUE;
+
+    SECTION("has the right type")
+    {
+        REQUIRE((std::is_same<decltype(&UIntToWord), HRESULT (*)(_In_ UINT, _Out_ WORD *)>::value));
+    }
+
+    SECTION("converts 0 to 0")
+    {
+        REQUIRE_FALSE(UIntToWord(0, &out));
+        REQUIRE(out == 0);
+    }
+
+    SECTION("converts the maximum value")
+    {
+        REQUIRE_FALSE(UIntToWord(0xffff, &out));
+        REQUIRE(out == 0xffff);
+    }
+
+    SECTION("rejects maximum value + 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == UIntToWord(0x10000, &out));
     }
 
 }
@@ -3711,6 +4325,34 @@ TEST_CASE("ULongToUShort")
 
 }
 
+TEST_CASE("ULongToWord")
+{
+    WORD out = INITIAL_VALUE;
+
+    SECTION("has the right type")
+    {
+        REQUIRE((std::is_same<decltype(&ULongToWord), HRESULT (*)(_In_ ULONG, _Out_ WORD *)>::value));
+    }
+
+    SECTION("converts 0 to 0")
+    {
+        REQUIRE_FALSE(ULongToWord(0, &out));
+        REQUIRE(out == 0);
+    }
+
+    SECTION("converts the maximum value")
+    {
+        REQUIRE_FALSE(ULongToWord(0xffff, &out));
+        REQUIRE(out == 0xffff);
+    }
+
+    SECTION("rejects maximum value + 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == ULongToWord(0x10000, &out));
+    }
+
+}
+
 TEST_CASE("ShortToByte")
 {
     BYTE out = INITIAL_VALUE;
@@ -3844,6 +4486,34 @@ TEST_CASE("ShortToUShort")
 
 }
 
+TEST_CASE("ShortToWord")
+{
+    WORD out = INITIAL_VALUE;
+
+    SECTION("has the right type")
+    {
+        REQUIRE((std::is_same<decltype(&ShortToWord), HRESULT (*)(_In_ SHORT, _Out_ WORD *)>::value));
+    }
+
+    SECTION("converts 0 to 0")
+    {
+        REQUIRE_FALSE(ShortToWord(0, &out));
+        REQUIRE(out == 0);
+    }
+
+    SECTION("converts the maximum value")
+    {
+        REQUIRE_FALSE(ShortToWord(0x7fff, &out));
+        REQUIRE(out == 0x7fff);
+    }
+
+    SECTION("rejects minimum value - 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == ShortToWord(-0x1LL, &out));
+    }
+
+}
+
 TEST_CASE("UShortToByte")
 {
     BYTE out = INITIAL_VALUE;
@@ -3952,6 +4622,118 @@ TEST_CASE("UShortToUChar")
     SECTION("rejects maximum value + 1")
     {
         REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == UShortToUChar(0x100, &out));
+    }
+
+}
+
+TEST_CASE("WordToByte")
+{
+    BYTE out = INITIAL_VALUE;
+
+    SECTION("has the right type")
+    {
+        REQUIRE((std::is_same<decltype(&WordToByte), HRESULT (*)(_In_ WORD, _Out_ BYTE *)>::value));
+    }
+
+    SECTION("converts 0 to 0")
+    {
+        REQUIRE_FALSE(WordToByte(0, &out));
+        REQUIRE(out == 0);
+    }
+
+    SECTION("converts the maximum value")
+    {
+        REQUIRE_FALSE(WordToByte(0xff, &out));
+        REQUIRE(out == 0xff);
+    }
+
+    SECTION("rejects maximum value + 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == WordToByte(0x100, &out));
+    }
+
+}
+
+TEST_CASE("WordToChar")
+{
+    CHAR out = INITIAL_VALUE;
+
+    SECTION("has the right type")
+    {
+        REQUIRE((std::is_same<decltype(&WordToChar), HRESULT (*)(_In_ WORD, _Out_ CHAR *)>::value));
+    }
+
+    SECTION("converts 0 to 0")
+    {
+        REQUIRE_FALSE(WordToChar(0, &out));
+        REQUIRE(out == 0);
+    }
+
+    SECTION("converts the maximum value")
+    {
+        REQUIRE_FALSE(WordToChar(0x7f, &out));
+        REQUIRE(out == 0x7f);
+    }
+
+    SECTION("rejects maximum value + 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == WordToChar(0x80, &out));
+    }
+
+}
+
+TEST_CASE("WordToShort")
+{
+    SHORT out = INITIAL_VALUE;
+
+    SECTION("has the right type")
+    {
+        REQUIRE((std::is_same<decltype(&WordToShort), HRESULT (*)(_In_ WORD, _Out_ SHORT *)>::value));
+    }
+
+    SECTION("converts 0 to 0")
+    {
+        REQUIRE_FALSE(WordToShort(0, &out));
+        REQUIRE(out == 0);
+    }
+
+    SECTION("converts the maximum value")
+    {
+        REQUIRE_FALSE(WordToShort(0x7fff, &out));
+        REQUIRE(out == 0x7fff);
+    }
+
+    SECTION("rejects maximum value + 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == WordToShort(0x8000, &out));
+    }
+
+}
+
+TEST_CASE("WordToUChar")
+{
+    UCHAR out = INITIAL_VALUE;
+
+    SECTION("has the right type")
+    {
+        REQUIRE((std::is_same<decltype(&WordToUChar), HRESULT (*)(_In_ WORD, _Out_ UCHAR *)>::value));
+    }
+
+    SECTION("converts 0 to 0")
+    {
+        REQUIRE_FALSE(WordToUChar(0, &out));
+        REQUIRE(out == 0);
+    }
+
+    SECTION("converts the maximum value")
+    {
+        REQUIRE_FALSE(WordToUChar(0xff, &out));
+        REQUIRE(out == 0xff);
+    }
+
+    SECTION("rejects maximum value + 1")
+    {
+        REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == WordToUChar(0x100, &out));
     }
 
 }
