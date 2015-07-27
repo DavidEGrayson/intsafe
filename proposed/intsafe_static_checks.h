@@ -14,6 +14,11 @@
 
 #include "intsafe_common.h"
 
+// Do not warn about unused local typedefs in this header because
+// they are used to implement static assertions.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+
 /**
  * @def __MINGW_INTSAFE_MISSING_STDC_CONSTANT_MACROS
  * Defined if some standard constant macro is not defined.
@@ -874,5 +879,7 @@ __MINGW_INTSAFE_MASTER_TESTSUITE("Mapping Win32 Types To Standard Types")
 #endif /* !__MINGW_INTSAFE_MISSING_STDC_CONSTANT_MACROS &&
         !__MINGW_INTSAFE_MISSING_STDC_LIMIT_MACROS &&
         !__MINGW_INTSAFE_MISSING_CHAR_BIT */
+
+#pragma GCC diagnostic pop
 
 #endif /* __MINGW_INTSAFE_STATIC_CHECKS_H_INCLUDED */
