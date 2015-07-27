@@ -1,6 +1,6 @@
 # intsafe.h implementation collection
 
-These files are implementations of Microsoft's [intsafe.h header](https://msdn.microsoft.com/en-us/library/windows/desktop/ff521693).
+These files are implementations of Microsoft's [intsafe.h header](https://msdn.microsoft.com/en-us/library/windows/desktop/ff521693), which defines 253 inline functions for save conversions, additions, multiplications, and subtractions of integers.
 I made this collection so that we can easily compare the choices available to us and make a good implementation for [mingw-w64](http://mingw-w64.org/).
 
 ## coreclr
@@ -39,3 +39,11 @@ The versions found in the Windows 8 and Windows 8.1 SDKs were very similar.
 
 * License: <font color='red'>All rights reserved AFAIK</font>
 * Lines: 8570
+
+## test
+
+The "test" folder contains scripts for testing an implementation of intsafe.h.
+
+The `grepcheck.sh` script uses grep to see which functions are implemented and reports the missing ones.
+
+The `build.sh` script calls grepcheck.sh, and it also calls a Ruby script to generate a C/C++ test file (`generated_tests.cpp`).  It then compiles and runs the generated tests for several different environments.
