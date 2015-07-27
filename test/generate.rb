@@ -1,4 +1,9 @@
 # Run this to generate generated_tests.cpp
+#
+# Environment variations to be aware of:
+#   language: C or C++
+#   architecture: win32 or win64
+#   char type: signed or unsigned (-funsigned-char)
 
 Dir.chdir(File.dirname(__FILE__))
 
@@ -47,7 +52,6 @@ end
 
 def generate_types(pointer_size, char_signed)
   char_type = char_signed ? -1 : 1
-  pointer_size = 8
   [
     CNumberType['UCHAR', 'UChar', 1],
     CNumberType['BYTE', 'Byte', 1],
@@ -73,8 +77,6 @@ def generate_types(pointer_size, char_signed)
   ]
 end
 
-Types64 = generate_types(8, true)
-
 Indent = "    "
 
 class IndentedIO
@@ -96,6 +98,7 @@ def write_header(io)
   io.puts <<END
 #include <intsafe.h>
 #include <wtypesbase.h>
+#define CATCH_CONFIG_MAIN
 #include <catch.hpp>
 
 #define INITIAL_VALUE 78
@@ -208,12 +211,34 @@ def write_conversion_tests(output, types)
   end
 end
 
-types = Types64
+def write_tests(output, types)
+  write_type_tests(output, types)
+  write_conversion_tests(output, types)
+end
 
 File.open('generated_tests.cpp', 'w') do |output|
   write_header(output)
-  write_type_tests(output, types)
-  write_conversion_tests(output, types)
+
+  output.write File.read('test.cpp')
+  output.puts
+
+  output.puts "#ifdef _WIN64"
+
+  output.puts "#ifdef __CHAR_UNSIGNED__"
+  write_tests output, generate_types(8, false)
+  output.puts "#else"
+  write_tests output, generate_types(8, true)
+  output.puts "#endif"
+
+  output.puts "#else"
+
+  output.puts "#ifdef __CHAR_UNSIGNED__"
+  write_tests output, generate_types(4, false)
+  output.puts "#else"
+  write_tests output, generate_types(4, true)
+  output.puts "#endif"
+
+  output.puts "#endif"
 end
 
 untested_functions = FunctionNames - TestedFunctions
