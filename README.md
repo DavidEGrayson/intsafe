@@ -1,6 +1,6 @@
 # intsafe.h implementation collection
 
-These files are implementations of Microsoft's [intsafe.h header](https://msdn.microsoft.com/en-us/library/windows/desktop/ff521693), which defines 253 inline functions for save conversions, additions, multiplications, and subtractions of integers.
+These files are implementations of Microsoft's [intsafe.h header](https://msdn.microsoft.com/en-us/library/windows/desktop/ff521693), which defines 253 inline functions for safe conversions, additions, multiplications, and subtractions of integers.
 I made this collection so that we can easily compare the choices available to us and make a good implementation for [mingw-w64](http://mingw-w64.org/).
 
 ## coreclr
