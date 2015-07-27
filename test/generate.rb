@@ -47,25 +47,25 @@ end
 
 pointer_size = 8
 Types64 = [
+  CNumberType['UCHAR', 'UChar', 1],
+  CNumberType['BYTE', 'Byte', 1],
+  CNumberType['CHAR', 'Char', -1],
+  CNumberType['USHORT', 'UShort', 2],
+  CNumberType['WORD', 'Word', 2],
+  CNumberType['SHORT', 'Short', -2],
+  CNumberType['UINT', 'UInt', 4],
+  CNumberType['ULONG', 'ULong', 4],
   CNumberType['DWORD', 'DWord', 4],
-  CNumberType['DWORD_PTR', 'DWordPtr', pointer_size],
   CNumberType['INT', 'Int', -4],
-  CNumberType['INT64', 'Int64', -8],
-  CNumberType['INT_PTR', 'IntPtr', -pointer_size],
   CNumberType['LONG', 'Long', -4],
+  CNumberType['INT64', 'Int64', -8],
+  CNumberType['UINT_PTR', 'UIntPtr', pointer_size],
+  CNumberType['size_t', 'SizeT', pointer_size],
+  CNumberType['DWORD_PTR', 'DWordPtr', pointer_size],
+  CNumberType['INT_PTR', 'IntPtr', -pointer_size],
   CNumberType['LONG_PTR', 'LongPtr', -pointer_size],
   CNumberType['ptrdiff_t', 'PtrdiffT', -pointer_size],
   CNumberType['SSIZE_T', 'SSIZET', -pointer_size],
-  CNumberType['size_t', 'SizeT', pointer_size],
-  CNumberType['UINT', 'UInt', 4],
-  CNumberType['UINT_PTR', 'UIntPtr', pointer_size],
-  CNumberType['ULONG', 'ULong', 4],
-  CNumberType['BYTE', 'Byte', 1],
-  CNumberType['CHAR', 'Char', -1],
-  CNumberType['SHORT', 'Short', -2],
-  CNumberType['UCHAR', 'UChar', 1],
-  CNumberType['USHORT', 'UShort', 2],
-  CNumberType['WORD', 'Word', 2],
 ]
 
 Indent = "    "
