@@ -4,6 +4,7 @@ if [ -z "$VER" ]
 then
     VER=proposed
 fi
+echo "intsafe version: $VER"
 
 set -ue
 
