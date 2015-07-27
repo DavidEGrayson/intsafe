@@ -8,7 +8,22 @@
 Dir.chdir(File.dirname(__FILE__))
 
 FunctionNames = File.readlines('function_names.txt').map(&:strip).reject(&:empty?)
+MissingFunctions = File.readlines('missing_functions.txt').map(&:strip)
 TestedFunctions = []
+
+def function_testable?(func_name)
+  if !FunctionNames.include?(func_name)
+    # This function is not in the Microsoft documentation.
+    return false
+  end
+
+  if MissingFunctions.include?(func_name)
+    # The implementation we are tested does not have this function.
+    return false
+  end
+
+  true
+end
 
 class CNumberType < Struct.new(:name, :camel_name, :type_id)
   def byte_count
@@ -183,31 +198,32 @@ def write_require_conversion_error(io, func_name, num)
   io.puts_indent %Q{error("#{func_name} did not overflow when given #{num_str}");}
 end
 
+def write_type_checker(io, func_name, return_type, arg_types)
+  io.puts "#{return_type} (*tmp)(#{arg_types}) __attribute__((unused)) = &#{func_name};"
+  io.puts "#ifdef __cplusplus"
+  type_signature = "#{return_type} (*)(#{arg_types})"
+  io.puts "if(!std::is_same<decltype(&#{func_name}), #{type_signature}>::value)"
+  io.puts_indent %Q{error("#{func_name} does not have the right signature");}
+  io.puts "#endif"
+end
+
 def write_conversion_test(io, type_src, type_dest)
   func_name = type_src.camel_name + 'To' + type_dest.camel_name
 
-  if !FunctionNames.include?(func_name)
-    # Someone could theoretically write this conversion function, but
-    # for whatever reason Microsoft chose not to.
-    return nil
-  end
+  return nil if !function_testable?(func_name)
+  TestedFunctions << func_name
 
   max = [type_src.max, type_dest.max].min
   min = [type_src.min, type_dest.min].max
 
   output_def = "#{type_dest} out;"
 
-  TestedFunctions << func_name
   write_test(io, "test_#{func_name}") do |test|
     test.puts output_def
 
-    write_section(test, "Make sure it has the right type.") do |sec|
-      sec.puts "HRESULT (*tmp)(_In_ #{type_src.name}, _Out_ #{type_dest} *) __attribute__ ((unused)) = &#{func_name};"
-      sec.puts "#ifdef __cplusplus"
-      type_signature = "HRESULT (*)(_In_ #{type_src.name}, _Out_ #{type_dest} *)"
-      sec.puts "if(!std::is_same<decltype(&#{func_name}), #{type_signature}>::value)"
-      sec.puts_indent %Q{error("#{func_name} does not have the right signature");}
-      sec.puts "#endif"
+    write_section(test, "has the right type") do |section|
+      write_type_checker section, func_name, "HRESULT",
+        "_In_ #{type_src.name}, _Out_ #{type_dest} *"
     end
 
     write_section(test, "converts 0 to 0") do |section|
@@ -243,10 +259,47 @@ def write_conversion_tests(io, types)
   end
 end
 
+def write_addition_test(io, type)
+  func_name = "#{type.camel_name}Add"
+
+  return nil if !function_testable?(func_name)
+  TestedFunctions << func_name
+
+  write_test(io, "test_#{func_name}") do |test|
+
+    write_section(test, "has the right type") do |section|
+      write_type_checker section, func_name, "HRESULT",
+        "_In_ #{type}, _In_ #{type}, _Out_ #{type} *"
+    end
+
+    # TODO: actually try some additions and check the results
+
+  end
+end
+
+def write_addition_tests(io, types)
+  collect_tests(io, 'tests_addition') do |tc|
+    types.each do |type|
+      tc << write_addition_test(io, type)
+    end
+  end
+end
+
+def write_missing_function_test(io)
+  return nil if MissingFunctions.empty?
+  write_test(io, "test_missing_functions") do |test|
+    test.puts %Q{error("#{MissingFunctions.size} functions are missing and will not be tested");}
+  end
+end
+
 def write_tests(io, types)
   collect_tests(io, 'tests_auto') do |tc|
+    tc << write_missing_function_test(io)
     tc << write_type_tests(io, types)
     tc << write_conversion_tests(io, types)
+    tc << write_addition_tests(io, types)
+    # TODO: write subtraction tests
+    # TODO: write multiplication tests
   end
 end
 

@@ -1,2 +1,4 @@
 sdk10
 *.exe
+test/missing_functions.txt
+test/generated_tests.cpp

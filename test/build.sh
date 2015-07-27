@@ -4,12 +4,11 @@ if [ -z "$VER" ]
 then
     VER=proposed
 fi
-echo "intsafe version: $VER"
 
 set -ue
 
-echo "Compiling C tests"
-gcc -I../$VER test.c -o run_test_c
+echo "Checking for missing functions"
+sh grepcheck.sh
 
 echo "Generating tests"
 ruby generate.rb
