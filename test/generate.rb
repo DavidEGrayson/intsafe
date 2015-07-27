@@ -89,51 +89,73 @@ class IndentedIO
     @io.puts *args
   end
 
+  def puts_indent(*args)
+    IndentedIO.new(self).puts(*args)
+  end
+
   def print(*args)
     @io.print *args
   end
 end
 
-def write_header(io)
-  io.puts <<END
-#include <intsafe.h>
-#include <wtypesbase.h>
-#define CATCH_CONFIG_MAIN
-#include <catch.hpp>
-
-#define INITIAL_VALUE 78
-
-END
-end
-
-def write_test(io, name)
-  io.puts "TEST_CASE(\"#{name}\")"
+def write_bracketed_section(io)
   io.puts '{'
   yield IndentedIO.new(io)
   io.puts '}'
   io.puts
 end
 
-def write_section(io, name)
-  io.puts "SECTION(\"#{name}\")"
-  io.puts '{'
-  yield IndentedIO.new(io)
-  io.puts '}'
-  io.puts
+def write_static_void_func(io, name, &block)
+  io.puts "static void #{name}()"
+  write_bracketed_section(io, &block)
+  name
+end
+
+def write_test(io, name, &block)
+  write_static_void_func(io, name, &block)
+end
+
+def write_section(io, comment = nil, &block)
+  io.puts "// " + comment if comment
+  write_bracketed_section(io, &block)
+end
+
+def collect_tests(io, name)
+  tc = []
+  yield tc
+
+  write_static_void_func(io, name) do |io|
+    tc.compact.each do |test_name|
+      io.puts "#{test_name}();"
+    end
+  end
 end
 
 # These tests makes sure our database of types is correct.
 def write_type_tests(io, types)
-  types.each do |type|
-    comparison = type.signed? ? '<' : '>';
-    write_test io, "#{type} is the same as #{type.c99_name}" do |test|
-      test.puts "REQUIRE(sizeof(#{type}) == #{type.byte_count});"
-      test.puts "#{type} x = 0;"
-      test.puts "REQUIRE((#{type})(x - 1) #{comparison} x);"
-      test.puts "REQUIRE_FALSE(std::is_pointer<#{type}>::value);"
+  collect_tests(io, 'tests_types') do |tc|
+    types.each do |type|
+      comparison = type.signed? ? '<' : '>';
+      tc << write_test(io, "test_#{type}_eq_#{type.c99_name}") do |test|
 
-      # If we are using C, we could do:
-      # test.puts "REQUIRE(__builtin_types_compatible_p(#{type}, #{type.c99_name}));";
+        # Check the size of the type.
+        test.puts "if(sizeof(#{type}) != #{type.byte_count})"
+        test.puts_indent %Q{error("#{type} is actually %d bytes", (int)sizeof(#{type}));}
+
+        # Check the signedness of the type.
+        test.puts "#{type} x = 0;"
+        test.puts "if(!((#{type})(x - 1) #{comparison} x))"
+        test.puts_indent %Q{error("#{type} sign check failed");}
+
+        # Do additional checks if possible.
+        test.puts "#ifdef __cplusplus"
+        test.puts "if(std::is_pointer<#{type}>::value)"
+        test.puts_indent %Q{error("#{type} is a pointer");}
+        #test.puts "#else"
+        #test.puts "if(!__builtin_types_compatible_p(#{type}, #{type.c99_name}))"
+        #test.puts_indent %Q{error("#{type} is not compatible with #{type.c99_name}");}
+        test.puts "#endif"
+      end
     end
   end
 end
@@ -141,41 +163,51 @@ end
 def nice_num_str(num)
   case
   when num.is_a?(String) then num
-  when num < 0 then '-' + nice_num_str(-num) + 'LL'
+  when num < 0 then '(-' + nice_num_str(-num - 1) + 'll - 1)'
   else '%#x' % num
   end
 end
 
 def write_require_conversion(io, func_name, num)
   num_str = nice_num_str(num)
-  io.puts "REQUIRE_FALSE(#{func_name}(#{num_str}, &out));"
-  io.puts "REQUIRE(out == #{num_str});"
+  io.puts "out = INITIAL_VALUE;"
+  io.puts "if(#{func_name}(#{num_str}, &out) != 0)"
+  io.puts_indent %Q{error("#{func_name} failed to convert #{num_str}");}
+  io.puts "if(out != #{num_str})"
+  io.puts_indent %Q{error("#{func_name} changed #{num_str} to something else.");}
 end
 
 def write_require_conversion_error(io, func_name, num)
   num_str = nice_num_str(num)
-  io.puts "REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW  == #{func_name}(#{num_str}, &out));"
+  io.puts "if(INTSAFE_E_ARITHMETIC_OVERFLOW != #{func_name}(#{num_str}, &out))"
+  io.puts_indent %Q{error("#{func_name} did not overflow when given #{num_str}");}
 end
 
-def write_conversion_test(output, type_src, type_dest)
+def write_conversion_test(io, type_src, type_dest)
   func_name = type_src.camel_name + 'To' + type_dest.camel_name
 
   if !FunctionNames.include?(func_name)
     # Someone could theoretically write this conversion function, but
     # for whatever reason Microsoft chose not to.
-    return
+    return nil
   end
 
   max = [type_src.max, type_dest.max].min
   min = [type_src.min, type_dest.min].max
 
-  write_test(output, func_name) do |test|
-    test.puts "#{type_dest} out = INITIAL_VALUE;"
-    test.puts
+  output_def = "#{type_dest} out;"
 
-    write_section(test, "has the right type") do |section|
+  TestedFunctions << func_name
+  write_test(io, "test_#{func_name}") do |test|
+    test.puts output_def
+
+    write_section(test, "Make sure it has the right type.") do |sec|
+      sec.puts "HRESULT (*tmp)(_In_ #{type_src.name}, _Out_ #{type_dest} *) __attribute__ ((unused)) = &#{func_name};"
+      sec.puts "#ifdef __cplusplus"
       type_signature = "HRESULT (*)(_In_ #{type_src.name}, _Out_ #{type_dest} *)"
-      section.puts "REQUIRE((std::is_same<decltype(&#{func_name}), #{type_signature}>::value));"
+      sec.puts "if(!std::is_same<decltype(&#{func_name}), #{type_signature}>::value)"
+      sec.puts_indent %Q{error("#{func_name} does not have the right signature");}
+      sec.puts "#endif"
     end
 
     write_section(test, "converts 0 to 0") do |section|
@@ -198,61 +230,48 @@ def write_conversion_test(output, type_src, type_dest)
       write_require_conversion_error(section, func_name, type_dest.min - 1);
     end if type_src.min < type_dest.min
   end
-
-  TestedFunctions << func_name
 end
 
-def write_conversion_tests(output, types)
-  types.each do |type1|
-    types.each do |type2|
-      next if type1 == type2
-      write_conversion_test(output, type1, type2)
+def write_conversion_tests(io, types)
+  collect_tests(io, 'tests_conversions') do |tc|
+    types.each do |type1|
+      types.each do |type2|
+        next if type1 == type2
+        tc << write_conversion_test(io, type1, type2)
+      end
     end
   end
 end
 
-def write_tests(output, types)
-  write_type_tests(output, types)
-  write_conversion_tests(output, types)
+def write_tests(io, types)
+  collect_tests(io, 'tests_auto') do |tc|
+    tc << write_type_tests(io, types)
+    tc << write_conversion_tests(io, types)
+  end
 end
 
 File.open('generated_tests.cpp', 'w') do |output|
-  output.puts "#ifdef __cplusplus"
-
-  write_header(output)
-  output.write File.read('test.cpp')
-  output.puts
+  output.puts File.read('test.cpp')
 
   output.puts "#ifdef _WIN64"
 
   output.puts "#ifdef __CHAR_UNSIGNED__"
   write_tests output, generate_types(8, false)
-  output.puts "#else"
+  output.puts "#else /* __CHAR_UNSIGNED__ */"
   write_tests output, generate_types(8, true)
-  output.puts "#endif"
+  output.puts "#endif /* __CHAR_UNSIGNED__ else */"
 
-  output.puts "#else"
+  output.puts "#else /* _WIN64 */"
 
   output.puts "#ifdef __CHAR_UNSIGNED__"
   write_tests output, generate_types(4, false)
-  output.puts "#else"
+  output.puts "#else /* __CHAR_UNSIGNED__ */"
   write_tests output, generate_types(4, true)
-  output.puts "#endif"
+  output.puts "#endif /* __CHAR_UNSIGNED__ else */"
 
-  output.puts "#endif"
+  output.puts "#endif /* _WIN64 else */"
 
-  output.puts "#else"
-
-  output.puts <<END
-#include <stdio.h>
-int main()
-{
-  printf("The tests have not been ported to the C language yet.\\n");
-  return 0;
-}
-END
-
-  output.puts "#endif"
+  output.puts File.read('test_bottom.cpp')
 end
 
 untested_functions = FunctionNames - TestedFunctions

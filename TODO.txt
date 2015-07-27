@@ -9,3 +9,7 @@ Some changes we might want to make to the proposed intsafe.h:
 
 - Don't use asserts on the output pointers, or perhaps turn off the
   assertion when NDEBUG is defined.
+
+- Fix it so the tests pass with optimizations turned off, which will
+  require a real definition of the function to be present somewhere in
+  C.

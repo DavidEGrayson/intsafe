@@ -1,12 +1,31 @@
-TEST_CASE("should include specstrings.h")
+#include <intsafe.h>
+#include <wtypesbase.h>
+
+#if __cplusplus
+#include <type_traits>
+#endif
+
+#define INITIAL_VALUE 78
+
+void error(const char * format, ...) __attribute__((format (printf, 1, 2)));
+
+void test_should_include_specstrings()
 {
     #ifndef __specstrings
-    REQUIRE(0);
+    error("intsafe.h did not include specstrings.h");
     #endif
 }
 
-TEST_CASE("defines the right value for INTSAFE_E_ARITHMETIC_OVERFLOW")
+void test_arithmetic_overflow_value()
 {
     // 0x80070216L is used in the coreclr implementation.
-    REQUIRE(INTSAFE_E_ARITHMETIC_OVERFLOW == 0x80070216L);
+    if (INTSAFE_E_ARITHMETIC_OVERFLOW != (HRESULT)0x80070216L)
+    {
+        error("INTSAFE_E_ARITHMETIC_OVERFLOW value is wrong");
+    }
+}
+
+void tests_manual()
+{
+    test_should_include_specstrings();
 }

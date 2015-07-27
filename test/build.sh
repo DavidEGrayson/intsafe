@@ -14,15 +14,16 @@ gcc -I../$VER test.c -o run_test_c
 echo "Generating tests"
 ruby generate.rb
 
-# TODO: add -Wall and fix all warnings
-CARGS="-I../$VER generated_tests.cpp"
+# We add -O1 to avoid getting undefined reference errors for the
+# inline functions without optimizations.  This should probably be fixed.
+CARGS="-Wall -Werror -O1 -I../$VER generated_tests.cpp"
 
 test_config () {
   echo "Testing $language, $(gcc -dumpmachine), ${extra_args}"
   if [ "$language" = "c++" ]; then
     compiler="g++ -x c++ --std=gnu++11"
   else
-    compiler="gcc -x c"
+    compiler="gcc -x c --std=gnu99"
   fi
   $compiler $CARGS ${extra_args} -o run_test
   ./run_test
