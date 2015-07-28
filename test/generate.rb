@@ -407,7 +407,11 @@ File.open('generated_tests.cpp', 'w') do |output|
   output.puts File.read('test_bottom.cpp')
 end
 
-untested_functions = FunctionNames - TestedFunctions
+if MissingFunctions.size > 0
+  puts "warning: #{MissingFunctions.size} functions are missing and tests were not generated for then"
+end
+
+untested_functions = FunctionNames - TestedFunctions - MissingFunctions
 if untested_functions.size > 0
   puts "warning: #{untested_functions.size} functions do not have tests yet, " \
     "for example: #{untested_functions.first}"
