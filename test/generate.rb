@@ -11,6 +11,15 @@ FunctionNames = File.readlines('function_names.txt').map(&:strip).reject(&:empty
 MissingFunctions = File.readlines('missing_functions.txt').map(&:strip)
 TestedFunctions = []
 
+#module HexInt
+#  refine Integer do
+#    def hex
+#      '%#x' % self
+#    end
+#  end
+#end
+#using HexInt
+
 def function_testable?(func_name)
   if !FunctionNames.include?(func_name)
     # This function is not in the Microsoft documentation.
@@ -262,9 +271,9 @@ def write_require_addition_core(io, func_name, num1, num2)
   num2_str = nice_num_str(num2)
   sum_str = nice_num_str(num1 + num2)
   io.puts "if (#{func_name}(#{num1_str}, #{num2_str}, &out))"
-  io.puts_indent %Q{error("#{func_name} gave error when adding #{num1} to #{num2}.");}
+  io.puts_indent %Q{error("#{func_name} gave error when adding #{num1_str} to #{num2_str}.");}
   io.puts "if (out != #{sum_str})"
-  io.puts_indent %Q{error("#{func_name} gave incorrect result when adding #{num1} to #{num2}.");}
+  io.puts_indent %Q{error("#{func_name} gave incorrect result when adding #{num1_str} to #{num2_str}.");}
 end
 
 def write_require_addition(io, func_name, num1, num2)
@@ -276,7 +285,7 @@ def write_require_addition_error_core(io, func_name, num1, num2)
   num1_str = nice_num_str(num1)
   num2_str = nice_num_str(num2)
   io.puts "if (#{func_name}(#{num1_str}, #{num2_str}, &out) != INTSAFE_E_ARITHMETIC_OVERFLOW)"
-  io.puts_indent %Q{error("#{func_name} did not overflow when adding #{num1} to #{num2}.");}
+  io.puts_indent %Q{error("#{func_name} did not overflow when adding #{num1_str} to #{num2_str}.");}
 end
 
 def write_require_addition_error(io, func_name, num1, num2)
