@@ -199,21 +199,25 @@ def write_require_conversion(io, func_name, num)
   io.puts_indent %Q{error("#{func_name} failed to convert #{num_str}");}
   io.puts "if(out != #{num_str})"
   io.puts_indent %Q{error("#{func_name} changed #{num_str} to something else.");}
+  io.puts
 end
 
 def write_require_conversion_error(io, func_name, num)
   num_str = nice_num_str(num)
   io.puts "if(INTSAFE_E_ARITHMETIC_OVERFLOW != #{func_name}(#{num_str}, &out))"
   io.puts_indent %Q{error("#{func_name} did not overflow when given #{num_str}");}
+  io.puts
 end
 
 def write_type_checker(io, func_name, return_type, arg_types)
-  io.puts "#{return_type} (*tmp)(#{arg_types}) __attribute__((unused)) = &#{func_name};"
-  io.puts "#ifdef __cplusplus"
-  type_signature = "#{return_type} (*)(#{arg_types})"
-  io.puts "if(!std::is_same<decltype(&#{func_name}), #{type_signature}>::value)"
-  io.puts_indent %Q{error("#{func_name} does not have the right signature");}
-  io.puts "#endif"
+  write_section(io, "has the right type") do |sec|
+    sec.puts "#{return_type} (*tmp)(#{arg_types}) __attribute__((unused)) = &#{func_name};"
+    sec.puts "#ifdef __cplusplus"
+    type_signature = "#{return_type} (*)(#{arg_types})"
+    sec.puts "if(!std::is_same<decltype(&#{func_name}), #{type_signature}>::value)"
+    sec.puts_indent %Q{error("#{func_name} does not have the right signature");}
+    sec.puts "#endif"
+  end
 end
 
 def write_conversion_test(io, type_src, type_dest)
@@ -228,30 +232,20 @@ def write_conversion_test(io, type_src, type_dest)
   write_test(io, "test_#{func_name}") do |test|
     test.puts "#{type_dest} out;"
 
-    write_section(test, "has the right type") do |section|
-      write_type_checker section, func_name, "HRESULT",
-        "_In_ #{type_src.name}, _Out_ #{type_dest} *"
+    write_type_checker test, func_name, "HRESULT",
+      "_In_ #{type_src.name}, _Out_ #{type_dest} *"
+
+    write_require_conversion(test, func_name, 0)
+    write_require_conversion(test, func_name, max)
+    write_require_conversion(test, func_name, min) if min != 0
+
+    if type_src.max > type_dest.max
+      write_require_conversion_error(test, func_name, type_dest.max + 1)
     end
 
-    write_section(test, "converts 0 to 0") do |section|
-      write_require_conversion(section, func_name, 0)
+    if type_src.min < type_dest.min
+      write_require_conversion_error(test, func_name, type_dest.min - 1);
     end
-
-    write_section(test, "converts the maximum value") do |section|
-      write_require_conversion(section, func_name, max)
-    end
-
-    write_section(test, "converts the minimum value") do |section|
-      write_require_conversion(section, func_name, min)
-    end if min != 0
-
-    write_section(test, "rejects maximum value + 1") do |section|
-      write_require_conversion_error(section, func_name, type_dest.max + 1);
-    end if type_src.max > type_dest.max
-
-    write_section(test, "rejects minimum value - 1") do |section|
-      write_require_conversion_error(section, func_name, type_dest.min - 1);
-    end if type_src.min < type_dest.min
   end
 end
 
@@ -275,6 +269,7 @@ def write_require_binop(io, func_name, num1, num2, result)
   io.puts_indent %Q{error("#{func_name} gave error when given #{num1_str}, #{num2_str}.");}
   io.puts "if (out != #{result_str})"
   io.puts_indent %Q{error("#{func_name} gave incorrect result when given #{num1_str}, #{num2_str}.");}
+  io.puts
 end
 
 def write_require_binop_error(io, func_name, num1, num2)
@@ -282,6 +277,7 @@ def write_require_binop_error(io, func_name, num1, num2)
   num2_str = nice_num_str(num2)
   io.puts "if (#{func_name}(#{num1_str}, #{num2_str}, &out) != INTSAFE_E_ARITHMETIC_OVERFLOW)"
   io.puts_indent %Q{error("#{func_name} did not overflow given #{num1_str}, #{num2_str}.");}
+  io.puts
 end
 
 def write_require_binop_error_both_ways(io, func_name, num1, num2)
@@ -314,11 +310,10 @@ def write_binop_test(io, type, func_name)
 
   write_test(io, "test_#{func_name}") do |test|
     test.puts "#{type} out;"
+    test.puts
 
-    write_section(test, "has the right type") do |section|
-      write_type_checker section, func_name, "HRESULT",
-        "_In_ #{type}, _In_ #{type}, _Out_ #{type} *"
-    end
+    write_type_checker test, func_name, "HRESULT",
+      "_In_ #{type}, _In_ #{type}, _Out_ #{type} *"
 
     yield test
   end
