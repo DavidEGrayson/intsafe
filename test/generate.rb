@@ -266,36 +266,48 @@ def write_conversion_tests(io, types)
   end
 end
 
-def write_require_addition_core(io, func_name, num1, num2)
+def write_require_binop(io, func_name, num1, num2, result)
   num1_str = nice_num_str(num1)
   num2_str = nice_num_str(num2)
-  sum_str = nice_num_str(num1 + num2)
+  result_str = nice_num_str(result)
   io.puts "if (#{func_name}(#{num1_str}, #{num2_str}, &out))"
   io.puts_indent %Q{error("#{func_name} gave error when adding #{num1_str} to #{num2_str}.");}
-  io.puts "if (out != #{sum_str})"
+  io.puts "if (out != #{result_str})"
   io.puts_indent %Q{error("#{func_name} gave incorrect result when adding #{num1_str} to #{num2_str}.");}
 end
 
-def write_require_addition(io, func_name, num1, num2)
-  write_require_addition_core(io, func_name, num1, num2)
-  write_require_addition_core(io, func_name, num2, num1) if num1 != num2
-end
-
-def write_require_addition_error_core(io, func_name, num1, num2)
+def write_require_binop_error(io, func_name, num1, num2)
   num1_str = nice_num_str(num1)
   num2_str = nice_num_str(num2)
   io.puts "if (#{func_name}(#{num1_str}, #{num2_str}, &out) != INTSAFE_E_ARITHMETIC_OVERFLOW)"
-  io.puts_indent %Q{error("#{func_name} did not overflow when adding #{num1_str} to #{num2_str}.");}
+  io.puts_indent %Q{error("#{func_name} did not overflow given #{num1_str} and #{num2_str}.");}
+end
+
+def write_require_binop_error_both_ways(io, func_name, num1, num2)
+  write_require_binop_error(io, func_name, num1, num2)
+  write_require_binop_error(io, func_name, num2, num1) if num1 != num2
+end
+
+def write_require_binop_both_ways(io, func_name, num1, num2, result)
+  write_require_binop(io, func_name, num1, num2, result)
+  write_require_binop(io, func_name, num2, num1, result) if num1 != num2
+end
+
+def write_require_addition(io, func_name, num1, num2)
+  sum = num1 + num2
+  write_require_binop_both_ways(io, func_name, num1, num2, sum)
+end
+
+def write_require_subtraction(io, func_name, num1, num2)
+  result = num1 - num2
+  write_require_binop(io, func_name, num1, num2, result)
 end
 
 def write_require_addition_error(io, func_name, num1, num2)
-  write_require_addition_error_core(io, func_name, num1, num2)
-  write_require_addition_error_core(io, func_name, num2, num1) if num1 != num2
+  write_require_binop_error_both_ways(io, func_name, num1, num2)
 end
 
-def write_addition_test(io, type)
-  func_name = "#{type.camel_name}Add"
-
+def write_binop_test(io, type, func_name)
   return nil if !function_testable?(func_name)
   TestedFunctions << func_name
 
@@ -307,6 +319,14 @@ def write_addition_test(io, type)
         "_In_ #{type}, _In_ #{type}, _Out_ #{type} *"
     end
 
+    yield test
+  end
+end
+
+def write_addition_test(io, type)
+  func_name = "#{type.camel_name}Add"
+
+  write_binop_test(io, type, func_name) do |test|
     write_section(test, "adds 0 + 0") do |section|
       write_require_addition(section, func_name, 0, 0)
     end
@@ -347,6 +367,25 @@ def write_addition_test(io, type)
   end
 end
 
+def write_subtraction_test(io, type)
+  func_name = "#{type.camel_name}Sub"
+  write_binop_test(io, type, func_name) do |test|
+    write_section(test, "subtracts 0 - 0") do |section|
+      write_require_subtraction(section, func_name, 0, 0)
+    end
+
+    # TODO: finish
+  end
+end
+
+def write_subtraction_tests(io, types)
+  collect_tests(io, 'tests_subtraction') do |tc|
+    types.each do |type|
+      tc << write_subtraction_test(io, type)
+    end
+  end
+end
+
 def write_addition_tests(io, types)
   collect_tests(io, 'tests_addition') do |tc|
     types.each do |type|
@@ -368,7 +407,7 @@ def write_tests(io, types)
     tc << write_type_tests(io, types)
     tc << write_conversion_tests(io, types)
     tc << write_addition_tests(io, types)
-    # TODO: write subtraction tests
+    tc << write_subtraction_tests(io, types)
     # TODO: write multiplication tests
   end
 end
