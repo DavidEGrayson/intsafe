@@ -11,12 +11,6 @@ FunctionNames = File.readlines('function_names.txt').map(&:strip).reject(&:empty
 MissingFunctions = File.readlines('missing_functions.txt').map(&:strip)
 TestedFunctions = []
 
-class Integer
-  def hex
-    '%#x' % self
-  end
-end
-
 def function_testable?(func_name)
   if !FunctionNames.include?(func_name)
     # This function is not in the Microsoft documentation.
@@ -268,9 +262,9 @@ def write_require_addition_core(io, func_name, num1, num2)
   num2_str = nice_num_str(num2)
   sum_str = nice_num_str(num1 + num2)
   io.puts "if (#{func_name}(#{num1_str}, #{num2_str}, &out))"
-  io.puts_indent %Q{error("Error when adding #{num1} to #{num2}.");}
+  io.puts_indent %Q{error("#{func_name} gave error when adding #{num1} to #{num2}.");}
   io.puts "if (out != #{sum_str})"
-  io.puts_indent %Q{error("Incorrect result when adding #{num1} to #{num2}.");}
+  io.puts_indent %Q{error("#{func_name} gave incorrect result when adding #{num1} to #{num2}.");}
 end
 
 def write_require_addition(io, func_name, num1, num2)
@@ -282,7 +276,7 @@ def write_require_addition_error_core(io, func_name, num1, num2)
   num1_str = nice_num_str(num1)
   num2_str = nice_num_str(num2)
   io.puts "if (#{func_name}(#{num1_str}, #{num2_str}, &out) != INTSAFE_E_ARITHMETIC_OVERFLOW)"
-  io.puts_indent %Q{error("Failed to get overflow error when adding #{num1} to #{num2}.");}
+  io.puts_indent %Q{error("#{func_name} did not overflow when adding #{num1} to #{num2}.");}
 end
 
 def write_require_addition_error(io, func_name, num1, num2)
@@ -312,21 +306,35 @@ def write_addition_test(io, type)
       write_require_addition(section, func_name, 1, 3)
     end
 
-    write_section(test, "adds 0 + #{type.max.hex}") do |section|
+    write_section(test, "adds 0 + max") do |section|
       write_require_addition(section, func_name, 0, type.max)
     end
 
-    write_section(test, "adds 0 + #{type.min.hex}") do |section|
-      write_require_addition(section, func_name, 0, type.min)
-    end if type.min != 0
-
-    write_section(test, "rejects 1 + #{type.max.hex}") do |section|
+    write_section(test, "rejects 1 + max") do |section|
       write_require_addition_error(section, func_name, 1, type.max)
     end
 
-    write_section(test, "rejects -1 + #{type.min.hex}") do |section|
-      write_require_addition_error(section, func_name, -1, type.min)
-    end if type.min < 0
+    write_section(test, "rejects max + max") do |section|
+      write_require_addition_error(section, func_name, type.max, type.max)
+    end
+
+    if type.min < 0
+      write_section(test, "adds 0 + min") do |section|
+        write_require_addition(section, func_name, 0, type.min)
+      end
+
+      write_section(test, "rejects -1 + min") do |section|
+        write_require_addition_error(section, func_name, -1, type.min)
+      end
+
+      write_section(test, "rejects -1 + min") do |section|
+        write_require_addition_error(section, func_name, -1, type.min)
+      end
+
+      write_section(test, "rejects min + min") do |section|
+        write_require_addition_error(section, func_name, type.min, type.min)
+      end
+    end
   end
 end
 
