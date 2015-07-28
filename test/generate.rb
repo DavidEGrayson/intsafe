@@ -11,6 +11,12 @@ FunctionNames = File.readlines('function_names.txt').map(&:strip).reject(&:empty
 MissingFunctions = File.readlines('missing_functions.txt').map(&:strip)
 TestedFunctions = []
 
+class Integer
+  def hex
+    '%#x' % self
+  end
+end
+
 def function_testable?(func_name)
   if !FunctionNames.include?(func_name)
     # This function is not in the Microsoft documentation.
@@ -216,10 +222,8 @@ def write_conversion_test(io, type_src, type_dest)
   max = [type_src.max, type_dest.max].min
   min = [type_src.min, type_dest.min].max
 
-  output_def = "#{type_dest} out;"
-
   write_test(io, "test_#{func_name}") do |test|
-    test.puts output_def
+    test.puts "#{type_dest} out;"
 
     write_section(test, "has the right type") do |section|
       write_type_checker section, func_name, "HRESULT",
@@ -259,6 +263,33 @@ def write_conversion_tests(io, types)
   end
 end
 
+def write_require_addition_core(io, func_name, num1, num2)
+  num1_str = nice_num_str(num1)
+  num2_str = nice_num_str(num2)
+  sum_str = nice_num_str(num1 + num2)
+  io.puts "if (#{func_name}(#{num1_str}, #{num2_str}, &out))"
+  io.puts_indent %Q{error("Error when adding #{num1} to #{num2}.");}
+  io.puts "if (out != #{sum_str})"
+  io.puts_indent %Q{error("Incorrect result when adding #{num1} to #{num2}.");}
+end
+
+def write_require_addition(io, func_name, num1, num2)
+  write_require_addition_core(io, func_name, num1, num2)
+  write_require_addition_core(io, func_name, num2, num1) if num1 != num2
+end
+
+def write_require_addition_error_core(io, func_name, num1, num2)
+  num1_str = nice_num_str(num1)
+  num2_str = nice_num_str(num2)
+  io.puts "if (#{func_name}(#{num1_str}, #{num2_str}, &out) != INTSAFE_E_ARITHMETIC_OVERFLOW)"
+  io.puts_indent %Q{error("Failed to get overflow error when adding #{num1} to #{num2}.");}
+end
+
+def write_require_addition_error(io, func_name, num1, num2)
+  write_require_addition_error_core(io, func_name, num1, num2)
+  write_require_addition_error_core(io, func_name, num2, num1) if num1 != num2
+end
+
 def write_addition_test(io, type)
   func_name = "#{type.camel_name}Add"
 
@@ -266,14 +297,36 @@ def write_addition_test(io, type)
   TestedFunctions << func_name
 
   write_test(io, "test_#{func_name}") do |test|
+    test.puts "#{type} out;"
 
     write_section(test, "has the right type") do |section|
       write_type_checker section, func_name, "HRESULT",
         "_In_ #{type}, _In_ #{type}, _Out_ #{type} *"
     end
 
-    # TODO: actually try some additions and check the results
+    write_section(test, "adds 0 + 0") do |section|
+      write_require_addition(section, func_name, 0, 0)
+    end
 
+    write_section(test, "adds 1 + 3") do |section|
+      write_require_addition(section, func_name, 1, 3)
+    end
+
+    write_section(test, "adds 0 + #{type.max.hex}") do |section|
+      write_require_addition(section, func_name, 0, type.max)
+    end
+
+    write_section(test, "adds 0 + #{type.min.hex}") do |section|
+      write_require_addition(section, func_name, 0, type.min)
+    end if type.min != 0
+
+    write_section(test, "rejects 1 + #{type.max.hex}") do |section|
+      write_require_addition_error(section, func_name, 1, type.max)
+    end
+
+    write_section(test, "rejects -1 + #{type.min.hex}") do |section|
+      write_require_addition_error(section, func_name, -1, type.min)
+    end if type.min < 0
   end
 end
 

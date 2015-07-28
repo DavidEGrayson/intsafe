@@ -36,8 +36,5 @@ test_machine () {
   language=c++ extra_args="-funsigned-char" test_config
 }
 
-# Uncomment to just test your default C++ environment and skip others:
-# compiler=g++ extra_args= test_config; exit
-
 PATH=/mingw32/bin:$PATH test_machine
 PATH=/mingw64/bin:$PATH test_machine
