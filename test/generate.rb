@@ -270,17 +270,18 @@ def write_require_binop(io, func_name, num1, num2, result)
   num1_str = nice_num_str(num1)
   num2_str = nice_num_str(num2)
   result_str = nice_num_str(result)
+  io.puts "out = INITIAL_VALUE;"
   io.puts "if (#{func_name}(#{num1_str}, #{num2_str}, &out))"
-  io.puts_indent %Q{error("#{func_name} gave error when adding #{num1_str} to #{num2_str}.");}
+  io.puts_indent %Q{error("#{func_name} gave error when given #{num1_str}, #{num2_str}.");}
   io.puts "if (out != #{result_str})"
-  io.puts_indent %Q{error("#{func_name} gave incorrect result when adding #{num1_str} to #{num2_str}.");}
+  io.puts_indent %Q{error("#{func_name} gave incorrect result when given #{num1_str}, #{num2_str}.");}
 end
 
 def write_require_binop_error(io, func_name, num1, num2)
   num1_str = nice_num_str(num1)
   num2_str = nice_num_str(num2)
   io.puts "if (#{func_name}(#{num1_str}, #{num2_str}, &out) != INTSAFE_E_ARITHMETIC_OVERFLOW)"
-  io.puts_indent %Q{error("#{func_name} did not overflow given #{num1_str} and #{num2_str}.");}
+  io.puts_indent %Q{error("#{func_name} did not overflow given #{num1_str}, #{num2_str}.");}
 end
 
 def write_require_binop_error_both_ways(io, func_name, num1, num2)
@@ -327,42 +328,18 @@ def write_addition_test(io, type)
   func_name = "#{type.camel_name}Add"
 
   write_binop_test(io, type, func_name) do |test|
-    write_section(test, "adds 0 + 0") do |section|
-      write_require_addition(section, func_name, 0, 0)
-    end
-
-    write_section(test, "adds 1 + 3") do |section|
-      write_require_addition(section, func_name, 1, 3)
-    end
-
-    write_section(test, "adds 0 + max") do |section|
-      write_require_addition(section, func_name, 0, type.max)
-    end
-
-    write_section(test, "rejects 1 + max") do |section|
-      write_require_addition_error(section, func_name, 1, type.max)
-    end
-
-    write_section(test, "rejects max + max") do |section|
-      write_require_addition_error(section, func_name, type.max, type.max)
-    end
+    write_require_addition(test, func_name, 0, 0)
+    write_require_addition(test, func_name, 1, 3)
+    write_require_addition(test, func_name, 0, type.max)
+    write_require_addition_error(test, func_name, 1, type.max)
+    write_require_addition_error(test, func_name, type.max, type.max)
 
     if type.min < 0
-      write_section(test, "adds 0 + min") do |section|
-        write_require_addition(section, func_name, 0, type.min)
-      end
-
-      write_section(test, "rejects -1 + min") do |section|
-        write_require_addition_error(section, func_name, -1, type.min)
-      end
-
-      write_section(test, "rejects -1 + min") do |section|
-        write_require_addition_error(section, func_name, -1, type.min)
-      end
-
-      write_section(test, "rejects min + min") do |section|
-        write_require_addition_error(section, func_name, type.min, type.min)
-      end
+      write_require_addition(test, func_name, 0, type.min)
+      write_require_addition(test, func_name, -1, -3)
+      write_require_addition_error(test, func_name, -1, type.min)
+      write_require_addition_error(test, func_name, -1, type.min)
+      write_require_addition_error(test, func_name, type.min, type.min)
     end
   end
 end
@@ -370,9 +347,7 @@ end
 def write_subtraction_test(io, type)
   func_name = "#{type.camel_name}Sub"
   write_binop_test(io, type, func_name) do |test|
-    write_section(test, "subtracts 0 - 0") do |section|
-      write_require_subtraction(section, func_name, 0, 0)
-    end
+    write_require_subtraction(test, func_name, 0, 0)
 
     # TODO: finish
   end
