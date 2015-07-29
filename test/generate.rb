@@ -409,18 +409,40 @@ def write_subtraction_test(io, type)
   end
 end
 
-def write_subtraction_tests(io, types)
-  collect_tests(io, 'tests_subtraction') do |tc|
-    types.each do |type|
-      tc << write_subtraction_test(io, type)
+def write_multiplication_test(io, type)
+  func_name = "#{type.camel_name}Mult"
+
+  write_binop_test(io, type, func_name) do |test|
+    write_require_multiplication(test, func_name, 0, 0)
+    write_require_multiplication(test, func_name, 0, 1)
+    write_require_multiplication(test, func_name, 1, 1)
+    write_require_multiplication(test, func_name, 1, 3)
+    write_require_multiplication(test, func_name, 3, 3)
+
+    write_require_multiplication(test, func_name, 0, type.max)
+    write_require_multiplication(test, func_name, 1, type.max)
+    write_require_multiplication_error(test, func_name, 2, type.max)
+
+    write_require_multiplication(test, func_name, 10, type.max / 10)
+    write_require_multiplication_error(test, func_name, 11, type.max / 10)
+
+    write_require_multiplication_error(test, func_name, type.max, type.max)
+
+    if type.signed?
+      write_require_multiplication(test, func_name, -1, type.max)
+      write_require_multiplication_error(test, func_name, -2, type.max)
+
+      # TODO: finish
     end
   end
 end
 
-def write_addition_tests(io, types)
-  collect_tests(io, 'tests_addition') do |tc|
+def write_math_tests(io, types)
+  collect_tests(io, 'tests_math') do |tc|
     types.each do |type|
       tc << write_addition_test(io, type)
+      tc << write_subtraction_test(io, type)
+      tc << write_multiplication_test(io, type)
     end
   end
 end
@@ -437,9 +459,7 @@ def write_tests(io, types)
     tc << write_missing_function_test(io)
     tc << write_type_tests(io, types)
     tc << write_conversion_tests(io, types)
-    tc << write_addition_tests(io, types)
-    tc << write_subtraction_tests(io, types)
-    # TODO: write multiplication tests
+    tc << write_math_tests(io, types)
   end
 end
 
