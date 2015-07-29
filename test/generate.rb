@@ -295,13 +295,26 @@ def write_require_addition(io, func_name, num1, num2)
   write_require_binop_both_ways(io, func_name, num1, num2, sum)
 end
 
+def write_require_addition_error(io, func_name, num1, num2)
+  write_require_binop_error_both_ways(io, func_name, num1, num2)
+end
+
+def write_require_multiplication(io, func_name, num1, num2)
+  product = num1 * num2
+  write_require_binop_both_ways(io, func_name, num1, num2, product)
+end
+
+def write_require_multiplication_error(io, func_name, num1, num2)
+  write_require_binop_error_both_ways(io, func_name, num1, num2)
+end
+
 def write_require_subtraction(io, func_name, num1, num2)
   result = num1 - num2
   write_require_binop(io, func_name, num1, num2, result)
 end
 
-def write_require_addition_error(io, func_name, num1, num2)
-  write_require_binop_error_both_ways(io, func_name, num1, num2)
+def write_require_subtraction_error(io, func_name, num1, num2)
+  write_require_binop_error(io, func_name, num1, num2)
 end
 
 def write_binop_test(io, type, func_name)
@@ -329,7 +342,7 @@ def write_addition_test(io, type)
     write_require_addition_error(test, func_name, 1, type.max)
     write_require_addition_error(test, func_name, type.max, type.max)
 
-    if type.min < 0
+    if type.signed?
       write_require_addition(test, func_name, 0, type.min)
       write_require_addition(test, func_name, -1, -3)
       write_require_addition_error(test, func_name, -1, type.min)
@@ -342,9 +355,57 @@ end
 def write_subtraction_test(io, type)
   func_name = "#{type.camel_name}Sub"
   write_binop_test(io, type, func_name) do |test|
-    write_require_subtraction(test, func_name, 0, 0)
+    if type.unsigned?
+      # Lower left
+      write_require_subtraction(test, func_name, 0, 0)
+      write_require_subtraction_error(test, func_name, 0, 1)
+      write_require_subtraction(test, func_name, 1, 1)
 
-    # TODO: finish
+      # Lower right
+      write_require_subtraction(test, func_name, type.max, 0)
+
+      # Upper left
+      write_require_subtraction_error(test, func_name, 0, type.max)
+
+      # Upper right
+      write_require_subtraction(test, func_name, type.max, type.max)
+      write_require_subtraction_error(test, func_name, type.max - 1, type.max)
+    else
+      # Center
+      write_require_subtraction(test, func_name, 0, 0)
+      write_require_subtraction(test, func_name, 5, 10)
+      write_require_subtraction(test, func_name, 5, -10)
+      write_require_subtraction(test, func_name, -5, -10)
+      write_require_subtraction(test, func_name, -5, 10)
+
+      # Upper left corner
+      write_require_subtraction_error(test, func_name, type.min, type.max)
+
+      # Lower right corner
+      write_require_subtraction_error(test, func_name, type.max, type.min)
+
+      # Upper right corner
+      write_require_subtraction(test, func_name, type.max, type.max)
+
+      # Lower left corner
+      write_require_subtraction(test, func_name, type.min, type.min)
+
+      # Left
+      write_require_subtraction(test, func_name, type.min, 0)
+      write_require_subtraction_error(test, func_name, type.min, 1)
+
+      # Right
+      write_require_subtraction(test, func_name, type.max, 0)
+      write_require_subtraction_error(test, func_name, type.max, -1)
+
+      # Top
+      write_require_subtraction(test, func_name, -1, type.max)
+      write_require_subtraction_error(test, func_name, -2, type.max)
+
+      # Bottom
+      write_require_subtraction(test, func_name, -1, type.min)
+      write_require_subtraction_error(test, func_name, 0, type.min)
+    end
   end
 end
 
