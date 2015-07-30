@@ -39,10 +39,7 @@ end
 def write_todos_for_missing_functions(cenv)
   missing = FunctionNames - GeneratedFunctions
   return if missing.empty?
-  cenv.puts
-  missing.each do |func|
-    cenv.puts "/* TODO: add #{func} */"
-  end
+  cenv.puts "/* TODO: add #{missing.size} missing functions */"
 end
 
 def write_top(cenv)

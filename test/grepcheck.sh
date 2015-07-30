@@ -18,7 +18,7 @@ do
         continue
     fi
     func="${func//$'\r'}"
-    (grep -e "\b${func}\b" -r ../$VER 2>&1 > /dev/null)
+    (grep --include='*.h' -e "\b${func}\b" -r ../$VER 2>&1 > /dev/null)
     if [ $? -ne 0 ]
     then
         count=$((count + 1))
