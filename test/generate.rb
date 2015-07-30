@@ -432,6 +432,7 @@ def write_multiplication_test(io, type)
       write_require_multiplication(test, func_name, -1, type.max)
       write_require_multiplication_error(test, func_name, -2, type.max)
 
+      write_require_multiplication(test, func_name, 1, type.min)
       write_require_multiplication(test, func_name, -1, type.min + 1)
       write_require_multiplication_error(test, func_name, -2, type.min + 1)
       write_require_multiplication_error(test, func_name, -1, type.min)
