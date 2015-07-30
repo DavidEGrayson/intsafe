@@ -19,9 +19,9 @@ This implementation was originally [posted](https://sourceforge.net/p/mingw-w64/
 * Lines: 5587
 * Functions missing: 30
 
-## proposed
+## tta_fixed
 
-This is the version I want to add to mingw-w64 eventually, but I have not finished testing and reviewing it.  It is based on tta's work, with some small patches.
+This is based on tta's work, but with some small patches to get most of my tests to pass.
 
 ## reactos
 
