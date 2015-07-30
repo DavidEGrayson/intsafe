@@ -48,6 +48,8 @@ def write_top(cenv)
   cenv.puts INFO
   cenv.puts
   cenv.puts "#pragma once"
+  cenv.puts
+  cenv.puts "#define INTSAFE_E_ARITHMETIC_OVERFLOW ((HRESULT)0x80070216L)"
 end
 
 CEnv.write_file('intsafe.h') do |cenv|

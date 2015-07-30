@@ -12,4 +12,6 @@
  */
 
 #pragma once
+
+#define INTSAFE_E_ARITHMETIC_OVERFLOW (HRESULT)0x80070216L
 /* TODO: add 253 missing functions */
