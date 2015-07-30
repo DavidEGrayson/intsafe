@@ -16,7 +16,7 @@ ruby generate.rb
 
 # We add -O1 to avoid getting undefined reference errors for the
 # inline functions without optimizations.  This should probably be fixed.
-CARGS="-Wall -Werror -O1 -I../$VER generated_tests.cpp"
+CARGS="-Wall -Werror -pedantic -O1 -I../$VER generated_tests.cpp"
 
 test_config () {
   echo "Testing $language, $(gcc -dumpmachine), ${extra_args}"
