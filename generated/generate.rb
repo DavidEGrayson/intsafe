@@ -109,7 +109,7 @@ MainTypes = [
 ].map(&TypesByName.method(:fetch))
 
 def conversion_function_name(type1, type2)
-  func_name = "#{type1.camel_name}to#{type2.camel_name}"
+  func_name = "#{type1.camel_name}To#{type2.camel_name}"
   if ApiFunctionNames.include?(func_name)
     func_name
   else
@@ -119,11 +119,11 @@ end
 
 def conversion_function_needed?(type1, type2)
   if MainTypes.include?(type1) && MainTypes.include?(type2)
-    if ApiFunctionNames.include?(conversion_function_name(type1, type2))
-      true
+    if ApiFunctionNames.include?("#{type1.camel_name}To#{type2.camel_name}")
+      return true
     end
   end
-  false
+  return false
 end
 
 def write_function(cenv, func_name, args)
@@ -131,6 +131,7 @@ def write_function(cenv, func_name, args)
   cenv.puts '{'
   yield cenv
   cenv.puts '}'
+  cenv.puts
 end
 
 def write_conversion_function(cenv, type_src, type_dest)
@@ -145,7 +146,7 @@ end
 def write_conversion_functions(cenv)
   Types.each do |type1|
     Types.each do |type2|
-      next if conversion_function_needed?(type1, type2)
+      next unless conversion_function_needed?(type1, type2)
       write_conversion_function(cenv, type1, type2)
     end
   end
@@ -158,7 +159,6 @@ end
 def write_todos_for_missing_functions(cenv)
   missing = ApiFunctionNames - GeneratedFunctions
   return if missing.empty?
-  cenv.puts
   cenv.puts "/* TODO: add #{missing.size} missing functions */"
 end
 
@@ -167,23 +167,8 @@ def write_top(cenv)
   cenv.puts
   cenv.puts INFO
   cenv.puts
-  cenv.puts '#pragma once'
+  cenv.puts File.read('top.h')
   cenv.puts
-  cenv.puts '#include <ntdef.h>'
-  cenv.puts '#include <limits.h>'
-  cenv.puts
-  cenv.puts '/* This should probably be in limits.h. */'
-  cenv.puts '#ifndef SSIZE_MIN'
-  cenv.puts '#ifdef _WIN64'
-  cenv.puts '#define SSIZE_MIN _I64_MIN'
-  cenv.puts '#else'
-  cenv.puts '#define SSIZE_MIN INT_MIN'
-  cenv.puts '#endif'
-  cenv.puts '#endif'
-  cenv.puts
-  cenv.puts '#define __MINGW_INTSAFE_API inline HRESULT'
-  cenv.puts
-  cenv.puts "#define INTSAFE_E_ARITHMETIC_OVERFLOW ((HRESULT)0x80070216L)"
 end
 
 CEnv.write_file('intsafe.h') do |cenv|
