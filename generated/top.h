@@ -13,7 +13,7 @@
 #endif
 
 #ifndef __MINGW_INTSAFE_API
-#define __MINGW_INTSAFE_API inline HRESULT
+#define __MINGW_INTSAFE_API inline
 #endif
 
 #define INTSAFE_E_ARITHMETIC_OVERFLOW ((HRESULT)0x80070216L)

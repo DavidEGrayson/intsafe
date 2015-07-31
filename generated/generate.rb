@@ -127,7 +127,7 @@ def conversion_function_needed?(type1, type2)
 end
 
 def write_function(cenv, func_name, args)
-  cenv.puts "__MINGW_INTSAFE_API #{func_name}(#{args})"
+  cenv.puts "__MINGW_INTSAFE_API HRESULT #{func_name}(#{args})"
   cenv.puts '{'
   yield cenv
   cenv.puts '}'

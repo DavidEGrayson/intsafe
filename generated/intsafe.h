@@ -26,198 +26,198 @@
 #endif
 
 #ifndef __MINGW_INTSAFE_API
-#define __MINGW_INTSAFE_API inline HRESULT
+#define __MINGW_INTSAFE_API inline
 #endif
 
 #define INTSAFE_E_ARITHMETIC_OVERFLOW ((HRESULT)0x80070216L)
 
-__MINGW_INTSAFE_API UShortToUChar(_In_ USHORT operand, _Out_ UCHAR * result)
+__MINGW_INTSAFE_API HRESULT UShortToUChar(_In_ USHORT operand, _Out_ UCHAR * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API UShortToShort(_In_ USHORT operand, _Out_ SHORT * result)
+__MINGW_INTSAFE_API HRESULT UShortToShort(_In_ USHORT operand, _Out_ SHORT * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API ShortToUChar(_In_ SHORT operand, _Out_ UCHAR * result)
+__MINGW_INTSAFE_API HRESULT ShortToUChar(_In_ SHORT operand, _Out_ UCHAR * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API ShortToUShort(_In_ SHORT operand, _Out_ USHORT * result)
+__MINGW_INTSAFE_API HRESULT ShortToUShort(_In_ SHORT operand, _Out_ USHORT * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API UIntToUChar(_In_ UINT operand, _Out_ UCHAR * result)
+__MINGW_INTSAFE_API HRESULT UIntToUChar(_In_ UINT operand, _Out_ UCHAR * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API UIntToUShort(_In_ UINT operand, _Out_ USHORT * result)
+__MINGW_INTSAFE_API HRESULT UIntToUShort(_In_ UINT operand, _Out_ USHORT * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API UIntToShort(_In_ UINT operand, _Out_ SHORT * result)
+__MINGW_INTSAFE_API HRESULT UIntToShort(_In_ UINT operand, _Out_ SHORT * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API UIntToInt(_In_ UINT operand, _Out_ INT * result)
+__MINGW_INTSAFE_API HRESULT UIntToInt(_In_ UINT operand, _Out_ INT * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API UIntToSSIZET(_In_ UINT operand, _Out_ SSIZE_T * result)
+__MINGW_INTSAFE_API HRESULT UIntToSSIZET(_In_ UINT operand, _Out_ SSIZE_T * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API IntToUChar(_In_ INT operand, _Out_ UCHAR * result)
+__MINGW_INTSAFE_API HRESULT IntToUChar(_In_ INT operand, _Out_ UCHAR * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API IntToUShort(_In_ INT operand, _Out_ USHORT * result)
+__MINGW_INTSAFE_API HRESULT IntToUShort(_In_ INT operand, _Out_ USHORT * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API IntToShort(_In_ INT operand, _Out_ SHORT * result)
+__MINGW_INTSAFE_API HRESULT IntToShort(_In_ INT operand, _Out_ SHORT * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API IntToUInt(_In_ INT operand, _Out_ UINT * result)
+__MINGW_INTSAFE_API HRESULT IntToUInt(_In_ INT operand, _Out_ UINT * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API IntToULongLong(_In_ INT operand, _Out_ ULONGLONG * result)
+__MINGW_INTSAFE_API HRESULT IntToULongLong(_In_ INT operand, _Out_ ULONGLONG * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API IntToSizeT(_In_ INT operand, _Out_ SIZE_T * result)
+__MINGW_INTSAFE_API HRESULT IntToSizeT(_In_ INT operand, _Out_ SIZE_T * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API ULongLongToUInt(_In_ ULONGLONG operand, _Out_ UINT * result)
+__MINGW_INTSAFE_API HRESULT ULongLongToUInt(_In_ ULONGLONG operand, _Out_ UINT * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API ULongLongToInt(_In_ ULONGLONG operand, _Out_ INT * result)
+__MINGW_INTSAFE_API HRESULT ULongLongToInt(_In_ ULONGLONG operand, _Out_ INT * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API ULongLongToInt64(_In_ ULONGLONG operand, _Out_ INT64 * result)
+__MINGW_INTSAFE_API HRESULT ULongLongToInt64(_In_ ULONGLONG operand, _Out_ INT64 * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API ULongLongToSizeT(_In_ ULONGLONG operand, _Out_ SIZE_T * result)
+__MINGW_INTSAFE_API HRESULT ULongLongToSizeT(_In_ ULONGLONG operand, _Out_ SIZE_T * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API ULongLongToSSIZET(_In_ ULONGLONG operand, _Out_ SSIZE_T * result)
+__MINGW_INTSAFE_API HRESULT ULongLongToSSIZET(_In_ ULONGLONG operand, _Out_ SSIZE_T * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API Int64ToUInt(_In_ INT64 operand, _Out_ UINT * result)
+__MINGW_INTSAFE_API HRESULT Int64ToUInt(_In_ INT64 operand, _Out_ UINT * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API Int64ToInt(_In_ INT64 operand, _Out_ INT * result)
+__MINGW_INTSAFE_API HRESULT Int64ToInt(_In_ INT64 operand, _Out_ INT * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API Int64ToULongLong(_In_ INT64 operand, _Out_ ULONGLONG * result)
+__MINGW_INTSAFE_API HRESULT Int64ToULongLong(_In_ INT64 operand, _Out_ ULONGLONG * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API Int64ToSizeT(_In_ INT64 operand, _Out_ SIZE_T * result)
+__MINGW_INTSAFE_API HRESULT Int64ToSizeT(_In_ INT64 operand, _Out_ SIZE_T * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API Int64ToSSIZET(_In_ INT64 operand, _Out_ SSIZE_T * result)
+__MINGW_INTSAFE_API HRESULT Int64ToSSIZET(_In_ INT64 operand, _Out_ SSIZE_T * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API SizeTToUInt(_In_ SIZE_T operand, _Out_ UINT * result)
+__MINGW_INTSAFE_API HRESULT SizeTToUInt(_In_ SIZE_T operand, _Out_ UINT * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API SizeTToInt(_In_ SIZE_T operand, _Out_ INT * result)
+__MINGW_INTSAFE_API HRESULT SizeTToInt(_In_ SIZE_T operand, _Out_ INT * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API SizeTToInt64(_In_ SIZE_T operand, _Out_ INT64 * result)
+__MINGW_INTSAFE_API HRESULT SizeTToInt64(_In_ SIZE_T operand, _Out_ INT64 * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API SizeTToSSIZET(_In_ SIZE_T operand, _Out_ SSIZE_T * result)
+__MINGW_INTSAFE_API HRESULT SizeTToSSIZET(_In_ SIZE_T operand, _Out_ SSIZE_T * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API SSIZETToUInt(_In_ SSIZE_T operand, _Out_ UINT * result)
+__MINGW_INTSAFE_API HRESULT SSIZETToUInt(_In_ SSIZE_T operand, _Out_ UINT * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API SSIZETToInt(_In_ SSIZE_T operand, _Out_ INT * result)
+__MINGW_INTSAFE_API HRESULT SSIZETToInt(_In_ SSIZE_T operand, _Out_ INT * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
 }
 
-__MINGW_INTSAFE_API SSIZETToSizeT(_In_ SSIZE_T operand, _Out_ SIZE_T * result)
+__MINGW_INTSAFE_API HRESULT SSIZETToSizeT(_In_ SSIZE_T operand, _Out_ SIZE_T * result)
 {
 *result = 0;
 return INTSAFE_E_ARITHMETIC_OVERFLOW;
