@@ -1,5 +1,5 @@
 def add_function_name(type)
-  "#{type.camel_name}Add__"
+  "#{type.camel_name}Add"
 end
 
 def sub_function_name(type)
@@ -14,11 +14,18 @@ def math_function_names(type)
   [add_function_name(type), sub_function_name(type), mult_function_name(type)]
 end
 
-def write_add_function(type)
+def write_add_function(cenv, type)
   func_name = add_function_name(type)
   return if !function_body_needed?(func_name)
 
-  
+  ret = '__MINGW_INTSAFE_API HRESULT'
+  args = "_In_ #{type} x, _In_ #{type} y, _Out_ #{type} * result"
+  write_function(cenv, func_name, args, ret) do |cenv|
+    cenv.puts "*result = 0;"
+    # cenv.puts "if (operand > __MINGW_INTSAFE_CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
+    cenv.puts "*result = x + y;"
+    cenv.puts "return S_OK;"
+  end
 end
 
 def calculate_math_function_aliases
@@ -40,7 +47,7 @@ end
 
 def write_math_functions(cenv)
   Types.each do |type|
-    write_add_function(type)
+    write_add_function(cenv, type)
     # TODO: write_sub_function(type)
     # TODO: write_mult_function(type)
   end

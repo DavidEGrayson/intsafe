@@ -894,6 +894,83 @@ __MINGW_INTSAFE_CHAR_API HRESULT LongToChar(_In_ LONG operand, _Out_ CHAR * resu
     return S_OK;
 }
 
+__MINGW_INTSAFE_API HRESULT UShortAdd(_In_ USHORT x, _In_ USHORT y, _Out_ USHORT * result)
+{
+    *result = 0;
+    *result = x + y;
+    return S_OK;
+}
+
+__MINGW_INTSAFE_API HRESULT ShortAdd(_In_ SHORT x, _In_ SHORT y, _Out_ SHORT * result)
+{
+    *result = 0;
+    *result = x + y;
+    return S_OK;
+}
+
+__MINGW_INTSAFE_API HRESULT UIntAdd(_In_ UINT x, _In_ UINT y, _Out_ UINT * result)
+{
+    *result = 0;
+    *result = x + y;
+    return S_OK;
+}
+
+__MINGW_INTSAFE_API HRESULT ULongAdd(_In_ ULONG x, _In_ ULONG y, _Out_ ULONG * result)
+{
+    *result = 0;
+    *result = x + y;
+    return S_OK;
+}
+
+__MINGW_INTSAFE_API HRESULT IntAdd(_In_ INT x, _In_ INT y, _Out_ INT * result)
+{
+    *result = 0;
+    *result = x + y;
+    return S_OK;
+}
+
+__MINGW_INTSAFE_API HRESULT LongAdd(_In_ LONG x, _In_ LONG y, _Out_ LONG * result)
+{
+    *result = 0;
+    *result = x + y;
+    return S_OK;
+}
+
+__MINGW_INTSAFE_API HRESULT UIntPtrAdd(_In_ UINT_PTR x, _In_ UINT_PTR y, _Out_ UINT_PTR * result)
+{
+    *result = 0;
+    *result = x + y;
+    return S_OK;
+}
+
+__MINGW_INTSAFE_API HRESULT DWordPtrAdd(_In_ DWORD_PTR x, _In_ DWORD_PTR y, _Out_ DWORD_PTR * result)
+{
+    *result = 0;
+    *result = x + y;
+    return S_OK;
+}
+
+__MINGW_INTSAFE_API HRESULT IntPtrAdd(_In_ INT_PTR x, _In_ INT_PTR y, _Out_ INT_PTR * result)
+{
+    *result = 0;
+    *result = x + y;
+    return S_OK;
+}
+
+__MINGW_INTSAFE_API HRESULT SSIZETAdd(_In_ SSIZE_T x, _In_ SSIZE_T y, _Out_ SSIZE_T * result)
+{
+    *result = 0;
+    *result = x + y;
+    return S_OK;
+}
+
+__MINGW_INTSAFE_API HRESULT ULongLongAdd(_In_ ULONGLONG x, _In_ ULONGLONG y, _Out_ ULONGLONG * result)
+{
+    *result = 0;
+    *result = x + y;
+    return S_OK;
+}
+
 #define UShortToByte UShortToUChar
 #define WordToUChar UShortToUChar
 #define WordToByte UShortToUChar
@@ -995,5 +1072,11 @@ __MINGW_INTSAFE_CHAR_API HRESULT LongToChar(_In_ LONG operand, _Out_ CHAR * resu
 #define Int64ToULongPtr Int64ToDWordPtr
 #define Int64ToPtrdiffT Int64ToIntPtr
 #define Int64ToLongPtr Int64ToSSIZET
+#define WordAdd UShortAdd
+#define DWordAdd ULongAdd
+#define SizeTAdd UIntPtrAdd
+#define ULongPtrAdd DWordPtrAdd
+#define PtrdiffTAdd IntPtrAdd
+#define LongPtrAdd SSIZETAdd
 
-/* TODO: add 60 missing functions */
+/* TODO: add 43 missing functions */
