@@ -211,7 +211,9 @@ __MINGW_INTSAFE_API HRESULT UIntToLong(_In_ UINT operand, _Out_ LONG * result)
 __MINGW_INTSAFE_API HRESULT UIntToIntPtr(_In_ UINT operand, _Out_ INT_PTR * result)
 {
     *result = 0;
+    #if UINT_MAX > INTPTR_MAX
     if (operand > INTPTR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    #endif
     *result = operand;
     return S_OK;
 }
@@ -219,7 +221,9 @@ __MINGW_INTSAFE_API HRESULT UIntToIntPtr(_In_ UINT operand, _Out_ INT_PTR * resu
 __MINGW_INTSAFE_API HRESULT UIntToSSIZET(_In_ UINT operand, _Out_ SSIZE_T * result)
 {
     *result = 0;
+    #if UINT_MAX > SSIZE_MAX
     if (operand > SSIZE_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    #endif
     *result = operand;
     return S_OK;
 }
@@ -279,7 +283,9 @@ __MINGW_INTSAFE_API HRESULT ULongToUIntPtr(_In_ ULONG operand, _Out_ UINT_PTR * 
 __MINGW_INTSAFE_API HRESULT ULongToIntPtr(_In_ ULONG operand, _Out_ INT_PTR * result)
 {
     *result = 0;
+    #if ULONG_MAX > INTPTR_MAX
     if (operand > INTPTR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    #endif
     *result = operand;
     return S_OK;
 }
@@ -287,7 +293,9 @@ __MINGW_INTSAFE_API HRESULT ULongToIntPtr(_In_ ULONG operand, _Out_ INT_PTR * re
 __MINGW_INTSAFE_API HRESULT ULongToSSIZET(_In_ ULONG operand, _Out_ SSIZE_T * result)
 {
     *result = 0;
+    #if ULONG_MAX > SSIZE_MAX
     if (operand > SSIZE_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    #endif
     *result = operand;
     return S_OK;
 }

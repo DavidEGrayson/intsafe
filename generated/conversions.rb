@@ -68,6 +68,7 @@ end
 # the possibilities incarnations that each type has.
 def cenv_where_upper_check_needed(cenv, type_src, type_dest)
   return if !upper_check_needed(type_src, type_dest)
+
   case
   when type_src.type_id == -PointerSizeDummy && type_dest.type_id == 4
     # On 64-bit systems, we need to do an upper check because signed
@@ -79,10 +80,8 @@ def cenv_where_upper_check_needed(cenv, type_src, type_dest)
     # as described in Section 6.3.1.8 of the C99.
     #
     # Therefore, we need an ifdef to only do the check when needed.
-    # Another possibility is a cast, but an ifdef is safer.
-    cenv.puts "#if #{type_src.max_str} > #{type_dest.max_str}"
-    yield cenv
-    cenv.puts "#endif"
+    # Another possibility is a cast, but an #if.
+    ifcheck = true
 
   when type_src.type_id == -8 && type_dest.type_id == PointerSizeDummy
     # On 32-bit systems, an upper check is needed.
@@ -90,15 +89,27 @@ def cenv_where_upper_check_needed(cenv, type_src, type_dest)
     # On 64-bit systems, no upper check is necessary because a signed
     # int64_t can never too large to be represented in a size_t
     # (uint64_t).  Also, the check would produce bad code because
-    # of Section 6.3.1.8 of C99.  Therefore, we need an ifdef.
-    cenv.puts "#if #{type_src.max_str} > #{type_dest.max_str}"
-    yield cenv
-    cenv.puts "#endif"
+    # of Section 6.3.1.8 of C99.  Therefore, we need an #if.
+    ifcheck = true
 
-  else
-    # Do the comparison.
-    yield cenv
+  when type_src.type_id == 4 && type_dest.type_id == -PointerSizeDummy
+    # On 32-bit systems, an upper check is needed.
+    #
+    # On 64-bit systems, clang whines about having a comparison that
+    # is always false.  Therefore we need an #if.
+    ifcheck = true
+
+  when type_src.type_id == PointerSizeDummy && type_dest.type_id == -8
+    # On 64-bit systems, an upper check is needed.
+    #
+    # On 32-bit systems, clang whines about having a comparison that
+    # is always false.  Therefore we need an #if.
+    # TODO: ifcheck = true
   end
+
+  cenv.puts "#if #{type_src.max_str} > #{type_dest.max_str}" if ifcheck
+  yield cenv
+  cenv.puts "#endif" if ifcheck
 end
 
 def lower_check_needed(type_src, type_dest)
