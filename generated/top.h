@@ -24,3 +24,6 @@
 #define __MINGW_INTSAFE_API inline
 #endif
 
+#ifndef __MINGW_INTSAFE_CHAR_API
+#define __MINGW_INTSAFE_CHAR_API __MINGW_INTSAFE_API
+#endif

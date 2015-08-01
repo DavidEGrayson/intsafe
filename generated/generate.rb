@@ -233,14 +233,16 @@ def conversion_function_name(type1, type2)
   end
 end
 
-def write_function(cenv, func_name, args)
-  cenv.puts "__MINGW_INTSAFE_API HRESULT #{func_name}(#{args})"
+def write_function(cenv, func_name, args, ret=nil)
+  ret ||= '__MINGW_INTSAFE_API HRESULT'
+  cenv.puts "#{ret} #{func_name}(#{args})"
   cenv.puts '{'
   cenv.indent_level += 1
   yield cenv
   cenv.indent_level -= 1
   cenv.puts '}'
   cenv.puts
+  GeneratedFunctions << func_name
 end
 
 # Yields zero or more C environments to the caller where we definitely
@@ -365,8 +367,9 @@ end
 def write_conversion_to_char(cenv, type)
   func_name = "#{type.camel_name}ToChar"
   return if !ApiFunctionNames.include?(func_name)
+  ret = '__MINGW_INTSAFE_CHAR_API HRESULT'
   args = "_In_ #{type} operand, _Out_ CHAR * result"
-  write_function(cenv, func_name, args) do |cenv|
+  write_function(cenv, func_name, args, ret) do |cenv|
     cenv.puts "*result = 0;"
     cenv.puts "if (operand > __MINGW_INTSAFE_CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
     if type.signed?
@@ -388,7 +391,6 @@ def write_char_conversions(cenv)
   cenv.puts "#define __MINGW_INTSAFE_CHAR_MAX 0x7f"
   cenv.puts "#endif"
   cenv.puts
-
   Types.each do |type|
     write_conversion_to_char(cenv, type)
   end

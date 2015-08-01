@@ -37,6 +37,9 @@
 #define __MINGW_INTSAFE_API inline
 #endif
 
+#ifndef __MINGW_INTSAFE_CHAR_API
+#define __MINGW_INTSAFE_CHAR_API __MINGW_INTSAFE_API
+#endif
 
 C_ASSERT(1 == sizeof(CHAR));
 C_ASSERT(1 == sizeof(UCHAR));
@@ -1688,7 +1691,7 @@ translation units with different types of chars are linked together. */
 #define __MINGW_INTSAFE_CHAR_MAX 0x7f
 #endif
 
-__MINGW_INTSAFE_API HRESULT UShortToChar(_In_ USHORT operand, _Out_ CHAR * result)
+__MINGW_INTSAFE_CHAR_API HRESULT UShortToChar(_In_ USHORT operand, _Out_ CHAR * result)
 {
     *result = 0;
     if (operand > __MINGW_INTSAFE_CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
@@ -1696,7 +1699,7 @@ __MINGW_INTSAFE_API HRESULT UShortToChar(_In_ USHORT operand, _Out_ CHAR * resul
     return S_OK;
 }
 
-__MINGW_INTSAFE_API HRESULT WordToChar(_In_ WORD operand, _Out_ CHAR * result)
+__MINGW_INTSAFE_CHAR_API HRESULT WordToChar(_In_ WORD operand, _Out_ CHAR * result)
 {
     *result = 0;
     if (operand > __MINGW_INTSAFE_CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
@@ -1704,40 +1707,7 @@ __MINGW_INTSAFE_API HRESULT WordToChar(_In_ WORD operand, _Out_ CHAR * result)
     return S_OK;
 }
 
-__MINGW_INTSAFE_API HRESULT ShortToChar(_In_ SHORT operand, _Out_ CHAR * result)
-{
-    *result = 0;
-    if (operand > __MINGW_INTSAFE_CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    if (operand < __MINGW_INTSAFE_CHAR_MIN) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    *result = operand;
-    return S_OK;
-}
-
-__MINGW_INTSAFE_API HRESULT UIntToChar(_In_ UINT operand, _Out_ CHAR * result)
-{
-    *result = 0;
-    if (operand > __MINGW_INTSAFE_CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    *result = operand;
-    return S_OK;
-}
-
-__MINGW_INTSAFE_API HRESULT ULongToChar(_In_ ULONG operand, _Out_ CHAR * result)
-{
-    *result = 0;
-    if (operand > __MINGW_INTSAFE_CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    *result = operand;
-    return S_OK;
-}
-
-__MINGW_INTSAFE_API HRESULT DWordToChar(_In_ DWORD operand, _Out_ CHAR * result)
-{
-    *result = 0;
-    if (operand > __MINGW_INTSAFE_CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    *result = operand;
-    return S_OK;
-}
-
-__MINGW_INTSAFE_API HRESULT IntToChar(_In_ INT operand, _Out_ CHAR * result)
+__MINGW_INTSAFE_CHAR_API HRESULT ShortToChar(_In_ SHORT operand, _Out_ CHAR * result)
 {
     *result = 0;
     if (operand > __MINGW_INTSAFE_CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
@@ -1746,7 +1716,31 @@ __MINGW_INTSAFE_API HRESULT IntToChar(_In_ INT operand, _Out_ CHAR * result)
     return S_OK;
 }
 
-__MINGW_INTSAFE_API HRESULT LongToChar(_In_ LONG operand, _Out_ CHAR * result)
+__MINGW_INTSAFE_CHAR_API HRESULT UIntToChar(_In_ UINT operand, _Out_ CHAR * result)
+{
+    *result = 0;
+    if (operand > __MINGW_INTSAFE_CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    *result = operand;
+    return S_OK;
+}
+
+__MINGW_INTSAFE_CHAR_API HRESULT ULongToChar(_In_ ULONG operand, _Out_ CHAR * result)
+{
+    *result = 0;
+    if (operand > __MINGW_INTSAFE_CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    *result = operand;
+    return S_OK;
+}
+
+__MINGW_INTSAFE_CHAR_API HRESULT DWordToChar(_In_ DWORD operand, _Out_ CHAR * result)
+{
+    *result = 0;
+    if (operand > __MINGW_INTSAFE_CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    *result = operand;
+    return S_OK;
+}
+
+__MINGW_INTSAFE_CHAR_API HRESULT IntToChar(_In_ INT operand, _Out_ CHAR * result)
 {
     *result = 0;
     if (operand > __MINGW_INTSAFE_CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
@@ -1755,4 +1749,13 @@ __MINGW_INTSAFE_API HRESULT LongToChar(_In_ LONG operand, _Out_ CHAR * result)
     return S_OK;
 }
 
-/* TODO: add 253 missing functions */
+__MINGW_INTSAFE_CHAR_API HRESULT LongToChar(_In_ LONG operand, _Out_ CHAR * result)
+{
+    *result = 0;
+    if (operand > __MINGW_INTSAFE_CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (operand < __MINGW_INTSAFE_CHAR_MIN) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    *result = operand;
+    return S_OK;
+}
+
+/* TODO: add 60 missing functions */
