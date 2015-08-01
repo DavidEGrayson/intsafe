@@ -3,7 +3,7 @@ def add_function_name(type)
 end
 
 def sub_function_name(type)
-  "#{type.camel_name}Sub__" # TODO: fix
+  "#{type.camel_name}Sub"
 end
 
 def mult_function_name(type)
@@ -20,7 +20,7 @@ def write_add_function(cenv, type)
 
   ret = '__MINGW_INTSAFE_API HRESULT'
   args = "_In_ #{type} x, _In_ #{type} y, _Out_ #{type} * result"
-  write_function(cenv, func_name, args, ret) do |cenv|
+  write_function(cenv, func_name, args) do |cenv|
     cenv.puts "*result = 0;"
 
     if type.signed?
@@ -34,6 +34,29 @@ def write_add_function(cenv, type)
     cenv.puts "if (#{too_big}) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
     cenv.puts "if (#{too_small}) return INTSAFE_E_ARITHMETIC_OVERFLOW;" if too_small
     cenv.puts "*result = x + y;"
+    cenv.puts "return S_OK;"
+  end
+end
+
+def write_sub_function(cenv, type)
+  func_name = sub_function_name(type)
+  return if !function_body_needed?(func_name)
+
+  args = "_In_ #{type} x, _In_ #{type} y, _Out_ #{type} * result"
+  write_function(cenv, func_name, args) do |cenv|
+    cenv.puts "*result = 0;"
+
+    if type.signed?
+      too_big = "x >= 0 && y < x - #{type.max_str}"
+      too_small = "x < 0 && y > x - #{type.min_str}"
+    else
+      too_big = nil
+      too_small = "y > x"
+    end
+
+    cenv.puts "if (#{too_big}) return INTSAFE_E_ARITHMETIC_OVERFLOW;" if too_big
+    cenv.puts "if (#{too_small}) return INTSAFE_E_ARITHMETIC_OVERFLOW;" if too_small
+    cenv.puts "*result = x - y;"
     cenv.puts "return S_OK;"
   end
 end
@@ -58,7 +81,7 @@ end
 def write_math_functions(cenv)
   Types.each do |type|
     write_add_function(cenv, type)
-    # TODO: write_sub_function(type)
-    # TODO: write_mult_function(type)
+    write_sub_function(cenv, type)
+    # TODO: write_mult_function(cenv, type)
   end
 end

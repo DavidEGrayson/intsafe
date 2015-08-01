@@ -4,6 +4,10 @@
  * provides inline functions for safe integer conversions and math operations:
  *
  *     https://msdn.microsoft.com/en-us/library/windows/desktop/ff521693
+ *
+ * The full list of math functions is only available here:
+ *
+ *     https://msdn.microsoft.com/en-us/library/windows/desktop/ff521701
  */
 
 /* This file is free and unencumbered software released into the
