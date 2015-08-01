@@ -2,7 +2,7 @@ cd $(dirname $0)
 
 if [ -z "$VER" ]
 then
-    VER=proposed
+    VER=generated
 fi
 echo "intsafe version: $VER"
 

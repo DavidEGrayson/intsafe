@@ -219,13 +219,26 @@ def cenv_where_upper_check_needed(cenv, type_src, type_dest)
     raise 'comment above is wrong, this case did happen'
   when type_src.type_id == -PointerSizeDummy && type_dest.type_id == 4
     # On 64-bit systems, we need to do an upper check because signed
-    # pointers can be bigger than unsigned ints.  On 32-bit systems we
-    # don't need to do the check, and the code for the check would
-    # behave incorrectly because it would convert the upper boudn
-    # (UINT_MAX) from an unsigned int to a signed int, as described in
-    # Section 6.3.1.8 of the C standard (Usual arithmetic
-    # conversions).  Therefore we need an ifdef to only do the check
-    # when needed.
+    # pointers can be bigger than unsigned ints.
+    #
+    # On 32-bit systems we don't need to do the check, and the code
+    # for the check would behave incorrectly because it would convert
+    # the upper boudn (UINT_MAX) from an unsigned int to a signed int,
+    # as described in Section 6.3.1.8 of the C99.
+    #
+    # Therefore, we need an ifdef to only do the check when needed.
+    # Another possibility is a cast, but an ifdef is safer.
+    cenv.puts "#if #{type_src.max_str} > #{type_dest.max_str}"
+    yield cenv
+    cenv.puts "#endif"
+  when type_src.type_id == -8 && type_dest.type_id == PointerSizeDummy
+    # On 32-bit systems, an upper check is needed.
+    #
+    # On 64-bit systems, no upper check is necessary because a signed
+    # int64_t can never too large to be represented in a size_t
+    # (uint64_t).  Also, the check would produce bad code because
+    # of Section 6.3.1.8 of C99.  Therefore, we need an ifdef.
+
     cenv.puts "#if #{type_src.max_str} > #{type_dest.max_str}"
     yield cenv
     cenv.puts "#endif"

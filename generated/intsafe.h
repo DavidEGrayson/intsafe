@@ -229,7 +229,9 @@ __MINGW_INTSAFE_API HRESULT Int64ToULongLong(_In_ INT64 operand, _Out_ ULONGLONG
 __MINGW_INTSAFE_API HRESULT Int64ToSizeT(_In_ INT64 operand, _Out_ size_t * result)
 {
     *result = 0;
+    #if _I64_MAX > SIZE_MAX
     if (operand > SIZE_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    #endif
     if (operand < 0) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = operand;
     return S_OK;

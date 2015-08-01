@@ -5,7 +5,7 @@ cd `dirname $0`
 
 if [ -z "$VER" ]
 then
-    VER=proposed
+    VER=generated
 fi
 
 count=0
