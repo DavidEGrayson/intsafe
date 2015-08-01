@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdint.h>
 #include <wtypesbase.h>
 #include <limits.h>
 #include <sal.h>

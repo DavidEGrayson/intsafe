@@ -118,9 +118,9 @@ Types = [
   CNumberType['size_t', 'SizeT', PointerSizeDummy, 'SIZE_MAX', 0],  # not SIZE_T!
   CNumberType['DWORD_PTR', 'DWordPtr', PointerSizeDummy, 'SIZE_MAX', 0],
   CNumberType['ULONG_PTR', 'ULongPtr', PointerSizeDummy, 'SIZE_MAX', 0],
-  CNumberType['INT_PTR', 'IntPtr', -PointerSizeDummy, 'SSIZE_MAX', 'SSIZE_MIN'],
+  CNumberType['INT_PTR', 'IntPtr', -PointerSizeDummy, 'INTPTR_MAX', 'INTPTR_MIN'],
   CNumberType['LONG_PTR', 'LongPtr', -PointerSizeDummy, 'SSIZE_MAX', 'SSIZE_MIN'],
-  CNumberType['ptrdiff_t', 'PtrdiffT', -PointerSizeDummy, 'SSIZE_MAX', 'SSIZE_MIN'],
+  CNumberType['ptrdiff_t', 'PtrdiffT', -PointerSizeDummy, 'PTRDIFF_MAX', 'PTRDIFF_MIN'],
   CNumberType['SSIZE_T', 'SSIZET', -PointerSizeDummy, 'SSIZE_MAX', 'SSIZE_MIN'],
   CNumberType['ULONGLONG', 'ULongLong', 8, 'ULLONG_MAX', 0],
   CNumberType['INT64', 'Int64', -8, '_I64_MAX', '_I64_MIN'],
@@ -137,8 +137,7 @@ def write_type_assumptions(cenv)
   last_type = nil
   Types.chunk { |s| s.type_id.abs }.each do |size, types|
     if size == PointerSizeDummy
-      cenv.puts_ct_assert "sizeof(void *) >= 4"
-      cenv.puts_ct_assert "sizeof(void *) <= 8"
+      cenv.puts_ct_assert "sizeof(void *) == 4 || sizeof(void *) == 8"
     end
 
     next if types.size < 2
