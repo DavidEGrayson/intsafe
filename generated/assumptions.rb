@@ -42,14 +42,14 @@ def write_limit_assumptions(cenv)
     std_max_name = (type.signed? ? '' : 'U') + "INT#{bits}_MAX"
     std_min_name = (type.signed? ? '' : 'U') + "INT#{bits}_MIN"
 
-    if !tested.include?(type.max_str)
+    if type.max_str != '_' && !tested.include?(type.max_str)
       tested << type.max_str
       unless std_max_name == type.max_str
         cenv.puts_ct_assert "#{type.max_str} == #{std_max_name}"
       end
     end
 
-    if type.min_str != 0 && !tested.include?(type.min_str)
+    if type.min_str != '_' && type.min_str != 0 && !tested.include?(type.min_str)
       tested << type.max_str
       unless std_min_name == type.min_str
         cenv.puts_ct_assert "#{type.min_str} == #{std_min_name}"

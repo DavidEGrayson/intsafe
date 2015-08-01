@@ -614,7 +614,7 @@ __MINGW_INTSAFE_API HRESULT
 DWordPtrToInt64(_In_ DWORD_PTR operand, _Out_ INT64 * result)
 {
     *result = 0;
-    #if SIZE_MAX > _I64_MAX
+    #if UINTPTR_MAX > _I64_MAX
     if (operand > _I64_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     #endif
     *result = operand;
@@ -819,7 +819,7 @@ __MINGW_INTSAFE_API HRESULT
 ULongLongToDWordPtr(_In_ ULONGLONG operand, _Out_ DWORD_PTR * result)
 {
     *result = 0;
-    if (operand > SIZE_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (operand > UINTPTR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = operand;
     return S_OK;
 }
@@ -907,8 +907,8 @@ __MINGW_INTSAFE_API HRESULT
 Int64ToDWordPtr(_In_ INT64 operand, _Out_ DWORD_PTR * result)
 {
     *result = 0;
-    #if _I64_MAX > SIZE_MAX
-    if (operand > SIZE_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    #if _I64_MAX > UINTPTR_MAX
+    if (operand > UINTPTR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     #endif
     if (operand < 0) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = operand;
@@ -1102,7 +1102,7 @@ __MINGW_INTSAFE_API HRESULT
 DWordPtrAdd(_In_ DWORD_PTR x, _In_ DWORD_PTR y, _Out_ DWORD_PTR * result)
 {
     *result = 0;
-    if (y > SIZE_MAX - x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (y > UINTPTR_MAX - x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = x + y;
     return S_OK;
 }
@@ -1380,7 +1380,7 @@ __MINGW_INTSAFE_API HRESULT
 DWordPtrMult(_In_ DWORD_PTR x, _In_ DWORD_PTR y, _Out_ DWORD_PTR * result)
 {
     *result = 0;
-    if (y > 0 && x > SIZE_MAX / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (y > 0 && x > UINTPTR_MAX / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = x * y;
     return S_OK;
 }
