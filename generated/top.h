@@ -4,6 +4,8 @@
 #include <limits.h>
 #include <sal.h>
 
+#define INTSAFE_E_ARITHMETIC_OVERFLOW ((HRESULT)0x80070216L)
+
 #ifndef S_OK
 #define S_OK ((HRESULT)0)
 #endif
@@ -21,4 +23,3 @@
 #define __MINGW_INTSAFE_API inline
 #endif
 
-#define INTSAFE_E_ARITHMETIC_OVERFLOW ((HRESULT)0x80070216L)

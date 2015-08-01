@@ -114,7 +114,7 @@ Types = [
   CNumberType['DWORD', 'DWord', 4, 'ULONG_MAX', 0],
   CNumberType['INT', 'Int', -4, 'INT_MAX', 'INT_MIN'],
   CNumberType['LONG', 'Long', -4, 'LONG_MAX', 'LONG_MIN'],
-  CNumberType['UINT_PTR', 'UIntPtr', PointerSizeDummy, 'SIZE_MAX', 0],
+  CNumberType['UINT_PTR', 'UIntPtr', PointerSizeDummy, 'UINTPTR_MAX', 0],
   CNumberType['size_t', 'SizeT', PointerSizeDummy, 'SIZE_MAX', 0],  # not SIZE_T!
   CNumberType['DWORD_PTR', 'DWordPtr', PointerSizeDummy, 'SIZE_MAX', 0],
   CNumberType['ULONG_PTR', 'ULongPtr', PointerSizeDummy, 'SIZE_MAX', 0],
@@ -131,26 +131,21 @@ TypesByName = Types.each_with_object({}) { |type, h| h[type.name] = type }
 def write_type_assumptions(cenv)
   # Size assumptions.
 
-  cenv.puts_ct_assert "sizeof(UCHAR) == sizeof(signed char)"
-  cenv.puts_ct_assert "sizeof(UCHAR) == sizeof(CHAR)"
+  cenv.puts_ct_assert "1 == sizeof(signed char)"
+  cenv.puts_ct_assert "1 == sizeof(CHAR)"
 
   last_type = nil
   Types.chunk { |s| s.type_id.abs }.each do |size, types|
-    if size == 8
-      cenv.puts_ct_assert "sizeof(#{types[0]}) > sizeof(UINT)"
-    end
-
-    if last_type
-      strict = true
-      strict = false if last_type.type_id.abs == PointerSizeDummy
-      strict = false if size == PointerSizeDummy
-      comparison = strict ? '>' : '>='
-      cenv.puts_ct_assert "sizeof(#{types[0]}) #{comparison} sizeof(#{last_type})"
+    if size == PointerSizeDummy
+      cenv.puts_ct_assert "sizeof(void *) >= 4"
+      cenv.puts_ct_assert "sizeof(void *) <= 8"
     end
 
     next if types.size < 2
-    types[1...types.size].each do |type|
-      cenv.puts_ct_assert "sizeof(#{types[0]}) == sizeof(#{type})"
+    types.each do |type|
+      size_str = type.type_id.abs.to_s
+      size_str = 'sizeof(void *)' if size == PointerSizeDummy
+      cenv.puts_ct_assert "#{size_str} == sizeof(#{type})"
     end
 
     cenv.puts

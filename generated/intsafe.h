@@ -17,6 +17,8 @@
 #include <limits.h>
 #include <sal.h>
 
+#define INTSAFE_E_ARITHMETIC_OVERFLOW ((HRESULT)0x80070216L)
+
 #ifndef S_OK
 #define S_OK ((HRESULT)0)
 #endif
@@ -34,35 +36,36 @@
 #define __MINGW_INTSAFE_API inline
 #endif
 
-#define INTSAFE_E_ARITHMETIC_OVERFLOW ((HRESULT)0x80070216L)
 
-C_ASSERT(sizeof(UCHAR) == sizeof(signed char));
-C_ASSERT(sizeof(UCHAR) == sizeof(CHAR));
-C_ASSERT(sizeof(UCHAR) == sizeof(INT8));
-C_ASSERT(sizeof(UCHAR) == sizeof(BYTE));
+C_ASSERT(1 == sizeof(signed char));
+C_ASSERT(1 == sizeof(CHAR));
+C_ASSERT(1 == sizeof(UCHAR));
+C_ASSERT(1 == sizeof(INT8));
+C_ASSERT(1 == sizeof(BYTE));
 
-C_ASSERT(sizeof(USHORT) > sizeof(UCHAR));
-C_ASSERT(sizeof(USHORT) == sizeof(WORD));
-C_ASSERT(sizeof(USHORT) == sizeof(SHORT));
+C_ASSERT(2 == sizeof(USHORT));
+C_ASSERT(2 == sizeof(WORD));
+C_ASSERT(2 == sizeof(SHORT));
 
-C_ASSERT(sizeof(UINT) > sizeof(USHORT));
-C_ASSERT(sizeof(UINT) == sizeof(ULONG));
-C_ASSERT(sizeof(UINT) == sizeof(DWORD));
-C_ASSERT(sizeof(UINT) == sizeof(INT));
-C_ASSERT(sizeof(UINT) == sizeof(LONG));
+C_ASSERT(4 == sizeof(UINT));
+C_ASSERT(4 == sizeof(ULONG));
+C_ASSERT(4 == sizeof(DWORD));
+C_ASSERT(4 == sizeof(INT));
+C_ASSERT(4 == sizeof(LONG));
 
-C_ASSERT(sizeof(UINT_PTR) >= sizeof(UINT));
-C_ASSERT(sizeof(UINT_PTR) == sizeof(size_t));
-C_ASSERT(sizeof(UINT_PTR) == sizeof(DWORD_PTR));
-C_ASSERT(sizeof(UINT_PTR) == sizeof(ULONG_PTR));
-C_ASSERT(sizeof(UINT_PTR) == sizeof(INT_PTR));
-C_ASSERT(sizeof(UINT_PTR) == sizeof(LONG_PTR));
-C_ASSERT(sizeof(UINT_PTR) == sizeof(ptrdiff_t));
-C_ASSERT(sizeof(UINT_PTR) == sizeof(SSIZE_T));
+C_ASSERT(sizeof(void *) >= 4);
+C_ASSERT(sizeof(void *) <= 8);
+C_ASSERT(sizeof(void *) == sizeof(UINT_PTR));
+C_ASSERT(sizeof(void *) == sizeof(size_t));
+C_ASSERT(sizeof(void *) == sizeof(DWORD_PTR));
+C_ASSERT(sizeof(void *) == sizeof(ULONG_PTR));
+C_ASSERT(sizeof(void *) == sizeof(INT_PTR));
+C_ASSERT(sizeof(void *) == sizeof(LONG_PTR));
+C_ASSERT(sizeof(void *) == sizeof(ptrdiff_t));
+C_ASSERT(sizeof(void *) == sizeof(SSIZE_T));
 
-C_ASSERT(sizeof(ULONGLONG) > sizeof(UINT));
-C_ASSERT(sizeof(ULONGLONG) >= sizeof(UINT_PTR));
-C_ASSERT(sizeof(ULONGLONG) == sizeof(INT64));
+C_ASSERT(8 == sizeof(ULONGLONG));
+C_ASSERT(8 == sizeof(INT64));
 
 __MINGW_INTSAFE_API HRESULT UShortToUChar(_In_ USHORT operand, _Out_ UCHAR * result)
 {
