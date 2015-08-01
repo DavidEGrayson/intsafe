@@ -1,10 +1,5 @@
 def conversion_function_name(type1, type2)
-  func_name = "#{type1.camel_name}To#{type2.camel_name}"
-  if ApiFunctionNames.include?(func_name)
-    func_name
-  else
-    '!!!'
-  end
+  "#{type1.camel_name}To#{type2.camel_name}"
 end
 
 def calculate_conversion_function_alias(type1, type2)
@@ -174,7 +169,7 @@ end
 
 def write_conversion_to_char(cenv, type)
   func_name = "#{type.camel_name}ToChar"
-  return if !ApiFunctionNames.include?(func_name) || FunctionAliases.include?(func_name)
+  return if !function_body_needed?(func_name)
   ret = '__MINGW_INTSAFE_CHAR_API HRESULT'
   args = "_In_ #{type} operand, _Out_ CHAR * result"
   write_function(cenv, func_name, args, ret) do |cenv|

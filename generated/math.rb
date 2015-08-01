@@ -15,7 +15,10 @@ def math_function_names(type)
 end
 
 def write_add_function(type)
+  func_name = add_function_name(type)
+  return if !function_body_needed?(func_name)
 
+  
 end
 
 def calculate_math_function_aliases
