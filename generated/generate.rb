@@ -160,7 +160,7 @@ def write_conversion_function(cenv, type_src, type_dest)
     # destination type is unsigned, and the check is unnecessary.
     unless type_src.signed? && type_dest.unsigned? && type_dest.type_id >= -type_src.type_id
       cenv.puts "#if #{type_src.max_str} > #{type_dest.max_str}"
-      cenv.puts "if (operand > (#{type_src})#{type_dest.max_str}) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
+      cenv.puts "if (operand > #{cast}#{type_dest.max_str}) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
       cenv.puts "#endif"
     end
 
