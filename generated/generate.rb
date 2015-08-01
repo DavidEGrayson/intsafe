@@ -104,8 +104,8 @@ PointerSizeDummy = 7
 
 Types = [
   CNumberType['UCHAR', 'UChar', 1, 'UCHAR_MAX', 0],
-  CNumberType['INT8', 'Int8', -1, 'SCHAR_MAX', 'SCHAR_MIN'],  # special type
   CNumberType['BYTE', 'Byte', 1, 'UCHAR_MAX', 0],
+  CNumberType['INT8', 'Int8', -1, 'SCHAR_MAX', 'SCHAR_MIN'],  # special type
   CNumberType['USHORT', 'UShort', 2, 'USHRT_MAX', 0],
   CNumberType['WORD', 'Word', 2, 'USHRT_MAX', 0],
   CNumberType['SHORT', 'Short', -2, 'SHRT_MAX', 'SHRT_MIN'],
@@ -119,14 +119,24 @@ Types = [
   CNumberType['DWORD_PTR', 'DWordPtr', PointerSizeDummy, 'SIZE_MAX', 0],
   CNumberType['ULONG_PTR', 'ULongPtr', PointerSizeDummy, 'SIZE_MAX', 0],
   CNumberType['INT_PTR', 'IntPtr', -PointerSizeDummy, 'INTPTR_MAX', 'INTPTR_MIN'],
-  CNumberType['LONG_PTR', 'LongPtr', -PointerSizeDummy, 'SSIZE_MAX', 'SSIZE_MIN'],
   CNumberType['ptrdiff_t', 'PtrdiffT', -PointerSizeDummy, 'PTRDIFF_MAX', 'PTRDIFF_MIN'],
   CNumberType['SSIZE_T', 'SSIZET', -PointerSizeDummy, 'SSIZE_MAX', 'SSIZE_MIN'],
+  CNumberType['LONG_PTR', 'LongPtr', -PointerSizeDummy, 'SSIZE_MAX', 'SSIZE_MIN'],
   CNumberType['ULONGLONG', 'ULongLong', 8, 'ULLONG_MAX', 0],
   CNumberType['INT64', 'Int64', -8, '_I64_MAX', '_I64_MIN'],
 ]
 
 TypesByName = Types.each_with_object({}) { |type, h| h[type.name] = type }
+
+EquivalentTypes = [
+  %w(UCHAR BYTE),
+  %w(USHORT WORD),
+  %w(ULONG DWORD),
+  %w(UINT_PTR size_t),
+  %w(DWORD_PTR ULONG_PTR),
+  %w(INT_PTR ptrdiff_t),
+  %w(SSIZE_T LONG_PTR),
+]
 
 def write_size_assumptions(cenv)
   cenv.puts_ct_assert "1 == sizeof(signed char)"
@@ -184,10 +194,22 @@ def write_limit_assumptions(cenv)
   cenv.puts
 end
 
+def write_compatibility_assumptions(cenv)
+  cenv.puts "#ifndef __cplusplus"
+  EquivalentTypes.each do |types|
+    types[1...types.size].each do |type|
+      cenv.puts_ct_assert "__builtin_types_compatible_p(#{types[0]}, #{type})"
+    end
+  end
+  cenv.puts "#endif"
+  cenv.puts
+end
+
 def write_type_assumptions(cenv)
   write_size_assumptions(cenv)
   write_sign_assumptions(cenv)
   write_limit_assumptions(cenv)
+  write_compatibility_assumptions(cenv)
 end
 
 def conversion_function_name(type1, type2)
