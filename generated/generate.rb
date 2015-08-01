@@ -128,19 +128,15 @@ Types = [
 
 TypesByName = Types.each_with_object({}) { |type, h| h[type.name] = type }
 
-def write_type_assumptions(cenv)
-  # Size assumptions.
-
+def write_size_assumptions(cenv)
   cenv.puts_ct_assert "1 == sizeof(signed char)"
   cenv.puts_ct_assert "1 == sizeof(CHAR)"
 
-  last_type = nil
   Types.chunk { |s| s.type_id.abs }.each do |size, types|
     if size == PointerSizeDummy
       cenv.puts_ct_assert "sizeof(void *) == 4 || sizeof(void *) == 8"
     end
 
-    next if types.size < 2
     types.each do |type|
       size_str = type.type_id.abs.to_s
       size_str = 'sizeof(void *)' if size == PointerSizeDummy
@@ -148,9 +144,46 @@ def write_type_assumptions(cenv)
     end
 
     cenv.puts
-
-    last_type = types[0]
   end
+end
+
+def write_sign_assumptions(cenv)
+  types_grouped_by_signedness = Types.sort_by { |t| [t.signed? ? 0 : 1, Types.index(t)] }
+  types_grouped_by_signedness.each do |type|
+    if type.signed?
+      cenv.puts_ct_assert "(#{type})-1 < 0"
+    else
+      cenv.puts_ct_assert "(#{type})-1 > 0"
+    end
+  end
+  cenv.puts
+end
+
+def write_limit_assumptions(cenv)
+  tested = []
+  Types.each do |type|
+    bits = type.type_id.abs * 8
+    bits = 'PTR' if bits == PointerSizeDummy * 8
+    std_max_name = (type.signed? ? '' : 'U') + "INT#{bits}_MAX"
+    std_min_name = (type.signed? ? '' : 'U') + "INT#{bits}_MIN"
+
+    if !tested.include?(type.max_str)
+      tested << type.max_str
+      cenv.puts_ct_assert "#{std_max_name} == #{type.max_str}"
+    end
+
+    if type.min_str != 0 && !tested.include?(type.min_str)
+      tested << type.max_str
+      cenv.puts_ct_assert "#{std_min_name} == #{type.min_str}"
+    end
+  end
+  cenv.puts
+end
+
+def write_type_assumptions(cenv)
+  write_size_assumptions(cenv)
+  write_sign_assumptions(cenv)
+  write_limit_assumptions(cenv)
 end
 
 def conversion_function_name(type1, type2)
