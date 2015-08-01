@@ -137,12 +137,6 @@ def EquivalentTypes.for_type(type)
   names.map { |n| TypesByName.fetch(n) }
 end
 
-def calculate_function_aliases
-  calculate_conversion_function_aliases
-end
-
-FunctionAliases = calculate_function_aliases
-
 def write_function_aliases(cenv)
   FunctionAliases.each do |api_func_name, real_name|
     GeneratedFunctions << api_func_name
@@ -177,6 +171,12 @@ def write_top(cenv)
   cenv.puts File.read('top.h')
   cenv.puts
 end
+
+def calculate_function_aliases
+  calculate_conversion_function_aliases
+end
+
+FunctionAliases = calculate_function_aliases
 
 CEnv.write_file('intsafe.h') do |cenv|
   write_top(cenv)
