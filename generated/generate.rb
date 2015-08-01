@@ -200,32 +200,38 @@ end
 # the possibilities incarnations that each type has.
 def cenv_where_upper_check_needed(cenv, type_src, type_dest)
   case
-  when type_src.more_bytes_than?(type_dest)
-    # On every system we care about, the source type has more bytes,
-    # so do the comparison.
-    yield cenv
   when type_dest.more_bytes_than?(type_src)
     # On every system we care about, the destination type has more
-    # bytes, so skip the comparison by emit a preprocessor-checked
+    # bytes, so skip the comparison but emit a preprocessor-checked
     # assumption.
     assume_max_not_greater(type_src, type_dest)
-  when type_src.signed? == type_dest.signed?
-    # The two types have the same signedness so lets compare them.
-    # This might be unnecessary in some cases, but that will be caught
-    # by the optimizer.  You might think we could do better by adding
-    # '&& !type_dest.as_many_bytes_as?(type_src)' to the condition
-    # above, but that makes no difference.
-    yield cenv
   when type_dest.unsigned? && type_dest.as_many_bytes_as?(type_src)
     # We shouldn't need an upper comparison because the destination
     # type is unsigned and guaranteed to have at least as many bytes
     # as the source type.  Explicitly record this assumption and test
     # it using the preprocessor.
     assume_max_not_greater(type_src, type_dest)
-  else
+  when type_src.signed? == type_dest.signed? && type_dest.as_many_bytes_as?(type_src)
+    # If the two types have equal signs and the destination is big
+    # enough, we could skip the comparison.  This case never actually
+    # comes up due to the cases above and the set of functions we
+    # implement.
+    raise 'comment above is wrong, this case did happen'
+  when type_src.type_id == -PointerSizeDummy && type_dest.type_id == 4
+    # On 64-bit systems, we need to do an upper check because signed
+    # pointers can be bigger than unsigned ints.  On 32-bit systems we
+    # don't need to do the check, and the code for the check would
+    # behave incorrectly because it would convert the upper boudn
+    # (UINT_MAX) from an unsigned int to a signed int, as described in
+    # Section 6.3.1.8 of the C standard (Usual arithmetic
+    # conversions).  Therefore we need an ifdef to only do the check
+    # when needed.
     cenv.puts "#if #{type_src.max_str} > #{type_dest.max_str}"
     yield cenv
     cenv.puts "#endif"
+  else
+    # Do the comparison.
+    yield cenv
   end
 end
 
