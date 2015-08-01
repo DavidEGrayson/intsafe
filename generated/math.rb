@@ -64,7 +64,6 @@ def write_mult_function(cenv, type)
   func_name = mult_function_name(type)
   return if !function_body_needed?(func_name)
 
-  FunctionAliases.each_key { |k| FunctionAliases.delete(k) if k.end_with? 'Mult' } # tmphax
   return if type.signed?  # tmphax
 
   args = "_In_ #{type} x, _In_ #{type} y, _Out_ #{type} * result"
@@ -75,7 +74,9 @@ def write_mult_function(cenv, type)
       too_big = nil
       too_small = nil
     else
-      too_big = "y > 0 && x > #{type.max_str} / y"  # TODO: surely this isn't good enough
+      # With unsigned types in C, max/y is the biggest number q such that q*y <= max.
+      # Therefore, q*y is fine but (q + 1) * y would overflow.
+      too_big = "y > 0 && x > #{type.max_str} / y"
       too_small = nil
     end
 

@@ -1101,14 +1101,6 @@ __MINGW_INTSAFE_API HRESULT UShortMult(_In_ USHORT x, _In_ USHORT y, _Out_ USHOR
     return S_OK;
 }
 
-__MINGW_INTSAFE_API HRESULT WordMult(_In_ WORD x, _In_ WORD y, _Out_ WORD * result)
-{
-    *result = 0;
-    if (y > 0 && x > USHRT_MAX / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    *result = x * y;
-    return S_OK;
-}
-
 __MINGW_INTSAFE_API HRESULT UIntMult(_In_ UINT x, _In_ UINT y, _Out_ UINT * result)
 {
     *result = 0;
@@ -1125,14 +1117,6 @@ __MINGW_INTSAFE_API HRESULT ULongMult(_In_ ULONG x, _In_ ULONG y, _Out_ ULONG * 
     return S_OK;
 }
 
-__MINGW_INTSAFE_API HRESULT DWordMult(_In_ DWORD x, _In_ DWORD y, _Out_ DWORD * result)
-{
-    *result = 0;
-    if (y > 0 && x > ULONG_MAX / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    *result = x * y;
-    return S_OK;
-}
-
 __MINGW_INTSAFE_API HRESULT UIntPtrMult(_In_ UINT_PTR x, _In_ UINT_PTR y, _Out_ UINT_PTR * result)
 {
     *result = 0;
@@ -1141,23 +1125,7 @@ __MINGW_INTSAFE_API HRESULT UIntPtrMult(_In_ UINT_PTR x, _In_ UINT_PTR y, _Out_ 
     return S_OK;
 }
 
-__MINGW_INTSAFE_API HRESULT SizeTMult(_In_ size_t x, _In_ size_t y, _Out_ size_t * result)
-{
-    *result = 0;
-    if (y > 0 && x > SIZE_MAX / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    *result = x * y;
-    return S_OK;
-}
-
 __MINGW_INTSAFE_API HRESULT DWordPtrMult(_In_ DWORD_PTR x, _In_ DWORD_PTR y, _Out_ DWORD_PTR * result)
-{
-    *result = 0;
-    if (y > 0 && x > SIZE_MAX / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    *result = x * y;
-    return S_OK;
-}
-
-__MINGW_INTSAFE_API HRESULT ULongPtrMult(_In_ ULONG_PTR x, _In_ ULONG_PTR y, _Out_ ULONG_PTR * result)
 {
     *result = 0;
     if (y > 0 && x > SIZE_MAX / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
@@ -1276,12 +1244,16 @@ __MINGW_INTSAFE_API HRESULT ULongLongMult(_In_ ULONGLONG x, _In_ ULONGLONG y, _O
 #define Int64ToLongPtr Int64ToSSIZET
 #define WordAdd UShortAdd
 #define WordSub UShortSub
+#define WordMult UShortMult
 #define DWordAdd ULongAdd
 #define DWordSub ULongSub
+#define DWordMult ULongMult
 #define SizeTAdd UIntPtrAdd
 #define SizeTSub UIntPtrSub
+#define SizeTMult UIntPtrMult
 #define ULongPtrAdd DWordPtrAdd
 #define ULongPtrSub DWordPtrSub
+#define ULongPtrMult DWordPtrMult
 #define PtrdiffTAdd IntPtrAdd
 #define PtrdiffTSub IntPtrSub
 #define LongPtrAdd SSIZETAdd

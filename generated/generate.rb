@@ -140,8 +140,10 @@ end
 
 def write_function_aliases(cenv)
   FunctionAliases.each do |api_func_name, real_name|
-    GeneratedFunctions << api_func_name
-    cenv.puts "#define #{api_func_name} #{real_name}"
+    if GeneratedFunctions.include? real_name
+      GeneratedFunctions << api_func_name
+      cenv.puts "#define #{api_func_name} #{real_name}"
+    end
   end
   cenv.puts
 end
