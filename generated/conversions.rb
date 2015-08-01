@@ -171,14 +171,14 @@ If CHAR is unsigned, use different symbol names.
 The avoids the risk of linking to the wrong function when different
 translation units with different types of chars are linked together.
 END
-
+  cenv.puts "#ifdef __CHAR_UNSIGNED__"
   Types.each do |type|
     if conversion_function_needed?(type, char_type)
       api_name = conversion_function_name(type, char_type)
       cenv.puts "#define #{api_name} __mingw_intsafe_uchar_#{api_name}"
     end
   end
-  cenv.puts
+  cenv.puts "#endif"
 end
 
 def write_conversion_to_char(cenv, type)
@@ -198,9 +198,10 @@ def write_conversion_to_char(cenv, type)
 end
 
 def write_char_conversions(cenv)
-  cenv.puts "#ifdef __CHAR_UNSIGNED__"
   write_unsigned_char_aliases(cenv, UnsignedCharType)
+  cenv.puts
   cenv.puts_comment 'this logic should be moved to limits.h'
+  cenv.puts "#ifdef __CHAR_UNSIGNED__"
   cenv.puts "#define __MINGW_INTSAFE_CHAR_MIN 0"
   cenv.puts "#define __MINGW_INTSAFE_CHAR_MAX 0xff"
   cenv.puts "#else"

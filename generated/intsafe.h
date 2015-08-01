@@ -822,18 +822,20 @@ __MINGW_INTSAFE_API HRESULT Int64ToULongLong(_In_ INT64 operand, _Out_ ULONGLONG
     return S_OK;
 }
 
-#ifdef __CHAR_UNSIGNED__
 /* If CHAR is unsigned, use different symbol names.
 The avoids the risk of linking to the wrong function when different
 translation units with different types of chars are linked together. */
+#ifdef __CHAR_UNSIGNED__
 #define UShortToChar __mingw_intsafe_uchar_UShortToChar
 #define ShortToChar __mingw_intsafe_uchar_ShortToChar
 #define UIntToChar __mingw_intsafe_uchar_UIntToChar
 #define ULongToChar __mingw_intsafe_uchar_ULongToChar
 #define IntToChar __mingw_intsafe_uchar_IntToChar
 #define LongToChar __mingw_intsafe_uchar_LongToChar
+#endif
 
 /* this logic should be moved to limits.h */
+#ifdef __CHAR_UNSIGNED__
 #define __MINGW_INTSAFE_CHAR_MIN 0
 #define __MINGW_INTSAFE_CHAR_MAX 0xff
 #else
