@@ -98,11 +98,15 @@ PointerSizeDummy = 7
 SignedCharType = CNumberType['CHAR', 'Char', -1, 'SCHAR_MAX', 'SCHAR_MIN']
 UnsignedCharType = CNumberType['CHAR', 'Char', 1, 'UCHAR_MAX', 0]
 
+# The underscores in the table below represent gaps in the max/min
+# macros available to us.  We avoid ever actually emitting those
+# underscores because all the types using them are equivalent to types
+# without underscores, so function aliases are created.
 Types = [
   CNumberType['UCHAR', 'UChar', 1, 'UCHAR_MAX', 0],
   CNumberType['INT8', 'Int8', -1, 'INT8_MAX', 'INT8_MIN'],
   CNumberType['UINT8', 'UInt8', 1, 'UINT8_MAX', 0],
-  CNumberType['BYTE', 'Byte', 1, 'UINT8_MAX', 0],
+  CNumberType['BYTE', 'Byte', 1, '_', 0],
   CNumberType['USHORT', 'UShort', 2, 'USHRT_MAX', 0],
   CNumberType['WORD', 'Word', 2, '_', 0],
   CNumberType['SHORT', 'Short', -2, 'SHRT_MAX', 'SHRT_MIN'],
