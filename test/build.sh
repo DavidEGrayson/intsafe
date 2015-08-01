@@ -14,6 +14,12 @@ sh grepcheck.sh
 echo "Generating tests"
 ruby generate.rb
 
+# To test using clang, edit the script below:
+# - change -O1 to -O3
+# - add -fsanitized=undefined
+# - change "g++" and "gcc" to "clang"
+# - comment out things that don't work (c++ didn't work for me)
+
 # We add -O1 to avoid getting undefined reference errors for the
 # inline functions without optimizations.  This should probably be fixed.
 # Some day, we should add -fsanitize=undefined here.
@@ -26,7 +32,7 @@ test_config () {
   else
     compiler="gcc -x c --std=gnu99"
   fi
-  $compiler $CARGS ${extra_args} -o run_test
+  $compiler $CARGS ${extra_args} -o run_test.exe
   ./run_test
 }
 
