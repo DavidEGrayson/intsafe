@@ -235,6 +235,25 @@ def cenv_where_upper_check_needed(cenv, type_src, type_dest)
   end
 end
 
+# Yields zero or more C environments to the caller where we definitely
+# need to do a lower bound check because it is possible that a value
+# of type type_src is too big to be represented in type_dest.  We
+# generate such environments either using ifdefs or our knowledge of
+# the possibilities incarnations that each type has.
+def cenv_where_lower_check_needed(cenv, type_src, type_dest)
+  case
+  when type_src.unsigned?
+    # The source is unsigned, so it can't be less than 0, so it will
+    # never be too small.
+  when type_src.signed? && type_dest.signed? && type_dest.as_many_bytes_as?(type_src)
+    # We could skip the check if this case ever happened, but it does not.
+    raise 'the comment above is wrong'
+  else
+    # Otherwise perform the check.
+    yield cenv
+  end
+end
+
 def write_conversion_function(cenv, type_src, type_dest)
   func_name = conversion_function_name(type_src, type_dest)
   args = "_In_ #{type_src} operand, _Out_ #{type_dest} * result"
@@ -247,12 +266,10 @@ def write_conversion_function(cenv, type_src, type_dest)
       cenv.puts "if (operand > #{type_dest.max_str}) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
     end
 
-    # Suppress this check if the source type is unsigned because:
-    #   1) It is never needed when the source type is unsigned.
-    #   2) It causes a warnings about unsigned/signed comparison.
-    if type_src.signed?
+    cenv_where_lower_check_needed(cenv, type_src, type_dest) do |cenv|
       cenv.puts "if (operand < #{type_dest.min_str}) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
     end
+
     cenv.puts "*result = operand;"
     cenv.puts "return S_OK;"
   end
