@@ -117,8 +117,8 @@ Types = [
   CNumberType['ULONG_PTR', 'ULongPtr', PointerSizeDummy, '_', 0],
   CNumberType['INT_PTR', 'IntPtr', -PointerSizeDummy, 'INTPTR_MAX', 'INTPTR_MIN'],
   CNumberType['ptrdiff_t', 'PtrdiffT', -PointerSizeDummy, 'PTRDIFF_MAX', 'PTRDIFF_MIN'],
-  CNumberType['SSIZE_T', 'SSIZET', -PointerSizeDummy, 'SSIZE_MAX', 'INTPTR_MIN'],
   CNumberType['LONG_PTR', 'LongPtr', -PointerSizeDummy, 'INTPTR_MAX', 'INTPTR_MIN'],
+  CNumberType['SSIZE_T', 'SSIZET', -PointerSizeDummy, 'SSIZE_MAX', '_'],
   CNumberType['ULONGLONG', 'ULongLong', 8, 'ULLONG_MAX', 0],
   CNumberType['INT64', 'Int64', -8, '_I64_MAX', '_I64_MIN'],
   CNumberType['LONGLONG', 'LongLong', -8, 'LLONG_MAX', 'LLONG_MIN'],
@@ -133,7 +133,7 @@ EquivalentTypes = [
   %w(UINT_PTR size_t),
   %w(DWORD_PTR ULONG_PTR),
   %w(INT_PTR ptrdiff_t),
-  %w(SSIZE_T LONG_PTR),
+  %w(LONG_PTR SSIZE_T),
   %w(INT64 LONGLONG)
 ]
 

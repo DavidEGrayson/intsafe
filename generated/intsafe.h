@@ -67,8 +67,8 @@ C_ASSERT(sizeof(void *) == sizeof(DWORD_PTR));
 C_ASSERT(sizeof(void *) == sizeof(ULONG_PTR));
 C_ASSERT(sizeof(void *) == sizeof(INT_PTR));
 C_ASSERT(sizeof(void *) == sizeof(ptrdiff_t));
-C_ASSERT(sizeof(void *) == sizeof(SSIZE_T));
 C_ASSERT(sizeof(void *) == sizeof(LONG_PTR));
+C_ASSERT(sizeof(void *) == sizeof(SSIZE_T));
 
 C_ASSERT(8 == sizeof(ULONGLONG));
 C_ASSERT(8 == sizeof(INT64));
@@ -85,8 +85,8 @@ C_ASSERT((INT)-1 < 0);
 C_ASSERT((LONG)-1 < 0);
 C_ASSERT((INT_PTR)-1 < 0);
 C_ASSERT((ptrdiff_t)-1 < 0);
-C_ASSERT((SSIZE_T)-1 < 0);
 C_ASSERT((LONG_PTR)-1 < 0);
+C_ASSERT((SSIZE_T)-1 < 0);
 C_ASSERT((INT64)-1 < 0);
 C_ASSERT((LONGLONG)-1 < 0);
 C_ASSERT((UCHAR)-1 > 0);
@@ -131,7 +131,7 @@ C_ASSERT(__builtin_types_compatible_p(ULONG, DWORD));
 C_ASSERT(__builtin_types_compatible_p(UINT_PTR, size_t));
 C_ASSERT(__builtin_types_compatible_p(DWORD_PTR, ULONG_PTR));
 C_ASSERT(__builtin_types_compatible_p(INT_PTR, ptrdiff_t));
-C_ASSERT(__builtin_types_compatible_p(SSIZE_T, LONG_PTR));
+C_ASSERT(__builtin_types_compatible_p(LONG_PTR, SSIZE_T));
 C_ASSERT(__builtin_types_compatible_p(INT64, LONGLONG));
 #endif
 
@@ -229,11 +229,11 @@ UIntToIntPtr(_In_ UINT operand, _Out_ INT_PTR * result)
 }
 
 __MINGW_INTSAFE_API HRESULT
-UIntToSSIZET(_In_ UINT operand, _Out_ SSIZE_T * result)
+UIntToLongPtr(_In_ UINT operand, _Out_ LONG_PTR * result)
 {
     *result = 0;
-    #if UINT_MAX > SSIZE_MAX
-    if (operand > SSIZE_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    #if UINT_MAX > INTPTR_MAX
+    if (operand > INTPTR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     #endif
     *result = operand;
     return S_OK;
@@ -310,11 +310,11 @@ ULongToIntPtr(_In_ ULONG operand, _Out_ INT_PTR * result)
 }
 
 __MINGW_INTSAFE_API HRESULT
-ULongToSSIZET(_In_ ULONG operand, _Out_ SSIZE_T * result)
+ULongToLongPtr(_In_ ULONG operand, _Out_ LONG_PTR * result)
 {
     *result = 0;
-    #if ULONG_MAX > SSIZE_MAX
-    if (operand > SSIZE_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    #if ULONG_MAX > INTPTR_MAX
+    if (operand > INTPTR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     #endif
     *result = operand;
     return S_OK;
@@ -530,10 +530,10 @@ UIntPtrToIntPtr(_In_ UINT_PTR operand, _Out_ INT_PTR * result)
 }
 
 __MINGW_INTSAFE_API HRESULT
-UIntPtrToSSIZET(_In_ UINT_PTR operand, _Out_ SSIZE_T * result)
+UIntPtrToLongPtr(_In_ UINT_PTR operand, _Out_ LONG_PTR * result)
 {
     *result = 0;
-    if (operand > SSIZE_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (operand > INTPTR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = operand;
     return S_OK;
 }
@@ -602,10 +602,10 @@ DWordPtrToIntPtr(_In_ DWORD_PTR operand, _Out_ INT_PTR * result)
 }
 
 __MINGW_INTSAFE_API HRESULT
-DWordPtrToSSIZET(_In_ DWORD_PTR operand, _Out_ SSIZE_T * result)
+DWordPtrToLongPtr(_In_ DWORD_PTR operand, _Out_ LONG_PTR * result)
 {
     *result = 0;
-    if (operand > SSIZE_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (operand > INTPTR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = operand;
     return S_OK;
 }
@@ -693,10 +693,10 @@ IntPtrToULongLong(_In_ INT_PTR operand, _Out_ ULONGLONG * result)
 }
 
 __MINGW_INTSAFE_API HRESULT
-SSIZETToUInt(_In_ SSIZE_T operand, _Out_ UINT * result)
+LongPtrToUInt(_In_ LONG_PTR operand, _Out_ UINT * result)
 {
     *result = 0;
-    #if SSIZE_MAX > UINT_MAX
+    #if INTPTR_MAX > UINT_MAX
     if (operand > UINT_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     #endif
     if (operand < 0) return INTSAFE_E_ARITHMETIC_OVERFLOW;
@@ -705,10 +705,10 @@ SSIZETToUInt(_In_ SSIZE_T operand, _Out_ UINT * result)
 }
 
 __MINGW_INTSAFE_API HRESULT
-SSIZETToULong(_In_ SSIZE_T operand, _Out_ ULONG * result)
+LongPtrToULong(_In_ LONG_PTR operand, _Out_ ULONG * result)
 {
     *result = 0;
-    #if SSIZE_MAX > ULONG_MAX
+    #if INTPTR_MAX > ULONG_MAX
     if (operand > ULONG_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     #endif
     if (operand < 0) return INTSAFE_E_ARITHMETIC_OVERFLOW;
@@ -717,7 +717,7 @@ SSIZETToULong(_In_ SSIZE_T operand, _Out_ ULONG * result)
 }
 
 __MINGW_INTSAFE_API HRESULT
-SSIZETToInt(_In_ SSIZE_T operand, _Out_ INT * result)
+LongPtrToInt(_In_ LONG_PTR operand, _Out_ INT * result)
 {
     *result = 0;
     if (operand > INT_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
@@ -727,7 +727,7 @@ SSIZETToInt(_In_ SSIZE_T operand, _Out_ INT * result)
 }
 
 __MINGW_INTSAFE_API HRESULT
-SSIZETToLong(_In_ SSIZE_T operand, _Out_ LONG * result)
+LongPtrToLong(_In_ LONG_PTR operand, _Out_ LONG * result)
 {
     *result = 0;
     if (operand > LONG_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
@@ -737,7 +737,7 @@ SSIZETToLong(_In_ SSIZE_T operand, _Out_ LONG * result)
 }
 
 __MINGW_INTSAFE_API HRESULT
-SSIZETToUIntPtr(_In_ SSIZE_T operand, _Out_ UINT_PTR * result)
+LongPtrToUIntPtr(_In_ LONG_PTR operand, _Out_ UINT_PTR * result)
 {
     *result = 0;
     if (operand < 0) return INTSAFE_E_ARITHMETIC_OVERFLOW;
@@ -746,7 +746,7 @@ SSIZETToUIntPtr(_In_ SSIZE_T operand, _Out_ UINT_PTR * result)
 }
 
 __MINGW_INTSAFE_API HRESULT
-SSIZETToDWordPtr(_In_ SSIZE_T operand, _Out_ DWORD_PTR * result)
+LongPtrToDWordPtr(_In_ LONG_PTR operand, _Out_ DWORD_PTR * result)
 {
     *result = 0;
     if (operand < 0) return INTSAFE_E_ARITHMETIC_OVERFLOW;
@@ -755,7 +755,7 @@ SSIZETToDWordPtr(_In_ SSIZE_T operand, _Out_ DWORD_PTR * result)
 }
 
 __MINGW_INTSAFE_API HRESULT
-SSIZETToIntPtr(_In_ SSIZE_T operand, _Out_ INT_PTR * result)
+LongPtrToIntPtr(_In_ LONG_PTR operand, _Out_ INT_PTR * result)
 {
     *result = operand;
     return S_OK;
@@ -834,10 +834,10 @@ ULongLongToIntPtr(_In_ ULONGLONG operand, _Out_ INT_PTR * result)
 }
 
 __MINGW_INTSAFE_API HRESULT
-ULongLongToSSIZET(_In_ ULONGLONG operand, _Out_ SSIZE_T * result)
+ULongLongToLongPtr(_In_ ULONGLONG operand, _Out_ LONG_PTR * result)
 {
     *result = 0;
-    if (operand > SSIZE_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (operand > INTPTR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = operand;
     return S_OK;
 }
@@ -926,10 +926,10 @@ Int64ToIntPtr(_In_ INT64 operand, _Out_ INT_PTR * result)
 }
 
 __MINGW_INTSAFE_API HRESULT
-Int64ToSSIZET(_In_ INT64 operand, _Out_ SSIZE_T * result)
+Int64ToLongPtr(_In_ INT64 operand, _Out_ LONG_PTR * result)
 {
     *result = 0;
-    if (operand > SSIZE_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (operand > INTPTR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     if (operand < INTPTR_MIN) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = operand;
     return S_OK;
@@ -1118,10 +1118,10 @@ IntPtrAdd(_In_ INT_PTR x, _In_ INT_PTR y, _Out_ INT_PTR * result)
 }
 
 __MINGW_INTSAFE_API HRESULT
-SSIZETAdd(_In_ SSIZE_T x, _In_ SSIZE_T y, _Out_ SSIZE_T * result)
+LongPtrAdd(_In_ LONG_PTR x, _In_ LONG_PTR y, _Out_ LONG_PTR * result)
 {
     *result = 0;
-    if (x > 0 && y > SSIZE_MAX - x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x > 0 && y > INTPTR_MAX - x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     if (x < 0 && y < INTPTR_MIN - x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = x + y;
     return S_OK;
@@ -1251,10 +1251,10 @@ IntPtrSub(_In_ INT_PTR x, _In_ INT_PTR y, _Out_ INT_PTR * result)
 }
 
 __MINGW_INTSAFE_API HRESULT
-SSIZETSub(_In_ SSIZE_T x, _In_ SSIZE_T y, _Out_ SSIZE_T * result)
+LongPtrSub(_In_ LONG_PTR x, _In_ LONG_PTR y, _Out_ LONG_PTR * result)
 {
     *result = 0;
-    if (x >= 0 && y < x - SSIZE_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x >= 0 && y < x - INTPTR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     if (x < 0 && y > x - INTPTR_MIN) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = x - y;
     return S_OK;
@@ -1399,13 +1399,13 @@ IntPtrMult(_In_ INT_PTR x, _In_ INT_PTR y, _Out_ INT_PTR * result)
 }
 
 __MINGW_INTSAFE_API HRESULT
-SSIZETMult(_In_ SSIZE_T x, _In_ SSIZE_T y, _Out_ SSIZE_T * result)
+LongPtrMult(_In_ LONG_PTR x, _In_ LONG_PTR y, _Out_ LONG_PTR * result)
 {
     *result = 0;
-    if (x > 0 && y > 0 && x > SSIZE_MAX / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x > 0 && y > 0 && x > INTPTR_MAX / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     if (x < 0 && y > 0 && x < INTPTR_MIN / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     if (x > 0 && y < 0 && y < INTPTR_MIN / x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    if (x < 0 && y < 0 && (x <= INTPTR_MIN || y <= INTPTR_MIN || -x > SSIZE_MAX / -y))
+    if (x < 0 && y < 0 && (x <= INTPTR_MIN || y <= INTPTR_MIN || -x > INTPTR_MAX / -y))
         return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = x * y;
     return S_OK;
@@ -1443,11 +1443,11 @@ LongLongMult(_In_ LONGLONG x, _In_ LONGLONG y, _Out_ LONGLONG * result)
 #define UIntToByte UIntToUChar
 #define UIntToWord UIntToUShort
 #define UIntToPtrdiffT UIntToIntPtr
-#define UIntToLongPtr UIntToSSIZET
+#define UIntToSSIZET UIntToLongPtr
 #define ULongToByte ULongToUChar
 #define ULongToWord ULongToUShort
 #define ULongToPtrdiffT ULongToIntPtr
-#define ULongToLongPtr ULongToSSIZET
+#define ULongToSSIZET ULongToLongPtr
 #define DWordToUChar ULongToUChar
 #define DWordToByte ULongToUChar
 #define DWordToUShort ULongToUShort
@@ -1459,8 +1459,8 @@ LongLongMult(_In_ LONGLONG x, _In_ LONGLONG y, _Out_ LONGLONG * result)
 #define DWordToUIntPtr ULongToUIntPtr
 #define DWordToIntPtr ULongToIntPtr
 #define DWordToPtrdiffT ULongToIntPtr
-#define DWordToSSIZET ULongToSSIZET
-#define DWordToLongPtr ULongToSSIZET
+#define DWordToLongPtr ULongToLongPtr
+#define DWordToSSIZET ULongToLongPtr
 #define DWordToChar ULongToChar
 #define IntToByte IntToUChar
 #define IntToWord IntToUShort
@@ -1474,7 +1474,7 @@ LongLongMult(_In_ LONGLONG x, _In_ LONGLONG y, _Out_ LONGLONG * result)
 #define LongToULongPtr LongToDWordPtr
 #define LongToPtrdiffT LongToIntPtr
 #define UIntPtrToDWord UIntPtrToULong
-#define UIntPtrToLongPtr UIntPtrToSSIZET
+#define UIntPtrToSSIZET UIntPtrToLongPtr
 #define SizeTToUInt UIntPtrToUInt
 #define SizeTToULong UIntPtrToULong
 #define SizeTToDWord UIntPtrToULong
@@ -1482,12 +1482,12 @@ LongLongMult(_In_ LONGLONG x, _In_ LONGLONG y, _Out_ LONGLONG * result)
 #define SizeTToLong UIntPtrToLong
 #define SizeTToIntPtr UIntPtrToIntPtr
 #define SizeTToPtrdiffT UIntPtrToIntPtr
-#define SizeTToSSIZET UIntPtrToSSIZET
-#define SizeTToLongPtr UIntPtrToSSIZET
+#define SizeTToLongPtr UIntPtrToLongPtr
+#define SizeTToSSIZET UIntPtrToLongPtr
 #define SizeTToInt64 UIntPtrToInt64
 #define DWordPtrToDWord DWordPtrToULong
 #define DWordPtrToPtrdiffT DWordPtrToIntPtr
-#define DWordPtrToLongPtr DWordPtrToSSIZET
+#define DWordPtrToSSIZET DWordPtrToLongPtr
 #define ULongPtrToUInt DWordPtrToUInt
 #define ULongPtrToULong DWordPtrToULong
 #define ULongPtrToDWord DWordPtrToULong
@@ -1496,8 +1496,8 @@ LongLongMult(_In_ LONGLONG x, _In_ LONGLONG y, _Out_ LONGLONG * result)
 #define ULongPtrToUIntPtr DWordPtrToUIntPtr
 #define ULongPtrToIntPtr DWordPtrToIntPtr
 #define ULongPtrToPtrdiffT DWordPtrToIntPtr
-#define ULongPtrToSSIZET DWordPtrToSSIZET
-#define ULongPtrToLongPtr DWordPtrToSSIZET
+#define ULongPtrToLongPtr DWordPtrToLongPtr
+#define ULongPtrToSSIZET DWordPtrToLongPtr
 #define ULongPtrToInt64 DWordPtrToInt64
 #define IntPtrToDWord IntPtrToULong
 #define IntPtrToSizeT IntPtrToUIntPtr
@@ -1511,29 +1511,29 @@ LongLongMult(_In_ LONGLONG x, _In_ LONGLONG y, _Out_ LONGLONG * result)
 #define PtrdiffTToSizeT IntPtrToUIntPtr
 #define PtrdiffTToDWordPtr IntPtrToDWordPtr
 #define PtrdiffTToULongPtr IntPtrToDWordPtr
-#define SSIZETToDWord SSIZETToULong
-#define SSIZETToSizeT SSIZETToUIntPtr
-#define SSIZETToULongPtr SSIZETToDWordPtr
-#define LongPtrToUInt SSIZETToUInt
-#define LongPtrToULong SSIZETToULong
-#define LongPtrToDWord SSIZETToULong
-#define LongPtrToInt SSIZETToInt
-#define LongPtrToLong SSIZETToLong
-#define LongPtrToUIntPtr SSIZETToUIntPtr
-#define LongPtrToSizeT SSIZETToUIntPtr
-#define LongPtrToDWordPtr SSIZETToDWordPtr
-#define LongPtrToULongPtr SSIZETToDWordPtr
-#define LongPtrToIntPtr SSIZETToIntPtr
+#define LongPtrToDWord LongPtrToULong
+#define LongPtrToSizeT LongPtrToUIntPtr
+#define LongPtrToULongPtr LongPtrToDWordPtr
+#define SSIZETToUInt LongPtrToUInt
+#define SSIZETToULong LongPtrToULong
+#define SSIZETToDWord LongPtrToULong
+#define SSIZETToInt LongPtrToInt
+#define SSIZETToLong LongPtrToLong
+#define SSIZETToUIntPtr LongPtrToUIntPtr
+#define SSIZETToSizeT LongPtrToUIntPtr
+#define SSIZETToDWordPtr LongPtrToDWordPtr
+#define SSIZETToULongPtr LongPtrToDWordPtr
+#define SSIZETToIntPtr LongPtrToIntPtr
 #define ULongLongToDWord ULongLongToULong
 #define ULongLongToSizeT ULongLongToUIntPtr
 #define ULongLongToULongPtr ULongLongToDWordPtr
 #define ULongLongToPtrdiffT ULongLongToIntPtr
-#define ULongLongToLongPtr ULongLongToSSIZET
+#define ULongLongToSSIZET ULongLongToLongPtr
 #define Int64ToDWord Int64ToULong
 #define Int64ToSizeT Int64ToUIntPtr
 #define Int64ToULongPtr Int64ToDWordPtr
 #define Int64ToPtrdiffT Int64ToIntPtr
-#define Int64ToLongPtr Int64ToSSIZET
+#define Int64ToSSIZET Int64ToLongPtr
 #define WordAdd UShortAdd
 #define WordSub UShortSub
 #define WordMult UShortMult
@@ -1549,7 +1549,7 @@ LongLongMult(_In_ LONGLONG x, _In_ LONGLONG y, _Out_ LONGLONG * result)
 #define PtrdiffTAdd IntPtrAdd
 #define PtrdiffTSub IntPtrSub
 #define PtrdiffTMult IntPtrMult
-#define LongPtrAdd SSIZETAdd
-#define LongPtrSub SSIZETSub
-#define LongPtrMult SSIZETMult
+#define SSIZETAdd LongPtrAdd
+#define SSIZETSub LongPtrSub
+#define SSIZETMult LongPtrMult
 
