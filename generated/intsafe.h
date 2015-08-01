@@ -46,6 +46,8 @@
 
 C_ASSERT(1 == sizeof(CHAR));
 C_ASSERT(1 == sizeof(UCHAR));
+C_ASSERT(1 == sizeof(INT8));
+C_ASSERT(1 == sizeof(UINT8));
 C_ASSERT(1 == sizeof(BYTE));
 
 C_ASSERT(2 == sizeof(USHORT));
@@ -70,12 +72,14 @@ C_ASSERT(sizeof(void *) == sizeof(LONG_PTR));
 
 C_ASSERT(8 == sizeof(ULONGLONG));
 C_ASSERT(8 == sizeof(INT64));
+C_ASSERT(8 == sizeof(LONGLONG));
 
 #ifdef __CHAR_UNSIGNED__
 C_ASSERT((char)-1 > 0);
 #else
 C_ASSERT((char)-1 < 0);
 #endif
+C_ASSERT((INT8)-1 < 0);
 C_ASSERT((SHORT)-1 < 0);
 C_ASSERT((INT)-1 < 0);
 C_ASSERT((LONG)-1 < 0);
@@ -84,7 +88,9 @@ C_ASSERT((ptrdiff_t)-1 < 0);
 C_ASSERT((SSIZE_T)-1 < 0);
 C_ASSERT((LONG_PTR)-1 < 0);
 C_ASSERT((INT64)-1 < 0);
+C_ASSERT((LONGLONG)-1 < 0);
 C_ASSERT((UCHAR)-1 > 0);
+C_ASSERT((UINT8)-1 > 0);
 C_ASSERT((BYTE)-1 > 0);
 C_ASSERT((USHORT)-1 > 0);
 C_ASSERT((WORD)-1 > 0);
@@ -114,15 +120,19 @@ C_ASSERT(SSIZE_MAX == INTPTR_MAX);
 C_ASSERT(ULLONG_MAX == UINT64_MAX);
 C_ASSERT(_I64_MAX == INT64_MAX);
 C_ASSERT(_I64_MIN == INT64_MIN);
+C_ASSERT(LLONG_MAX == INT64_MAX);
+C_ASSERT(LLONG_MIN == INT64_MIN);
 
 #ifndef __cplusplus
 C_ASSERT(__builtin_types_compatible_p(UCHAR, BYTE));
+C_ASSERT(__builtin_types_compatible_p(UCHAR, UINT8));
 C_ASSERT(__builtin_types_compatible_p(USHORT, WORD));
 C_ASSERT(__builtin_types_compatible_p(ULONG, DWORD));
 C_ASSERT(__builtin_types_compatible_p(UINT_PTR, size_t));
 C_ASSERT(__builtin_types_compatible_p(DWORD_PTR, ULONG_PTR));
 C_ASSERT(__builtin_types_compatible_p(INT_PTR, ptrdiff_t));
 C_ASSERT(__builtin_types_compatible_p(SSIZE_T, LONG_PTR));
+C_ASSERT(__builtin_types_compatible_p(INT64, LONGLONG));
 #endif
 
 __MINGW_INTSAFE_API HRESULT UShortToUChar(_In_ USHORT operand, _Out_ UCHAR * result)
@@ -899,6 +909,23 @@ __MINGW_INTSAFE_CHAR_API HRESULT LongToChar(_In_ LONG operand, _Out_ CHAR * resu
     return S_OK;
 }
 
+__MINGW_INTSAFE_API HRESULT Int8Add(_In_ INT8 x, _In_ INT8 y, _Out_ INT8 * result)
+{
+    *result = 0;
+    if (x > 0 && y > INT8_MAX - x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x < 0 && y < INT8_MIN - x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    *result = x + y;
+    return S_OK;
+}
+
+__MINGW_INTSAFE_API HRESULT UInt8Add(_In_ UINT8 x, _In_ UINT8 y, _Out_ UINT8 * result)
+{
+    *result = 0;
+    if (y > UINT8_MAX - x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    *result = x + y;
+    return S_OK;
+}
+
 __MINGW_INTSAFE_API HRESULT UShortAdd(_In_ USHORT x, _In_ USHORT y, _Out_ USHORT * result)
 {
     *result = 0;
@@ -992,6 +1019,32 @@ __MINGW_INTSAFE_API HRESULT ULongLongAdd(_In_ ULONGLONG x, _In_ ULONGLONG y, _Ou
     return S_OK;
 }
 
+__MINGW_INTSAFE_API HRESULT LongLongAdd(_In_ LONGLONG x, _In_ LONGLONG y, _Out_ LONGLONG * result)
+{
+    *result = 0;
+    if (x > 0 && y > LLONG_MAX - x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x < 0 && y < LLONG_MIN - x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    *result = x + y;
+    return S_OK;
+}
+
+__MINGW_INTSAFE_API HRESULT Int8Sub(_In_ INT8 x, _In_ INT8 y, _Out_ INT8 * result)
+{
+    *result = 0;
+    if (x >= 0 && y < x - INT8_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x < 0 && y > x - INT8_MIN) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    *result = x - y;
+    return S_OK;
+}
+
+__MINGW_INTSAFE_API HRESULT UInt8Sub(_In_ UINT8 x, _In_ UINT8 y, _Out_ UINT8 * result)
+{
+    *result = 0;
+    if (y > x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    *result = x - y;
+    return S_OK;
+}
+
 __MINGW_INTSAFE_API HRESULT UShortSub(_In_ USHORT x, _In_ USHORT y, _Out_ USHORT * result)
 {
     *result = 0;
@@ -1082,6 +1135,35 @@ __MINGW_INTSAFE_API HRESULT ULongLongSub(_In_ ULONGLONG x, _In_ ULONGLONG y, _Ou
     *result = 0;
     if (y > x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = x - y;
+    return S_OK;
+}
+
+__MINGW_INTSAFE_API HRESULT LongLongSub(_In_ LONGLONG x, _In_ LONGLONG y, _Out_ LONGLONG * result)
+{
+    *result = 0;
+    if (x >= 0 && y < x - LLONG_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x < 0 && y > x - LLONG_MIN) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    *result = x - y;
+    return S_OK;
+}
+
+__MINGW_INTSAFE_API HRESULT Int8Mult(_In_ INT8 x, _In_ INT8 y, _Out_ INT8 * result)
+{
+    *result = 0;
+    if (x > 0 && y > 0 && x > INT8_MAX / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x < 0 && y > 0 && x < INT8_MIN / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x > 0 && y < 0 && y < INT8_MIN / x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x < 0 && y < 0 && (x <= INT8_MIN || y <= INT8_MIN || -x > INT8_MAX / -y))
+        return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    *result = x * y;
+    return S_OK;
+}
+
+__MINGW_INTSAFE_API HRESULT UInt8Mult(_In_ UINT8 x, _In_ UINT8 y, _Out_ UINT8 * result)
+{
+    *result = 0;
+    if (y > 0 && x > UINT8_MAX / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    *result = x * y;
     return S_OK;
 }
 
@@ -1189,6 +1271,18 @@ __MINGW_INTSAFE_API HRESULT ULongLongMult(_In_ ULONGLONG x, _In_ ULONGLONG y, _O
 {
     *result = 0;
     if (y > 0 && x > ULLONG_MAX / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    *result = x * y;
+    return S_OK;
+}
+
+__MINGW_INTSAFE_API HRESULT LongLongMult(_In_ LONGLONG x, _In_ LONGLONG y, _Out_ LONGLONG * result)
+{
+    *result = 0;
+    if (x > 0 && y > 0 && x > LLONG_MAX / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x < 0 && y > 0 && x < LLONG_MIN / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x > 0 && y < 0 && y < LLONG_MIN / x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x < 0 && y < 0 && (x <= LLONG_MIN || y <= LLONG_MIN || -x > LLONG_MAX / -y))
+        return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = x * y;
     return S_OK;
 }
@@ -1313,4 +1407,3 @@ __MINGW_INTSAFE_API HRESULT ULongLongMult(_In_ ULONGLONG x, _In_ ULONGLONG y, _O
 #define LongPtrSub SSIZETSub
 #define LongPtrMult SSIZETMult
 
-/* TODO: add 9 missing functions */

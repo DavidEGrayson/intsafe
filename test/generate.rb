@@ -78,8 +78,10 @@ def generate_types(pointer_size, char_signed)
   char_type = char_signed ? -1 : 1
   [
     CNumberType['UCHAR', 'UChar', 1],
+    CNumberType['UINT8', 'UInt8', 1],
     CNumberType['BYTE', 'Byte', 1],
     CNumberType['CHAR', 'Char', char_type],
+    CNumberType['INT8', 'Int8', -1],
     CNumberType['USHORT', 'UShort', 2],
     CNumberType['WORD', 'Word', 2],
     CNumberType['SHORT', 'Short', -2],
@@ -90,6 +92,7 @@ def generate_types(pointer_size, char_signed)
     CNumberType['LONG', 'Long', -4],
     CNumberType['ULONGLONG', 'ULongLong', 8],
     CNumberType['INT64', 'Int64', -8],
+    CNumberType['LONGLONG', 'LongLong', -8],
     CNumberType['UINT_PTR', 'UIntPtr', pointer_size],
     CNumberType['size_t', 'SizeT', pointer_size],
     CNumberType['DWORD_PTR', 'DWordPtr', pointer_size],

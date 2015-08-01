@@ -104,7 +104,7 @@ def calculate_math_function_aliases
     real_names = math_function_names(et)
     api_names.zip(real_names).each do |api_func_name, real_func_name|
       next if !ApiFunctionNames.include?(api_func_name)
-      raise if !ApiFunctionNames.include?(real_func_name)
+      next if !ApiFunctionNames.include?(real_func_name)
       aliases[api_func_name] = real_func_name
     end
   end

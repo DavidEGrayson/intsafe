@@ -100,6 +100,8 @@ UnsignedCharType = CNumberType['CHAR', 'Char', 1, 'UCHAR_MAX', 0]
 
 Types = [
   CNumberType['UCHAR', 'UChar', 1, 'UCHAR_MAX', 0],
+  CNumberType['INT8', 'Int8', -1, 'INT8_MAX', 'INT8_MIN'],
+  CNumberType['UINT8', 'UInt8', 1, 'UINT8_MAX', 0],
   CNumberType['BYTE', 'Byte', 1, 'UCHAR_MAX', 0],
   CNumberType['USHORT', 'UShort', 2, 'USHRT_MAX', 0],
   CNumberType['WORD', 'Word', 2, 'USHRT_MAX', 0],
@@ -119,18 +121,20 @@ Types = [
   CNumberType['LONG_PTR', 'LongPtr', -PointerSizeDummy, 'INTPTR_MAX', 'INTPTR_MIN'],
   CNumberType['ULONGLONG', 'ULongLong', 8, 'ULLONG_MAX', 0],
   CNumberType['INT64', 'Int64', -8, '_I64_MAX', '_I64_MIN'],
+  CNumberType['LONGLONG', 'LongLong', -8, 'LLONG_MAX', 'LLONG_MIN'],
 ]
 
 TypesByName = Types.each_with_object({}) { |type, h| h[type.name] = type }
 
 EquivalentTypes = [
-  %w(UCHAR BYTE),
+  %w(UCHAR BYTE UINT8),
   %w(USHORT WORD),
   %w(ULONG DWORD),
   %w(UINT_PTR size_t),
   %w(DWORD_PTR ULONG_PTR),
   %w(INT_PTR ptrdiff_t),
   %w(SSIZE_T LONG_PTR),
+  %w(INT64 LONGLONG)
 ]
 
 def EquivalentTypes.for_type(type)
