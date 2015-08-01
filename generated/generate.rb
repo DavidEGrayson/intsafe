@@ -1,4 +1,4 @@
-# The license for this file and the header it generates is:
+# The license for this file and all files in this directory is:
 LICENSE = <<END
 /* This file is free and unencumbered software released into the
  * public domain. */
@@ -16,6 +16,8 @@ INFO = <<END
  */
 END
 
+require 'stringio'
+
 Dir.chdir(File.dirname(__FILE__))
 ApiFunctionNames = File.readlines('function_names.txt').map(&:strip).reject(&:empty?)
 GeneratedFunctions = []
@@ -23,6 +25,7 @@ GeneratedFunctions = []
 Indent = '    '
 
 class CEnv
+  attr_reader :io
   attr_accessor :indent_level
 
   def self.write_file(filename)
@@ -31,7 +34,7 @@ class CEnv
     end
   end
 
-  def initialize(io)
+  def initialize(io = StringIO.new)
     @io = io
     self.indent_level = 0
   end
@@ -47,6 +50,9 @@ class CEnv
     self.indent_level -= 1
   end
 
+  def puts_comment(str)
+    puts "/* #{str} */"
+  end
 end
 
 class CNumberType < Struct.new(:name, :camel_name, :type_id, :max_str, :min_str)
@@ -150,6 +156,30 @@ def write_function(cenv, func_name, args)
   cenv.puts
 end
 
+def assume
+  cenv = CEnv.new
+  yield cenv
+  Assumptions << cenv.io.string
+end
+
+# Yields zero or more C environments to the caller where it is
+# possible that a value of type type_src is too big to be represented
+# in type_dest.
+def cenv_where_upper_check_needed(cenv, type_src, type_dest)
+  case
+  when type_src.signed? && type_dest.unsigned? && type_dest.type_id >= -type_src.type_id
+    assume do |cenv|
+      cenv.puts "#if #{type_src.max_str} > #{type_dest.max_str}"
+      cenv.puts "#error assumed no #{type_src} is too large to be represented as a #{type_dest}"
+      cenv.puts "#endif"
+    end
+  else
+    cenv.puts "#if #{type_src.max_str} > #{type_dest.max_str}"
+    yield cenv
+    cenv.puts "#endif"
+  end
+end
+
 def write_conversion_function(cenv, type_src, type_dest)
   func_name = conversion_function_name(type_src, type_dest)
   args = "_In_ #{type_src} operand, _Out_ #{type_dest} * result"
@@ -158,10 +188,8 @@ def write_conversion_function(cenv, type_src, type_dest)
 
     # Suppress this check if the source type is signed, the
     # destination type is unsigned, and the check is unnecessary.
-    unless type_src.signed? && type_dest.unsigned? && type_dest.type_id >= -type_src.type_id
-      cenv.puts "#if #{type_src.max_str} > #{type_dest.max_str}"
+    cenv_where_upper_check_needed(cenv, type_src, type_dest) do |cenv|
       cenv.puts "if (operand > #{type_dest.max_str}) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
-      cenv.puts "#endif"
     end
 
     # Suppress this check if the source type is unsigned because:
@@ -203,8 +231,11 @@ def write_top(cenv)
   cenv.puts
 end
 
+Assumptions = []
+Functions = CEnv.new
 CEnv.write_file('intsafe.h') do |cenv|
   write_top(cenv)
   write_functions(cenv)
+  cenv.puts Assumptions.uniq.sort.join("\n")
   write_todos_for_missing_functions(cenv)
 end

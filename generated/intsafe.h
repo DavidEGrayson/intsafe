@@ -354,4 +354,27 @@ __MINGW_INTSAFE_API HRESULT SSIZETToSizeT(_In_ SSIZE_T operand, _Out_ size_t * r
     return S_OK;
 }
 
+#if INT_MAX > SIZE_MAX
+#error assumed no INT is too large to be represented as a size_t
+#endif
+
+#if INT_MAX > UINT_MAX
+#error assumed no INT is too large to be represented as a UINT
+#endif
+
+#if INT_MAX > ULLONG_MAX
+#error assumed no INT is too large to be represented as a ULONGLONG
+#endif
+
+#if SHRT_MAX > USHRT_MAX
+#error assumed no SHORT is too large to be represented as a USHORT
+#endif
+
+#if SSIZE_MAX > SIZE_MAX
+#error assumed no SSIZE_T is too large to be represented as a size_t
+#endif
+
+#if _I64_MAX > ULLONG_MAX
+#error assumed no INT64 is too large to be represented as a ULONGLONG
+#endif
 /* TODO: add 253 missing functions */
