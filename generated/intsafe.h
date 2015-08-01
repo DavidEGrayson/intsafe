@@ -497,7 +497,9 @@ __MINGW_INTSAFE_API HRESULT UIntPtrToSSIZET(_In_ UINT_PTR operand, _Out_ SSIZE_T
 __MINGW_INTSAFE_API HRESULT UIntPtrToInt64(_In_ UINT_PTR operand, _Out_ INT64 * result)
 {
     *result = 0;
+    #if UINTPTR_MAX > _I64_MAX
     if (operand > _I64_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    #endif
     *result = operand;
     return S_OK;
 }
@@ -559,7 +561,9 @@ __MINGW_INTSAFE_API HRESULT DWordPtrToSSIZET(_In_ DWORD_PTR operand, _Out_ SSIZE
 __MINGW_INTSAFE_API HRESULT DWordPtrToInt64(_In_ DWORD_PTR operand, _Out_ INT64 * result)
 {
     *result = 0;
+    #if SIZE_MAX > _I64_MAX
     if (operand > _I64_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    #endif
     *result = operand;
     return S_OK;
 }

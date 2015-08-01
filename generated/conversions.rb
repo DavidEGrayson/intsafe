@@ -104,7 +104,7 @@ def cenv_where_upper_check_needed(cenv, type_src, type_dest)
     #
     # On 32-bit systems, clang whines about having a comparison that
     # is always false.  Therefore we need an #if.
-    # TODO: ifcheck = true
+    ifcheck = true
   end
 
   cenv.puts "#if #{type_src.max_str} > #{type_dest.max_str}" if ifcheck
