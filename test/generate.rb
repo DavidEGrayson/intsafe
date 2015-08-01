@@ -495,7 +495,7 @@ File.open('generated_tests.cpp', 'w') do |output|
 end
 
 if MissingFunctions.size > 0
-  puts "warning: #{MissingFunctions.size} functions are missing and tests were not generated for then"
+  puts "warning: #{MissingFunctions.size} functions are missing and tests were not generated for them"
 end
 
 untested_functions = FunctionNames - TestedFunctions - MissingFunctions

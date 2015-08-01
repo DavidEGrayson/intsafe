@@ -51,7 +51,12 @@ class CEnv
   end
 
   def puts_comment(str)
-    puts "/* #{str} */"
+    str.strip.lines.each_with_index do |line, index|
+      @io.print Indent * indent_level
+      @io.print '/* ' if index == 0
+      @io.print line
+    end
+    @io.puts ' */'
   end
 
   # compile-time assert
@@ -102,10 +107,12 @@ end
 # This value can be negated for signed types.
 PointerSizeDummy = 7
 
+SignedCharType = CNumberType['CHAR', 'Char', -1, 'SCHAR_MAX', 'SCHAR_MIN']
+UnsignedCharType = CNumberType['CHAR', 'Char', 1, 'UCHAR_MAX', 0]
+
 Types = [
   CNumberType['UCHAR', 'UChar', 1, 'UCHAR_MAX', 0],
   CNumberType['BYTE', 'Byte', 1, 'UCHAR_MAX', 0],
-  CNumberType['INT8', 'Int8', -1, 'SCHAR_MAX', 'SCHAR_MIN'],  # special type
   CNumberType['USHORT', 'UShort', 2, 'USHRT_MAX', 0],
   CNumberType['WORD', 'Word', 2, 'USHRT_MAX', 0],
   CNumberType['SHORT', 'Short', -2, 'SHRT_MAX', 'SHRT_MIN'],
@@ -139,7 +146,6 @@ EquivalentTypes = [
 ]
 
 def write_size_assumptions(cenv)
-  cenv.puts_ct_assert "1 == sizeof(signed char)"
   cenv.puts_ct_assert "1 == sizeof(CHAR)"
 
   Types.chunk { |s| s.type_id.abs }.each do |size, types|
@@ -158,6 +164,12 @@ def write_size_assumptions(cenv)
 end
 
 def write_sign_assumptions(cenv)
+  cenv.puts "#ifdef __CHAR_UNSIGNED__"
+  cenv.puts_ct_assert "(char)-1 > 0"
+  cenv.puts "#else"
+  cenv.puts_ct_assert "(char)-1 < 0"
+  cenv.puts "#endif"
+
   types_grouped_by_signedness = Types.sort_by { |t| [t.signed? ? 0 : 1, Types.index(t)] }
   types_grouped_by_signedness.each do |type|
     if type.signed?
@@ -303,6 +315,8 @@ def cenv_where_lower_check_needed(cenv, type_src, type_dest)
 end
 
 def write_conversion_function(cenv, type_src, type_dest)
+  return if !conversion_function_needed?(type_src, type_dest)
+
   func_name = conversion_function_name(type_src, type_dest)
   args = "_In_ #{type_src} operand, _Out_ #{type_dest} * result"
   write_function(cenv, func_name, args) do |cenv|
@@ -331,6 +345,40 @@ end
 #  cenv.puts "#define #{func_name} #{real_name}"
 #end
 
+def write_unsigned_char_aliases(cenv, char_type)
+  cenv.puts_comment <<END
+If CHAR is unsigned, use different symbol names.
+The avoids the risk of linking to the wrong function when different
+translation units with different types of chars are linked together.
+END
+
+  Types.each do |type|
+    if conversion_function_needed?(type, char_type)
+      api_name = conversion_function_name(type, char_type)
+      symbol_name = "__mingw_intsafe_uchar_#{type.camel_name}To#{char_type.camel_name}"
+      cenv.puts "#define #{api_name} #{symbol_name}"
+    end
+  end
+  cenv.puts
+end
+
+def write_specific_char_conversions(cenv, char_type)
+  Types.each do |type|
+    write_conversion_function(cenv, type, char_type)
+  end
+end
+
+def write_char_conversions(cenv)
+  cenv.puts "#ifdef __CHAR_UNSIGNED__"
+  cenv.puts
+  write_unsigned_char_aliases(cenv, UnsignedCharType)
+  write_specific_char_conversions(cenv, UnsignedCharType)
+  cenv.puts "#else /* char is signed */"
+  cenv.puts
+  write_specific_char_conversions(cenv, SignedCharType)
+  cenv.puts "#endif"
+end
+
 # Write functions for converting from one type to another.
 def write_conversion_functions(cenv)
   # To make the header shorter, we have a list of "main types" and we
@@ -344,6 +392,8 @@ def write_conversion_functions(cenv)
       write_conversion_function(cenv, type1, type2)
     end
   end
+
+  write_char_conversions(cenv)
 end
 
 def write_functions(cenv)
