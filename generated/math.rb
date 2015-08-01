@@ -82,7 +82,12 @@ def write_mult_function(cenv, type)
     end
 
     conds.each do |cond|
-      cenv.puts "if (#{cond}) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
+      if cond.size > 40
+        cenv.puts "if (#{cond})"
+        cenv.puts_indent "return INTSAFE_E_ARITHMETIC_OVERFLOW;"
+      else
+        cenv.puts "if (#{cond}) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
+      end
     end
     cenv.puts "*result = x * y;"
     cenv.puts "return S_OK;"

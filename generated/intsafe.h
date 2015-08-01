@@ -1099,7 +1099,8 @@ __MINGW_INTSAFE_API HRESULT ShortMult(_In_ SHORT x, _In_ SHORT y, _Out_ SHORT * 
     if (x > 0 && y > 0 && x > SHRT_MAX / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     if (x < 0 && y > 0 && x < SHRT_MIN / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     if (x > 0 && y < 0 && y < SHRT_MIN / x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    if (x < 0 && y < 0 && (x <= SHRT_MIN || y <= SHRT_MIN || -x > SHRT_MAX / -y)) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x < 0 && y < 0 && (x <= SHRT_MIN || y <= SHRT_MIN || -x > SHRT_MAX / -y))
+        return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = x * y;
     return S_OK;
 }
@@ -1126,7 +1127,8 @@ __MINGW_INTSAFE_API HRESULT IntMult(_In_ INT x, _In_ INT y, _Out_ INT * result)
     if (x > 0 && y > 0 && x > INT_MAX / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     if (x < 0 && y > 0 && x < INT_MIN / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     if (x > 0 && y < 0 && y < INT_MIN / x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    if (x < 0 && y < 0 && (x <= INT_MIN || y <= INT_MIN || -x > INT_MAX / -y)) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x < 0 && y < 0 && (x <= INT_MIN || y <= INT_MIN || -x > INT_MAX / -y))
+        return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = x * y;
     return S_OK;
 }
@@ -1137,7 +1139,8 @@ __MINGW_INTSAFE_API HRESULT LongMult(_In_ LONG x, _In_ LONG y, _Out_ LONG * resu
     if (x > 0 && y > 0 && x > LONG_MAX / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     if (x < 0 && y > 0 && x < LONG_MIN / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     if (x > 0 && y < 0 && y < LONG_MIN / x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    if (x < 0 && y < 0 && (x <= LONG_MIN || y <= LONG_MIN || -x > LONG_MAX / -y)) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x < 0 && y < 0 && (x <= LONG_MIN || y <= LONG_MIN || -x > LONG_MAX / -y))
+        return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = x * y;
     return S_OK;
 }
@@ -1164,7 +1167,8 @@ __MINGW_INTSAFE_API HRESULT IntPtrMult(_In_ INT_PTR x, _In_ INT_PTR y, _Out_ INT
     if (x > 0 && y > 0 && x > INTPTR_MAX / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     if (x < 0 && y > 0 && x < INTPTR_MIN / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     if (x > 0 && y < 0 && y < INTPTR_MIN / x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    if (x < 0 && y < 0 && (x <= INTPTR_MIN || y <= INTPTR_MIN || -x > INTPTR_MAX / -y)) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x < 0 && y < 0 && (x <= INTPTR_MIN || y <= INTPTR_MIN || -x > INTPTR_MAX / -y))
+        return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = x * y;
     return S_OK;
 }
@@ -1175,7 +1179,8 @@ __MINGW_INTSAFE_API HRESULT SSIZETMult(_In_ SSIZE_T x, _In_ SSIZE_T y, _Out_ SSI
     if (x > 0 && y > 0 && x > SSIZE_MAX / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     if (x < 0 && y > 0 && x < INTPTR_MIN / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     if (x > 0 && y < 0 && y < INTPTR_MIN / x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    if (x < 0 && y < 0 && (x <= INTPTR_MIN || y <= INTPTR_MIN || -x > SSIZE_MAX / -y)) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x < 0 && y < 0 && (x <= INTPTR_MIN || y <= INTPTR_MIN || -x > SSIZE_MAX / -y))
+        return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = x * y;
     return S_OK;
 }
