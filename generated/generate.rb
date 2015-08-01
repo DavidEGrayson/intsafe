@@ -162,12 +162,27 @@ def assume
   Assumptions << cenv.io.string
 end
 
-# Yields zero or more C environments to the caller where it is
-# possible that a value of type type_src is too big to be represented
-# in type_dest.
+# Yields zero or more C environments to the caller where we definitely
+# need to do an upper bound check because it is possible that a value
+# of type type_src is too big to be represented in type_dest.  We
+# generate such environments either using ifdefs or our knowledge of
+# the possibilities incarnations that each type has.
 def cenv_where_upper_check_needed(cenv, type_src, type_dest)
+  dest_enough_bytes = type_dest.type_id >= type_src.type_id.abs
   case
-  when type_src.signed? && type_dest.unsigned? && type_dest.type_id >= -type_src.type_id
+  when type_src.unsigned? && type_dest.unsigned? && !dest_enough_bytes
+    # Both are unsigned and the destination type is not guaranteed to
+    # be larger, so let's do the comparison.  This will be unneeded in
+    # some cases (like comparing a UINT to a UINT_PTR on a 32-bit
+    # system) but the optimizer should have no problem removing those
+    # cases, and there is no risk of doing a signed/unsigned
+    # comparison.
+    yield cenv
+  when type_dest.unsigned? && dest_enough_bytes
+    # We shouldn't need an upper comparison because the destination
+    # type is unsigned and guaranteed to have at least as many bytes
+    # as the source type.  Explicitly record this assumption and test
+    # it using the preproscessor.
     assume do |cenv|
       cenv.puts "#if #{type_src.max_str} > #{type_dest.max_str}"
       cenv.puts "#error assumed no #{type_src} is too large to be represented as a #{type_dest}"

@@ -39,9 +39,7 @@
 __MINGW_INTSAFE_API HRESULT UShortToUChar(_In_ USHORT operand, _Out_ UCHAR * result)
 {
     *result = 0;
-    #if USHRT_MAX > UCHAR_MAX
     if (operand > UCHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    #endif
     *result = operand;
     return S_OK;
 }
@@ -78,9 +76,7 @@ __MINGW_INTSAFE_API HRESULT ShortToUShort(_In_ SHORT operand, _Out_ USHORT * res
 __MINGW_INTSAFE_API HRESULT UIntToUChar(_In_ UINT operand, _Out_ UCHAR * result)
 {
     *result = 0;
-    #if UINT_MAX > UCHAR_MAX
     if (operand > UCHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    #endif
     *result = operand;
     return S_OK;
 }
@@ -88,9 +84,7 @@ __MINGW_INTSAFE_API HRESULT UIntToUChar(_In_ UINT operand, _Out_ UCHAR * result)
 __MINGW_INTSAFE_API HRESULT UIntToUShort(_In_ UINT operand, _Out_ USHORT * result)
 {
     *result = 0;
-    #if UINT_MAX > USHRT_MAX
     if (operand > USHRT_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    #endif
     *result = operand;
     return S_OK;
 }
@@ -185,9 +179,7 @@ __MINGW_INTSAFE_API HRESULT IntToSizeT(_In_ INT operand, _Out_ size_t * result)
 __MINGW_INTSAFE_API HRESULT ULongLongToUInt(_In_ ULONGLONG operand, _Out_ UINT * result)
 {
     *result = 0;
-    #if ULLONG_MAX > UINT_MAX
     if (operand > UINT_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    #endif
     *result = operand;
     return S_OK;
 }
@@ -215,9 +207,7 @@ __MINGW_INTSAFE_API HRESULT ULongLongToInt64(_In_ ULONGLONG operand, _Out_ INT64
 __MINGW_INTSAFE_API HRESULT ULongLongToSizeT(_In_ ULONGLONG operand, _Out_ size_t * result)
 {
     *result = 0;
-    #if ULLONG_MAX > SIZE_MAX
     if (operand > SIZE_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    #endif
     *result = operand;
     return S_OK;
 }
@@ -287,9 +277,7 @@ __MINGW_INTSAFE_API HRESULT Int64ToSSIZET(_In_ INT64 operand, _Out_ SSIZE_T * re
 __MINGW_INTSAFE_API HRESULT SizeTToUInt(_In_ size_t operand, _Out_ UINT * result)
 {
     *result = 0;
-    #if SIZE_MAX > UINT_MAX
     if (operand > UINT_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    #endif
     *result = operand;
     return S_OK;
 }
