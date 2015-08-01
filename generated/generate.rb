@@ -97,7 +97,6 @@ end
 # This value can be negated for signed types.
 PointerSizeDummy = 7
 
-
 Types = [
   CNumberType['UCHAR', 'UChar', 1, 'UCHAR_MAX', 0],
   CNumberType['INT8', 'Int8', -1, 'SCHAR_MAX', 'SCHAR_MIN'],  # special type
@@ -110,8 +109,6 @@ Types = [
   CNumberType['DWORD', 'DWord', 4, 'ULONG_MAX', 0],
   CNumberType['INT', 'Int', -4, 'INT_MAX', 'INT_MIN'],
   CNumberType['LONG', 'Long', -4, 'LONG_MAX', 'LONG_MIN'],
-  CNumberType['ULONGLONG', 'ULongLong', 8, 'ULLONG_MAX', 0],
-  CNumberType['INT64', 'Int64', -8, '_I64_MAX', '_I64_MIN'],
   CNumberType['UINT_PTR', 'UIntPtr', PointerSizeDummy, 'SIZE_MAX', 0],
   CNumberType['size_t', 'SizeT', PointerSizeDummy, 'SIZE_MAX', 0],  # not SIZE_T!
   CNumberType['DWORD_PTR', 'DWordPtr', PointerSizeDummy, 'SIZE_MAX', 0],
@@ -120,36 +117,11 @@ Types = [
   CNumberType['LONG_PTR', 'LongPtr', -PointerSizeDummy, 'SSIZE_MAX', 'SSIZE_MIN'],
   CNumberType['ptrdiff_t', 'PtrdiffT', -PointerSizeDummy, 'SSIZE_MAX', 'SSIZE_MIN'],
   CNumberType['SSIZE_T', 'SSIZET', -PointerSizeDummy, 'SSIZE_MAX', 'SSIZE_MIN'],
+  CNumberType['ULONGLONG', 'ULongLong', 8, 'ULLONG_MAX', 0],
+  CNumberType['INT64', 'Int64', -8, '_I64_MAX', '_I64_MIN'],
 ]
 
 TypesByName = Types.each_with_object({}) { |type, h| h[type.name] = type }
-
-TypeAliases = {
-  'BYTE' => 'UCHAR',
-  'WORD' => 'USHORT',
-  'ULONG' => 'UINT',  # I think this isn't true; fix it when the compiler complains
-  'DWORD' => 'UINT',  # probably not true either
-  'LONG'  => 'INT',   # probably not true either
-  'UINT_PTR' => 'size_t',
-  'DWORD_PTR' => 'size_t',
-  'ULONG_PTR' => 'size_t',
-  'INT_PTR' => 'SSIZE_T',
-  'LONG_PTR' => 'SSIZE_T',
-  'ptrdiff_t' => 'SSIZE_T',
-}
-
-MainTypes = [
-  'UCHAR',
-  'INT8',
-  'USHORT',
-  'SHORT',
-  'UINT',
-  'INT',
-  'ULONGLONG',
-  'INT64',
-  'size_t',
-  'SSIZE_T'
-].map(&TypesByName.method(:fetch))
 
 def conversion_function_name(type1, type2)
   func_name = "#{type1.camel_name}To#{type2.camel_name}"
@@ -158,15 +130,6 @@ def conversion_function_name(type1, type2)
   else
     '__mingw_intsafe_' + func_name
   end
-end
-
-def conversion_function_needed?(type1, type2)
-  if MainTypes.include?(type1) && MainTypes.include?(type2)
-    if ApiFunctionNames.include?("#{type1.camel_name}To#{type2.camel_name}")
-      return true
-    end
-  end
-  return false
 end
 
 def write_function(cenv, func_name, args)
@@ -185,11 +148,27 @@ def assume
   Assumptions << cenv.io.string
 end
 
-def assume_max_not_greater(type1, type2)
+def assume_min_not_less(type1, type2)
+  assumption = "no #{type1} is too small to be represented as a #{type2}"
   assume do |cenv|
-    cenv.puts "#if #{type1.max_str} > #{type2.max_str}"
-    cenv.puts "#error assumed no #{type1} is too large to be represented as a #{type2}"
-    cenv.puts "#endif"
+    cenv.puts_comment "assumption: #{assumption}"
+    unless type1.min_str == type2.min_str
+      cenv.puts "#if #{type1.min_str} < #{type2.min_str}"
+      cenv.puts "#error assumed #{assumption}"
+      cenv.puts "#endif"
+    end
+  end
+end
+
+def assume_max_not_greater(type1, type2)
+  assumption = "no #{type1} is too large to be represented as a #{type2}"
+  assume do |cenv|
+    cenv.puts_comment "assumption: #{assumption}"
+    unless type1.max_str == type2.max_str
+      cenv.puts "#if #{type1.max_str} > #{type2.max_str}"
+      cenv.puts "#error assumed #{assumption}"
+      cenv.puts "#endif"
+    end
   end
 end
 
@@ -215,10 +194,8 @@ def cenv_where_upper_check_needed(cenv, type_src, type_dest)
 
   when type_src.signed? == type_dest.signed? && type_dest.as_many_bytes_as?(type_src)
     # If the two types have equal signs and the destination is big
-    # enough, we could skip the comparison.  This case never actually
-    # comes up due to the cases above and the set of functions we
-    # implement.
-    raise 'comment above is wrong, this case did happen'
+    # enough, we can skip the comparison.
+    assume_max_not_greater(type_src, type_dest)
 
   when type_src.type_id == -PointerSizeDummy && type_dest.type_id == 4
     # On 64-bit systems, we need to do an upper check because signed
@@ -263,8 +240,8 @@ def cenv_where_lower_check_needed(cenv, type_src, type_dest)
     # The source is unsigned, so it can't be less than 0, so it will
     # never be too small.
   when type_src.signed? && type_dest.signed? && type_dest.as_many_bytes_as?(type_src)
-    # We could skip the check if this case ever happened, but it does not.
-    raise 'the comment above is wrong'
+    assume_min_not_less(type_src, type_dest)
+    assume_max_not_greater(type_src, type_dest)
   else
     # Otherwise perform the check.
     yield cenv
@@ -292,7 +269,21 @@ def write_conversion_function(cenv, type_src, type_dest)
   end
 end
 
+def conversion_function_needed?(type1, type2)
+  ApiFunctionNames.include?("#{type1.camel_name}To#{type2.camel_name}")
+end
+
+#def write_aliased_conversion_function(cenv, type1, type2)
+#  cenv.puts "#define #{func_name} #{real_name}"
+#end
+
+# Write functions for converting from one type to another.
 def write_conversion_functions(cenv)
+  # To make the header shorter, we have a list of "main types" and we
+  # only define functions for converting between those main types.
+  # All the other functions are preprocessor macros pointing to a
+  # conversion function that operates on "main types".
+
   Types.each do |type1|
     Types.each do |type2|
       next unless conversion_function_needed?(type1, type2)
@@ -320,8 +311,29 @@ def write_top(cenv)
   cenv.puts
 end
 
+def visualize_needed_conversions
+  print '  '
+  Types.each do |type2|
+    print '%2d' % type2.type_id
+  end
+  puts
+  Types.each do |type1|
+    print '%2d' % type1.type_id
+    Types.each do |type2|
+      print ' '
+      if conversion_function_needed?(type1, type2)
+        print 'X'
+      elsif type1 == type2
+        print '='
+      else
+        print '.'
+      end
+    end
+    puts
+  end
+end
+
 Assumptions = []
-Functions = CEnv.new
 CEnv.write_file('intsafe.h') do |cenv|
   write_top(cenv)
   write_functions(cenv)
