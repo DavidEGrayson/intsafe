@@ -22,15 +22,6 @@
 #define S_OK ((HRESULT)0)
 #endif
 
-/* This should probably be in limits.h. */
-#ifndef SSIZE_MIN
-#ifdef _WIN64
-#define SSIZE_MIN _I64_MIN
-#else
-#define SSIZE_MIN INT_MIN
-#endif
-#endif
-
 #ifndef __MINGW_INTSAFE_API
 #define __MINGW_INTSAFE_API inline
 #endif
@@ -106,8 +97,6 @@ C_ASSERT(UINTPTR_MAX == SIZE_MAX);
 C_ASSERT(INTPTR_MAX == PTRDIFF_MAX);
 C_ASSERT(INTPTR_MIN == PTRDIFF_MIN);
 C_ASSERT(INTPTR_MAX == SSIZE_MAX);
-C_ASSERT(INTPTR_MIN == SSIZE_MIN);
-C_ASSERT(INTPTR_MIN == SSIZE_MIN);
 C_ASSERT(UINT64_MAX == ULLONG_MAX);
 C_ASSERT(INT64_MAX == _I64_MAX);
 C_ASSERT(INT64_MIN == _I64_MIN);
@@ -820,7 +809,7 @@ __MINGW_INTSAFE_API HRESULT Int64ToSSIZET(_In_ INT64 operand, _Out_ SSIZE_T * re
 {
     *result = 0;
     if (operand > SSIZE_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    if (operand < SSIZE_MIN) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (operand < INTPTR_MIN) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = operand;
     return S_OK;
 }
