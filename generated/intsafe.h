@@ -846,11 +846,9 @@ __MINGW_INTSAFE_API HRESULT Int64ToULongLong(_In_ INT64 operand, _Out_ ULONGLONG
 The avoids the risk of linking to the wrong function when different
 translation units with different types of chars are linked together. */
 #define UShortToChar __mingw_intsafe_uchar_UShortToChar
-#define WordToChar __mingw_intsafe_uchar_WordToChar
 #define ShortToChar __mingw_intsafe_uchar_ShortToChar
 #define UIntToChar __mingw_intsafe_uchar_UIntToChar
 #define ULongToChar __mingw_intsafe_uchar_ULongToChar
-#define DWordToChar __mingw_intsafe_uchar_DWordToChar
 #define IntToChar __mingw_intsafe_uchar_IntToChar
 #define LongToChar __mingw_intsafe_uchar_LongToChar
 
@@ -863,14 +861,6 @@ translation units with different types of chars are linked together. */
 #endif
 
 __MINGW_INTSAFE_CHAR_API HRESULT UShortToChar(_In_ USHORT operand, _Out_ CHAR * result)
-{
-    *result = 0;
-    if (operand > __MINGW_INTSAFE_CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    *result = operand;
-    return S_OK;
-}
-
-__MINGW_INTSAFE_CHAR_API HRESULT WordToChar(_In_ WORD operand, _Out_ CHAR * result)
 {
     *result = 0;
     if (operand > __MINGW_INTSAFE_CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
@@ -903,14 +893,6 @@ __MINGW_INTSAFE_CHAR_API HRESULT ULongToChar(_In_ ULONG operand, _Out_ CHAR * re
     return S_OK;
 }
 
-__MINGW_INTSAFE_CHAR_API HRESULT DWordToChar(_In_ DWORD operand, _Out_ CHAR * result)
-{
-    *result = 0;
-    if (operand > __MINGW_INTSAFE_CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    *result = operand;
-    return S_OK;
-}
-
 __MINGW_INTSAFE_CHAR_API HRESULT IntToChar(_In_ INT operand, _Out_ CHAR * result)
 {
     *result = 0;
@@ -933,6 +915,7 @@ __MINGW_INTSAFE_CHAR_API HRESULT LongToChar(_In_ LONG operand, _Out_ CHAR * resu
 #define WordToUChar UShortToUChar
 #define WordToByte UShortToUChar
 #define WordToShort UShortToShort
+#define WordToChar UShortToChar
 #define ShortToByte ShortToUChar
 #define ShortToWord ShortToUShort
 #define UIntToByte UIntToUChar
@@ -956,6 +939,7 @@ __MINGW_INTSAFE_CHAR_API HRESULT LongToChar(_In_ LONG operand, _Out_ CHAR * resu
 #define DWordToPtrdiffT ULongToIntPtr
 #define DWordToSSIZET ULongToSSIZET
 #define DWordToLongPtr ULongToSSIZET
+#define DWordToChar ULongToChar
 #define IntToByte IntToUChar
 #define IntToWord IntToUShort
 #define IntToDWord IntToULong
@@ -1029,4 +1013,4 @@ __MINGW_INTSAFE_CHAR_API HRESULT LongToChar(_In_ LONG operand, _Out_ CHAR * resu
 #define Int64ToPtrdiffT Int64ToIntPtr
 #define Int64ToLongPtr Int64ToSSIZET
 
-/* TODO: add 159 missing functions */
+/* TODO: add 60 missing functions */

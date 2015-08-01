@@ -185,8 +185,9 @@ end
 
 def calculate_conversion_function_aliases
   aliases = {}
-  Types.each do |type1|
-    Types.each do |type2|
+  types = Types + [SignedCharType]
+  types.each do |type1|
+    types.each do |type2|
       api_name, real_name = calculate_conversion_function_alias(type1, type2)
       aliases[api_name] = real_name if real_name
     end
@@ -202,6 +203,7 @@ FunctionAliases = calculate_function_aliases
 
 def write_function_aliases(cenv)
   FunctionAliases.each do |api_func_name, real_name|
+    GeneratedFunctions << api_func_name
     cenv.puts "#define #{api_func_name} #{real_name}"
   end
   cenv.puts
@@ -420,7 +422,7 @@ end
 
 def write_conversion_to_char(cenv, type)
   func_name = "#{type.camel_name}ToChar"
-  return if !ApiFunctionNames.include?(func_name)
+  return if !ApiFunctionNames.include?(func_name) || FunctionAliases.include?(func_name)
   ret = '__MINGW_INTSAFE_CHAR_API HRESULT'
   args = "_In_ #{type} operand, _Out_ CHAR * result"
   write_function(cenv, func_name, args, ret) do |cenv|
