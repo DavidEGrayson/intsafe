@@ -205,18 +205,21 @@ def cenv_where_upper_check_needed(cenv, type_src, type_dest)
     # bytes, so skip the comparison but emit a preprocessor-checked
     # assumption.
     assume_max_not_greater(type_src, type_dest)
+
   when type_dest.unsigned? && type_dest.as_many_bytes_as?(type_src)
     # We shouldn't need an upper comparison because the destination
     # type is unsigned and guaranteed to have at least as many bytes
     # as the source type.  Explicitly record this assumption and test
     # it using the preprocessor.
     assume_max_not_greater(type_src, type_dest)
+
   when type_src.signed? == type_dest.signed? && type_dest.as_many_bytes_as?(type_src)
     # If the two types have equal signs and the destination is big
     # enough, we could skip the comparison.  This case never actually
     # comes up due to the cases above and the set of functions we
     # implement.
     raise 'comment above is wrong, this case did happen'
+
   when type_src.type_id == -PointerSizeDummy && type_dest.type_id == 4
     # On 64-bit systems, we need to do an upper check because signed
     # pointers can be bigger than unsigned ints.
@@ -231,6 +234,7 @@ def cenv_where_upper_check_needed(cenv, type_src, type_dest)
     cenv.puts "#if #{type_src.max_str} > #{type_dest.max_str}"
     yield cenv
     cenv.puts "#endif"
+
   when type_src.type_id == -8 && type_dest.type_id == PointerSizeDummy
     # On 32-bit systems, an upper check is needed.
     #
@@ -238,10 +242,10 @@ def cenv_where_upper_check_needed(cenv, type_src, type_dest)
     # int64_t can never too large to be represented in a size_t
     # (uint64_t).  Also, the check would produce bad code because
     # of Section 6.3.1.8 of C99.  Therefore, we need an ifdef.
-
     cenv.puts "#if #{type_src.max_str} > #{type_dest.max_str}"
     yield cenv
     cenv.puts "#endif"
+
   else
     # Do the comparison.
     yield cenv
