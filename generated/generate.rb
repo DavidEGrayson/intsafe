@@ -168,15 +168,14 @@ end
 # generate such environments either using ifdefs or our knowledge of
 # the possibilities incarnations that each type has.
 def cenv_where_upper_check_needed(cenv, type_src, type_dest)
-  dest_enough_bytes = type_dest.type_id >= type_src.type_id.abs
+  dest_enough_bytes = type_dest.type_id.abs >= type_src.type_id.abs
   case
-  when type_src.unsigned? && type_dest.unsigned? && !dest_enough_bytes
-    # Both are unsigned and the destination type is not guaranteed to
-    # be large enough, so let's do the comparison.  This will be
-    # unneeded in some cases (like comparing a UINT to a UINT_PTR on a
-    # 32-bit system) but the optimizer should have no problem removing
-    # those cases, and there is no risk of doing a signed/unsigned
-    # comparison.
+  when type_src.signed? == type_dest.signed?
+    # The two types have the same signedness so lets compare them.
+    # This might be unnecessary in some cases, but that will be caught
+    # by the optimizer.  You might think we could do better by adding
+    # '&& !dest_enough_bytes' to the condition above, but that makes
+    # no difference.
     yield cenv
   when type_dest.unsigned? && dest_enough_bytes
     # We shouldn't need an upper comparison because the destination
