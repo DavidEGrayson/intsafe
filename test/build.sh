@@ -16,6 +16,7 @@ ruby generate.rb
 
 # We add -O1 to avoid getting undefined reference errors for the
 # inline functions without optimizations.  This should probably be fixed.
+# Some day, we should add -fsanitize=undefined here.
 CARGS="-Wall -Werror -pedantic -O1 -I../$VER generated_tests.cpp"
 
 test_config () {
