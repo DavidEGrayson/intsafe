@@ -145,6 +145,68 @@ EquivalentTypes = [
   %w(SSIZE_T LONG_PTR),
 ]
 
+def EquivalentTypes.for_type(type)
+  names = find { |ns| ns.include? type.name } or return [type]
+  names.map { |n| TypesByName.fetch(n) }
+end
+
+def conversion_function_name(type1, type2)
+  func_name = "#{type1.camel_name}To#{type2.camel_name}"
+  if ApiFunctionNames.include?(func_name)
+    func_name
+  else
+    '!!!'
+  end
+end
+
+def calculate_conversion_function_alias(type1, type2)
+  api_func_name = conversion_function_name(type1, type2)
+  return [] if !ApiFunctionNames.include?(api_func_name)
+  EquivalentTypes.for_type(type1).each do |et1|
+    EquivalentTypes.for_type(type2).each do |et2|
+      equivalent_func_name = conversion_function_name(et1, et2)
+      next if !ApiFunctionNames.include?(equivalent_func_name)
+
+      # equivalent_func_name is the preferred name for the set of
+      # functions equivalent to api_func_name.
+
+      if equivalent_func_name == api_func_name
+        # The function we are considering already has the best
+        # possible name, don't define it as an alias.
+        return []
+      else
+        # The function we are looking at should be defined as an alias.
+        return [api_func_name, equivalent_func_name]
+      end
+    end
+  end
+  return []
+end
+
+def calculate_conversion_function_aliases
+  aliases = {}
+  Types.each do |type1|
+    Types.each do |type2|
+      api_name, real_name = calculate_conversion_function_alias(type1, type2)
+      aliases[api_name] = real_name if real_name
+    end
+  end
+  aliases
+end
+
+def calculate_function_aliases
+  calculate_conversion_function_aliases
+end
+
+FunctionAliases = calculate_function_aliases
+
+def write_function_aliases(cenv)
+  FunctionAliases.each do |api_func_name, real_name|
+    cenv.puts "#define #{api_func_name} #{real_name}"
+  end
+  cenv.puts
+end
+
 def write_size_assumptions(cenv)
   cenv.puts_ct_assert "1 == sizeof(CHAR)"
 
@@ -222,15 +284,6 @@ def write_type_assumptions(cenv)
   write_sign_assumptions(cenv)
   write_limit_assumptions(cenv)
   write_compatibility_assumptions(cenv)
-end
-
-def conversion_function_name(type1, type2)
-  func_name = "#{type1.camel_name}To#{type2.camel_name}"
-  if ApiFunctionNames.include?(func_name)
-    func_name
-  else
-    '__mingw_intsafe_' + func_name
-  end
 end
 
 def write_function(cenv, func_name, args, ret=nil)
@@ -340,7 +393,8 @@ def write_conversion_function(cenv, type_src, type_dest)
 end
 
 def conversion_function_needed?(type1, type2)
-  ApiFunctionNames.include?("#{type1.camel_name}To#{type2.camel_name}")
+  name = conversion_function_name(type1, type2)
+  ApiFunctionNames.include?(name) && !FunctionAliases.include?(name)
 end
 
 #def write_aliased_conversion_function(cenv, type1, type2)
@@ -458,5 +512,6 @@ CEnv.write_file('intsafe.h') do |cenv|
   write_top(cenv)
   write_type_assumptions(cenv)
   write_functions(cenv)
+  write_function_aliases(cenv)
   write_todos_for_missing_functions(cenv)
 end
