@@ -4,6 +4,7 @@
 require 'stringio'
 require_relative 'assumptions'
 require_relative 'conversions'
+require_relative 'math'
 
 Dir.chdir(File.dirname(__FILE__))
 ApiFunctionNames = File.readlines('function_names.txt').map(&:strip).reject(&:empty?)
@@ -157,10 +158,6 @@ def write_function(cenv, func_name, args, ret=nil)
   GeneratedFunctions << func_name
 end
 
-def write_functions(cenv)
-  write_conversion_functions(cenv)
-end
-
 def write_todos_for_missing_functions(cenv)
   missing = ApiFunctionNames - GeneratedFunctions
   return if missing.empty?
@@ -173,10 +170,23 @@ def write_top(cenv)
 end
 
 def calculate_function_aliases
-  calculate_conversion_function_aliases
+  aliases = {}
+  aliases.merge! calculate_conversion_function_aliases
+  aliases.merge! calculate_math_function_aliases
+end
+
+def write_functions(cenv)
+  write_conversion_functions(cenv)
+  write_math_functions(cenv)
+end
+
+def function_body_needed?(name)
+  ApiFunctionNames.include?(name) && !FunctionAliases.include?(name)
 end
 
 FunctionAliases = calculate_function_aliases
+
+# visualize_needed_conversions && abort
 
 CEnv.write_file('intsafe.h') do |cenv|
   write_top(cenv)

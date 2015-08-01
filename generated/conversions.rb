@@ -132,9 +132,9 @@ def cenv_where_lower_check_needed(cenv, type_src, type_dest)
 end
 
 def write_conversion_function(cenv, type_src, type_dest)
-  return if !conversion_function_needed?(type_src, type_dest)
-
   func_name = conversion_function_name(type_src, type_dest)
+  return if !function_body_needed?(func_name)
+
   args = "_In_ #{type_src} operand, _Out_ #{type_dest} * result"
   write_function(cenv, func_name, args) do |cenv|
     if upper_check_needed(type_src, type_dest) || lower_check_needed(type_src, type_dest)
@@ -156,15 +156,6 @@ def write_conversion_function(cenv, type_src, type_dest)
   end
 end
 
-def conversion_function_needed?(type1, type2)
-  name = conversion_function_name(type1, type2)
-  ApiFunctionNames.include?(name) && !FunctionAliases.include?(name)
-end
-
-#def write_aliased_conversion_function(cenv, type1, type2)
-#  cenv.puts "#define #{func_name} #{real_name}"
-#end
-
 def write_unsigned_char_aliases(cenv, char_type)
   cenv.puts_comment <<END
 If CHAR is unsigned, use different symbol names.
@@ -173,8 +164,8 @@ translation units with different types of chars are linked together.
 END
   cenv.puts "#ifdef __CHAR_UNSIGNED__"
   Types.each do |type|
-    if conversion_function_needed?(type, char_type)
-      api_name = conversion_function_name(type, char_type)
+    api_name = conversion_function_name(type, char_type)
+    if function_body_needed?(api_name)
       cenv.puts "#define #{api_name} __mingw_intsafe_uchar_#{api_name}"
     end
   end
@@ -223,7 +214,6 @@ def write_conversion_functions(cenv)
 
   Types.each do |type1|
     Types.each do |type2|
-      next unless conversion_function_needed?(type1, type2)
       write_conversion_function(cenv, type1, type2)
     end
   end
@@ -241,8 +231,14 @@ def visualize_needed_conversions
     print '%2d' % type1.type_id
     Types.each do |type2|
       print ' '
-      if conversion_function_needed?(type1, type2)
-        print 'X'
+
+      name = conversion_function_name(type1, type2)
+      if ApiFunctionNames.include?(name)
+        if FunctionAliases.include?(name)
+          print 'o'
+        else
+          print 'X'
+        end
       elsif type1 == type2
         print '='
       else
@@ -252,3 +248,4 @@ def visualize_needed_conversions
     puts
   end
 end
+
