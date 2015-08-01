@@ -95,6 +95,7 @@ end
 # This value can be negated for signed types.
 PointerSizeDummy = 7
 
+# These are used to help generate aliases.
 SignedCharType = CNumberType['CHAR', 'Char', -1, 'SCHAR_MAX', 'SCHAR_MIN']
 UnsignedCharType = CNumberType['CHAR', 'Char', 1, 'UCHAR_MAX', 0]
 
