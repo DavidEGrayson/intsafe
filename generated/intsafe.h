@@ -36,6 +36,34 @@
 
 #define INTSAFE_E_ARITHMETIC_OVERFLOW ((HRESULT)0x80070216L)
 
+C_ASSERT(sizeof(UCHAR) == sizeof(signed char));
+C_ASSERT(sizeof(UCHAR) == sizeof(CHAR));
+C_ASSERT(sizeof(UCHAR) == sizeof(INT8));
+C_ASSERT(sizeof(UCHAR) == sizeof(BYTE));
+
+C_ASSERT(sizeof(USHORT) > sizeof(UCHAR));
+C_ASSERT(sizeof(USHORT) == sizeof(WORD));
+C_ASSERT(sizeof(USHORT) == sizeof(SHORT));
+
+C_ASSERT(sizeof(UINT) > sizeof(USHORT));
+C_ASSERT(sizeof(UINT) == sizeof(ULONG));
+C_ASSERT(sizeof(UINT) == sizeof(DWORD));
+C_ASSERT(sizeof(UINT) == sizeof(INT));
+C_ASSERT(sizeof(UINT) == sizeof(LONG));
+
+C_ASSERT(sizeof(UINT_PTR) >= sizeof(UINT));
+C_ASSERT(sizeof(UINT_PTR) == sizeof(size_t));
+C_ASSERT(sizeof(UINT_PTR) == sizeof(DWORD_PTR));
+C_ASSERT(sizeof(UINT_PTR) == sizeof(ULONG_PTR));
+C_ASSERT(sizeof(UINT_PTR) == sizeof(INT_PTR));
+C_ASSERT(sizeof(UINT_PTR) == sizeof(LONG_PTR));
+C_ASSERT(sizeof(UINT_PTR) == sizeof(ptrdiff_t));
+C_ASSERT(sizeof(UINT_PTR) == sizeof(SSIZE_T));
+
+C_ASSERT(sizeof(ULONGLONG) > sizeof(UINT));
+C_ASSERT(sizeof(ULONGLONG) >= sizeof(UINT_PTR));
+C_ASSERT(sizeof(ULONGLONG) == sizeof(INT64));
+
 __MINGW_INTSAFE_API HRESULT UShortToUChar(_In_ USHORT operand, _Out_ UCHAR * result)
 {
     *result = 0;
@@ -1582,250 +1610,4 @@ __MINGW_INTSAFE_API HRESULT Int64ToULongLong(_In_ INT64 operand, _Out_ ULONGLONG
     return S_OK;
 }
 
-/* assumption: no DWORD is too large to be represented as a UINT */
-#if ULONG_MAX > UINT_MAX
-#error assumed no DWORD is too large to be represented as a UINT
-#endif
-
-/* assumption: no DWORD is too large to be represented as a UINT_PTR */
-#if ULONG_MAX > SIZE_MAX
-#error assumed no DWORD is too large to be represented as a UINT_PTR
-#endif
-
-/* assumption: no DWORD_PTR is too large to be represented as a UINT_PTR */
-
-/* assumption: no INT is too large to be represented as a DWORD */
-#if INT_MAX > ULONG_MAX
-#error assumed no INT is too large to be represented as a DWORD
-#endif
-
-/* assumption: no INT is too large to be represented as a DWORD_PTR */
-#if INT_MAX > SIZE_MAX
-#error assumed no INT is too large to be represented as a DWORD_PTR
-#endif
-
-/* assumption: no INT is too large to be represented as a UINT */
-#if INT_MAX > UINT_MAX
-#error assumed no INT is too large to be represented as a UINT
-#endif
-
-/* assumption: no INT is too large to be represented as a UINT_PTR */
-#if INT_MAX > SIZE_MAX
-#error assumed no INT is too large to be represented as a UINT_PTR
-#endif
-
-/* assumption: no INT is too large to be represented as a ULONG */
-#if INT_MAX > ULONG_MAX
-#error assumed no INT is too large to be represented as a ULONG
-#endif
-
-/* assumption: no INT is too large to be represented as a ULONGLONG */
-#if INT_MAX > ULLONG_MAX
-#error assumed no INT is too large to be represented as a ULONGLONG
-#endif
-
-/* assumption: no INT is too large to be represented as a ULONG_PTR */
-#if INT_MAX > SIZE_MAX
-#error assumed no INT is too large to be represented as a ULONG_PTR
-#endif
-
-/* assumption: no INT is too large to be represented as a size_t */
-#if INT_MAX > SIZE_MAX
-#error assumed no INT is too large to be represented as a size_t
-#endif
-
-/* assumption: no INT64 is too large to be represented as a ULONGLONG */
-#if _I64_MAX > ULLONG_MAX
-#error assumed no INT64 is too large to be represented as a ULONGLONG
-#endif
-
-/* assumption: no INT_PTR is too large to be represented as a DWORD_PTR */
-#if SSIZE_MAX > SIZE_MAX
-#error assumed no INT_PTR is too large to be represented as a DWORD_PTR
-#endif
-
-/* assumption: no INT_PTR is too large to be represented as a UINT_PTR */
-#if SSIZE_MAX > SIZE_MAX
-#error assumed no INT_PTR is too large to be represented as a UINT_PTR
-#endif
-
-/* assumption: no INT_PTR is too large to be represented as a ULONGLONG */
-#if SSIZE_MAX > ULLONG_MAX
-#error assumed no INT_PTR is too large to be represented as a ULONGLONG
-#endif
-
-/* assumption: no INT_PTR is too large to be represented as a ULONG_PTR */
-#if SSIZE_MAX > SIZE_MAX
-#error assumed no INT_PTR is too large to be represented as a ULONG_PTR
-#endif
-
-/* assumption: no INT_PTR is too large to be represented as a size_t */
-#if SSIZE_MAX > SIZE_MAX
-#error assumed no INT_PTR is too large to be represented as a size_t
-#endif
-
-/* assumption: no LONG is too large to be represented as a DWORD */
-#if LONG_MAX > ULONG_MAX
-#error assumed no LONG is too large to be represented as a DWORD
-#endif
-
-/* assumption: no LONG is too large to be represented as a DWORD_PTR */
-#if LONG_MAX > SIZE_MAX
-#error assumed no LONG is too large to be represented as a DWORD_PTR
-#endif
-
-/* assumption: no LONG is too large to be represented as a INT */
-#if LONG_MAX > INT_MAX
-#error assumed no LONG is too large to be represented as a INT
-#endif
-
-/* assumption: no LONG is too large to be represented as a INT_PTR */
-#if LONG_MAX > SSIZE_MAX
-#error assumed no LONG is too large to be represented as a INT_PTR
-#endif
-
-/* assumption: no LONG is too large to be represented as a UINT */
-#if LONG_MAX > UINT_MAX
-#error assumed no LONG is too large to be represented as a UINT
-#endif
-
-/* assumption: no LONG is too large to be represented as a UINT_PTR */
-#if LONG_MAX > SIZE_MAX
-#error assumed no LONG is too large to be represented as a UINT_PTR
-#endif
-
-/* assumption: no LONG is too large to be represented as a ULONG */
-#if LONG_MAX > ULONG_MAX
-#error assumed no LONG is too large to be represented as a ULONG
-#endif
-
-/* assumption: no LONG is too large to be represented as a ULONGLONG */
-#if LONG_MAX > ULLONG_MAX
-#error assumed no LONG is too large to be represented as a ULONGLONG
-#endif
-
-/* assumption: no LONG is too large to be represented as a ULONG_PTR */
-#if LONG_MAX > SIZE_MAX
-#error assumed no LONG is too large to be represented as a ULONG_PTR
-#endif
-
-/* assumption: no LONG is too large to be represented as a ptrdiff_t */
-#if LONG_MAX > SSIZE_MAX
-#error assumed no LONG is too large to be represented as a ptrdiff_t
-#endif
-
-/* assumption: no LONG is too large to be represented as a size_t */
-#if LONG_MAX > SIZE_MAX
-#error assumed no LONG is too large to be represented as a size_t
-#endif
-
-/* assumption: no LONG is too small to be represented as a INT */
-#if LONG_MIN < INT_MIN
-#error assumed no LONG is too small to be represented as a INT
-#endif
-
-/* assumption: no LONG is too small to be represented as a INT_PTR */
-#if LONG_MIN < SSIZE_MIN
-#error assumed no LONG is too small to be represented as a INT_PTR
-#endif
-
-/* assumption: no LONG is too small to be represented as a ptrdiff_t */
-#if LONG_MIN < SSIZE_MIN
-#error assumed no LONG is too small to be represented as a ptrdiff_t
-#endif
-
-/* assumption: no LONG_PTR is too large to be represented as a DWORD_PTR */
-#if SSIZE_MAX > SIZE_MAX
-#error assumed no LONG_PTR is too large to be represented as a DWORD_PTR
-#endif
-
-/* assumption: no LONG_PTR is too large to be represented as a INT_PTR */
-
-/* assumption: no LONG_PTR is too large to be represented as a UINT_PTR */
-#if SSIZE_MAX > SIZE_MAX
-#error assumed no LONG_PTR is too large to be represented as a UINT_PTR
-#endif
-
-/* assumption: no LONG_PTR is too large to be represented as a ULONGLONG */
-#if SSIZE_MAX > ULLONG_MAX
-#error assumed no LONG_PTR is too large to be represented as a ULONGLONG
-#endif
-
-/* assumption: no LONG_PTR is too large to be represented as a ULONG_PTR */
-#if SSIZE_MAX > SIZE_MAX
-#error assumed no LONG_PTR is too large to be represented as a ULONG_PTR
-#endif
-
-/* assumption: no LONG_PTR is too large to be represented as a size_t */
-#if SSIZE_MAX > SIZE_MAX
-#error assumed no LONG_PTR is too large to be represented as a size_t
-#endif
-
-/* assumption: no LONG_PTR is too small to be represented as a INT_PTR */
-
-/* assumption: no SHORT is too large to be represented as a USHORT */
-#if SHRT_MAX > USHRT_MAX
-#error assumed no SHORT is too large to be represented as a USHORT
-#endif
-
-/* assumption: no SHORT is too large to be represented as a WORD */
-#if SHRT_MAX > USHRT_MAX
-#error assumed no SHORT is too large to be represented as a WORD
-#endif
-
-/* assumption: no SSIZE_T is too large to be represented as a DWORD_PTR */
-#if SSIZE_MAX > SIZE_MAX
-#error assumed no SSIZE_T is too large to be represented as a DWORD_PTR
-#endif
-
-/* assumption: no SSIZE_T is too large to be represented as a INT_PTR */
-
-/* assumption: no SSIZE_T is too large to be represented as a UINT_PTR */
-#if SSIZE_MAX > SIZE_MAX
-#error assumed no SSIZE_T is too large to be represented as a UINT_PTR
-#endif
-
-/* assumption: no SSIZE_T is too large to be represented as a ULONG_PTR */
-#if SSIZE_MAX > SIZE_MAX
-#error assumed no SSIZE_T is too large to be represented as a ULONG_PTR
-#endif
-
-/* assumption: no SSIZE_T is too large to be represented as a size_t */
-#if SSIZE_MAX > SIZE_MAX
-#error assumed no SSIZE_T is too large to be represented as a size_t
-#endif
-
-/* assumption: no SSIZE_T is too small to be represented as a INT_PTR */
-
-/* assumption: no ULONG is too large to be represented as a UINT */
-#if ULONG_MAX > UINT_MAX
-#error assumed no ULONG is too large to be represented as a UINT
-#endif
-
-/* assumption: no ULONG is too large to be represented as a UINT_PTR */
-#if ULONG_MAX > SIZE_MAX
-#error assumed no ULONG is too large to be represented as a UINT_PTR
-#endif
-
-/* assumption: no ULONG_PTR is too large to be represented as a UINT_PTR */
-
-/* assumption: no ptrdiff_t is too large to be represented as a DWORD_PTR */
-#if SSIZE_MAX > SIZE_MAX
-#error assumed no ptrdiff_t is too large to be represented as a DWORD_PTR
-#endif
-
-/* assumption: no ptrdiff_t is too large to be represented as a UINT_PTR */
-#if SSIZE_MAX > SIZE_MAX
-#error assumed no ptrdiff_t is too large to be represented as a UINT_PTR
-#endif
-
-/* assumption: no ptrdiff_t is too large to be represented as a ULONG_PTR */
-#if SSIZE_MAX > SIZE_MAX
-#error assumed no ptrdiff_t is too large to be represented as a ULONG_PTR
-#endif
-
-/* assumption: no ptrdiff_t is too large to be represented as a size_t */
-#if SSIZE_MAX > SIZE_MAX
-#error assumed no ptrdiff_t is too large to be represented as a size_t
-#endif
 /* TODO: add 253 missing functions */

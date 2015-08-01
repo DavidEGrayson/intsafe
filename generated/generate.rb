@@ -53,6 +53,11 @@ class CEnv
   def puts_comment(str)
     puts "/* #{str} */"
   end
+
+  # compile-time assert
+  def puts_ct_assert(expr)
+    puts "C_ASSERT(#{expr});"
+  end
 end
 
 class CNumberType < Struct.new(:name, :camel_name, :type_id, :max_str, :min_str)
@@ -123,6 +128,37 @@ Types = [
 
 TypesByName = Types.each_with_object({}) { |type, h| h[type.name] = type }
 
+def write_type_assumptions(cenv)
+  # Size assumptions.
+
+  cenv.puts_ct_assert "sizeof(UCHAR) == sizeof(signed char)"
+  cenv.puts_ct_assert "sizeof(UCHAR) == sizeof(CHAR)"
+
+  last_type = nil
+  Types.chunk { |s| s.type_id.abs }.each do |size, types|
+    if size == 8
+      cenv.puts_ct_assert "sizeof(#{types[0]}) > sizeof(UINT)"
+    end
+
+    if last_type
+      strict = true
+      strict = false if last_type.type_id.abs == PointerSizeDummy
+      strict = false if size == PointerSizeDummy
+      comparison = strict ? '>' : '>='
+      cenv.puts_ct_assert "sizeof(#{types[0]}) #{comparison} sizeof(#{last_type})"
+    end
+
+    next if types.size < 2
+    types[1...types.size].each do |type|
+      cenv.puts_ct_assert "sizeof(#{types[0]}) == sizeof(#{type})"
+    end
+
+    cenv.puts
+
+    last_type = types[0]
+  end
+end
+
 def conversion_function_name(type1, type2)
   func_name = "#{type1.camel_name}To#{type2.camel_name}"
   if ApiFunctionNames.include?(func_name)
@@ -142,36 +178,6 @@ def write_function(cenv, func_name, args)
   cenv.puts
 end
 
-def assume
-  cenv = CEnv.new
-  yield cenv
-  Assumptions << cenv.io.string
-end
-
-def assume_min_not_less(type1, type2)
-  assumption = "no #{type1} is too small to be represented as a #{type2}"
-  assume do |cenv|
-    cenv.puts_comment "assumption: #{assumption}"
-    unless type1.min_str == type2.min_str
-      cenv.puts "#if #{type1.min_str} < #{type2.min_str}"
-      cenv.puts "#error assumed #{assumption}"
-      cenv.puts "#endif"
-    end
-  end
-end
-
-def assume_max_not_greater(type1, type2)
-  assumption = "no #{type1} is too large to be represented as a #{type2}"
-  assume do |cenv|
-    cenv.puts_comment "assumption: #{assumption}"
-    unless type1.max_str == type2.max_str
-      cenv.puts "#if #{type1.max_str} > #{type2.max_str}"
-      cenv.puts "#error assumed #{assumption}"
-      cenv.puts "#endif"
-    end
-  end
-end
-
 # Yields zero or more C environments to the caller where we definitely
 # need to do an upper bound check because it is possible that a value
 # of type type_src is too big to be represented in type_dest.  We
@@ -181,21 +187,16 @@ def cenv_where_upper_check_needed(cenv, type_src, type_dest)
   case
   when type_dest.more_bytes_than?(type_src)
     # On every system we care about, the destination type has more
-    # bytes, so skip the comparison but emit a preprocessor-checked
-    # assumption.
-    assume_max_not_greater(type_src, type_dest)
+    # bytes, so skip the comparison.
 
   when type_dest.unsigned? && type_dest.as_many_bytes_as?(type_src)
     # We shouldn't need an upper comparison because the destination
     # type is unsigned and guaranteed to have at least as many bytes
-    # as the source type.  Explicitly record this assumption and test
-    # it using the preprocessor.
-    assume_max_not_greater(type_src, type_dest)
+    # as the source type.
 
   when type_src.signed? == type_dest.signed? && type_dest.as_many_bytes_as?(type_src)
     # If the two types have equal signs and the destination is big
     # enough, we can skip the comparison.
-    assume_max_not_greater(type_src, type_dest)
 
   when type_src.type_id == -PointerSizeDummy && type_dest.type_id == 4
     # On 64-bit systems, we need to do an upper check because signed
@@ -240,8 +241,8 @@ def cenv_where_lower_check_needed(cenv, type_src, type_dest)
     # The source is unsigned, so it can't be less than 0, so it will
     # never be too small.
   when type_src.signed? && type_dest.signed? && type_dest.as_many_bytes_as?(type_src)
-    assume_min_not_less(type_src, type_dest)
-    assume_max_not_greater(type_src, type_dest)
+    # It is a signed-to-signed conversion and the destination will
+    # always be big enough.
   else
     # Otherwise perform the check.
     yield cenv
@@ -333,10 +334,9 @@ def visualize_needed_conversions
   end
 end
 
-Assumptions = []
 CEnv.write_file('intsafe.h') do |cenv|
   write_top(cenv)
+  write_type_assumptions(cenv)
   write_functions(cenv)
-  cenv.puts Assumptions.uniq.sort.join("\n")
   write_todos_for_missing_functions(cenv)
 end
