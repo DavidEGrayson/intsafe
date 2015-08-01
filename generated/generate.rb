@@ -67,6 +67,29 @@ class CNumberType < Struct.new(:name, :camel_name, :type_id, :max_str, :min_str)
   def to_s
     name
   end
+
+  # Returns true if this type is always going to have at least as many
+  # bytes as another type on all systems we care about.  If you use
+  # this fact, you should probably emit an assumption to test it.
+  def as_many_bytes_as?(other)
+    type_id.abs >= other.type_id.abs  # TODO: use possible_byte_sizes
+  end
+
+  # Returns true if this type is always guaranteed to have more bytes
+  # than another.
+  def more_bytes_than?(other)
+    possible_byte_sizes.min > other.possible_byte_sizes.max
+  end
+
+  def possible_byte_sizes
+    if type_id.abs == PointerSizeDummy
+      # This is a pointer-sized type, so it could have 4 or 8 bytes.
+      return [4, 8]
+    end
+
+    # This type always has the same number of bytes.
+    [type_id.abs]
+  end
 end
 
 # Dummy value that can be used inside a type ID to indicate that this
@@ -162,31 +185,43 @@ def assume
   Assumptions << cenv.io.string
 end
 
+def assume_max_not_greater(type1, type2)
+  assume do |cenv|
+    cenv.puts "#if #{type1.max_str} > #{type2.max_str}"
+    cenv.puts "#error assumed no #{type1} is too large to be represented as a #{type2}"
+    cenv.puts "#endif"
+  end
+end
+
 # Yields zero or more C environments to the caller where we definitely
 # need to do an upper bound check because it is possible that a value
 # of type type_src is too big to be represented in type_dest.  We
 # generate such environments either using ifdefs or our knowledge of
 # the possibilities incarnations that each type has.
 def cenv_where_upper_check_needed(cenv, type_src, type_dest)
-  dest_enough_bytes = type_dest.type_id.abs >= type_src.type_id.abs
   case
+  when type_src.more_bytes_than?(type_dest)
+    # On every system we care about, the source type has more bytes,
+    # so do the comparison.
+    yield cenv
+  when type_dest.more_bytes_than?(type_src)
+    # On every system we care about, the destination type has more
+    # bytes, so skip the comparison by emit a preprocessor-checked
+    # assumption.
+    assume_max_not_greater(type_src, type_dest)
   when type_src.signed? == type_dest.signed?
     # The two types have the same signedness so lets compare them.
     # This might be unnecessary in some cases, but that will be caught
     # by the optimizer.  You might think we could do better by adding
-    # '&& !dest_enough_bytes' to the condition above, but that makes
-    # no difference.
+    # '&& !type_dest.as_many_bytes_as?(type_src)' to the condition
+    # above, but that makes no difference.
     yield cenv
-  when type_dest.unsigned? && dest_enough_bytes
+  when type_dest.unsigned? && type_dest.as_many_bytes_as?(type_src)
     # We shouldn't need an upper comparison because the destination
     # type is unsigned and guaranteed to have at least as many bytes
     # as the source type.  Explicitly record this assumption and test
-    # it using the preproscessor.
-    assume do |cenv|
-      cenv.puts "#if #{type_src.max_str} > #{type_dest.max_str}"
-      cenv.puts "#error assumed no #{type_src} is too large to be represented as a #{type_dest}"
-      cenv.puts "#endif"
-    end
+    # it using the preprocessor.
+    assume_max_not_greater(type_src, type_dest)
   else
     cenv.puts "#if #{type_src.max_str} > #{type_dest.max_str}"
     yield cenv

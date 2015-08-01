@@ -57,9 +57,7 @@ __MINGW_INTSAFE_API HRESULT UShortToShort(_In_ USHORT operand, _Out_ SHORT * res
 __MINGW_INTSAFE_API HRESULT ShortToUChar(_In_ SHORT operand, _Out_ UCHAR * result)
 {
     *result = 0;
-    #if SHRT_MAX > UCHAR_MAX
     if (operand > UCHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    #endif
     if (operand < 0) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = operand;
     return S_OK;
@@ -92,9 +90,7 @@ __MINGW_INTSAFE_API HRESULT UIntToUShort(_In_ UINT operand, _Out_ USHORT * resul
 __MINGW_INTSAFE_API HRESULT UIntToShort(_In_ UINT operand, _Out_ SHORT * result)
 {
     *result = 0;
-    #if UINT_MAX > SHRT_MAX
     if (operand > SHRT_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    #endif
     *result = operand;
     return S_OK;
 }
@@ -122,9 +118,7 @@ __MINGW_INTSAFE_API HRESULT UIntToSSIZET(_In_ UINT operand, _Out_ SSIZE_T * resu
 __MINGW_INTSAFE_API HRESULT IntToUChar(_In_ INT operand, _Out_ UCHAR * result)
 {
     *result = 0;
-    #if INT_MAX > UCHAR_MAX
     if (operand > UCHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    #endif
     if (operand < 0) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = operand;
     return S_OK;
@@ -133,9 +127,7 @@ __MINGW_INTSAFE_API HRESULT IntToUChar(_In_ INT operand, _Out_ UCHAR * result)
 __MINGW_INTSAFE_API HRESULT IntToUShort(_In_ INT operand, _Out_ USHORT * result)
 {
     *result = 0;
-    #if INT_MAX > USHRT_MAX
     if (operand > USHRT_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    #endif
     if (operand < 0) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = operand;
     return S_OK;
@@ -185,9 +177,7 @@ __MINGW_INTSAFE_API HRESULT ULongLongToUInt(_In_ ULONGLONG operand, _Out_ UINT *
 __MINGW_INTSAFE_API HRESULT ULongLongToInt(_In_ ULONGLONG operand, _Out_ INT * result)
 {
     *result = 0;
-    #if ULLONG_MAX > INT_MAX
     if (operand > INT_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    #endif
     *result = operand;
     return S_OK;
 }
@@ -223,9 +213,7 @@ __MINGW_INTSAFE_API HRESULT ULongLongToSSIZET(_In_ ULONGLONG operand, _Out_ SSIZ
 __MINGW_INTSAFE_API HRESULT Int64ToUInt(_In_ INT64 operand, _Out_ UINT * result)
 {
     *result = 0;
-    #if _I64_MAX > UINT_MAX
     if (operand > UINT_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    #endif
     if (operand < 0) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = operand;
     return S_OK;
