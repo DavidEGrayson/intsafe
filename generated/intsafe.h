@@ -16,6 +16,16 @@
 #include <limits.h>
 #include <sal.h>
 
+/* TODO: This logic should be moved to limits.h
+ * so we can use CHAR_MIN/CHAR_MAX. */
+#ifdef __CHAR_UNSIGNED__
+#define __MINGW_INTSAFE_CHAR_MIN 0
+#define __MINGW_INTSAFE_CHAR_MAX 0xff
+#else
+#define __MINGW_INTSAFE_CHAR_MIN -0x80
+#define __MINGW_INTSAFE_CHAR_MAX 0x7f
+#endif
+
 #define INTSAFE_E_ARITHMETIC_OVERFLOW ((HRESULT)0x80070216L)
 
 #ifndef S_OK
@@ -834,15 +844,6 @@ translation units with different types of chars are linked together. */
 #define LongToChar __mingw_intsafe_uchar_LongToChar
 #endif
 
-/* this logic should be moved to limits.h */
-#ifdef __CHAR_UNSIGNED__
-#define __MINGW_INTSAFE_CHAR_MIN 0
-#define __MINGW_INTSAFE_CHAR_MAX 0xff
-#else
-#define __MINGW_INTSAFE_CHAR_MIN -0x80
-#define __MINGW_INTSAFE_CHAR_MAX 0x7f
-#endif
-
 __MINGW_INTSAFE_CHAR_API HRESULT UShortToChar(_In_ USHORT operand, _Out_ CHAR * result)
 {
     *result = 0;
@@ -897,6 +898,7 @@ __MINGW_INTSAFE_CHAR_API HRESULT LongToChar(_In_ LONG operand, _Out_ CHAR * resu
 __MINGW_INTSAFE_API HRESULT UShortAdd(_In_ USHORT x, _In_ USHORT y, _Out_ USHORT * result)
 {
     *result = 0;
+    if (y > USHRT_MAX - x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = x + y;
     return S_OK;
 }
@@ -904,6 +906,8 @@ __MINGW_INTSAFE_API HRESULT UShortAdd(_In_ USHORT x, _In_ USHORT y, _Out_ USHORT
 __MINGW_INTSAFE_API HRESULT ShortAdd(_In_ SHORT x, _In_ SHORT y, _Out_ SHORT * result)
 {
     *result = 0;
+    if (x > 0 && y > SHRT_MAX - x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x < 0 && y < SHRT_MIN - x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = x + y;
     return S_OK;
 }
@@ -911,6 +915,7 @@ __MINGW_INTSAFE_API HRESULT ShortAdd(_In_ SHORT x, _In_ SHORT y, _Out_ SHORT * r
 __MINGW_INTSAFE_API HRESULT UIntAdd(_In_ UINT x, _In_ UINT y, _Out_ UINT * result)
 {
     *result = 0;
+    if (y > UINT_MAX - x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = x + y;
     return S_OK;
 }
@@ -918,6 +923,7 @@ __MINGW_INTSAFE_API HRESULT UIntAdd(_In_ UINT x, _In_ UINT y, _Out_ UINT * resul
 __MINGW_INTSAFE_API HRESULT ULongAdd(_In_ ULONG x, _In_ ULONG y, _Out_ ULONG * result)
 {
     *result = 0;
+    if (y > ULONG_MAX - x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = x + y;
     return S_OK;
 }
@@ -925,6 +931,8 @@ __MINGW_INTSAFE_API HRESULT ULongAdd(_In_ ULONG x, _In_ ULONG y, _Out_ ULONG * r
 __MINGW_INTSAFE_API HRESULT IntAdd(_In_ INT x, _In_ INT y, _Out_ INT * result)
 {
     *result = 0;
+    if (x > 0 && y > INT_MAX - x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x < 0 && y < INT_MIN - x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = x + y;
     return S_OK;
 }
@@ -932,6 +940,8 @@ __MINGW_INTSAFE_API HRESULT IntAdd(_In_ INT x, _In_ INT y, _Out_ INT * result)
 __MINGW_INTSAFE_API HRESULT LongAdd(_In_ LONG x, _In_ LONG y, _Out_ LONG * result)
 {
     *result = 0;
+    if (x > 0 && y > LONG_MAX - x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x < 0 && y < LONG_MIN - x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = x + y;
     return S_OK;
 }
@@ -939,6 +949,7 @@ __MINGW_INTSAFE_API HRESULT LongAdd(_In_ LONG x, _In_ LONG y, _Out_ LONG * resul
 __MINGW_INTSAFE_API HRESULT UIntPtrAdd(_In_ UINT_PTR x, _In_ UINT_PTR y, _Out_ UINT_PTR * result)
 {
     *result = 0;
+    if (y > UINTPTR_MAX - x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = x + y;
     return S_OK;
 }
@@ -946,6 +957,7 @@ __MINGW_INTSAFE_API HRESULT UIntPtrAdd(_In_ UINT_PTR x, _In_ UINT_PTR y, _Out_ U
 __MINGW_INTSAFE_API HRESULT DWordPtrAdd(_In_ DWORD_PTR x, _In_ DWORD_PTR y, _Out_ DWORD_PTR * result)
 {
     *result = 0;
+    if (y > SIZE_MAX - x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = x + y;
     return S_OK;
 }
@@ -953,6 +965,8 @@ __MINGW_INTSAFE_API HRESULT DWordPtrAdd(_In_ DWORD_PTR x, _In_ DWORD_PTR y, _Out
 __MINGW_INTSAFE_API HRESULT IntPtrAdd(_In_ INT_PTR x, _In_ INT_PTR y, _Out_ INT_PTR * result)
 {
     *result = 0;
+    if (x > 0 && y > INTPTR_MAX - x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x < 0 && y < INTPTR_MIN - x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = x + y;
     return S_OK;
 }
@@ -960,6 +974,8 @@ __MINGW_INTSAFE_API HRESULT IntPtrAdd(_In_ INT_PTR x, _In_ INT_PTR y, _Out_ INT_
 __MINGW_INTSAFE_API HRESULT SSIZETAdd(_In_ SSIZE_T x, _In_ SSIZE_T y, _Out_ SSIZE_T * result)
 {
     *result = 0;
+    if (x > 0 && y > SSIZE_MAX - x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x < 0 && y < INTPTR_MIN - x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = x + y;
     return S_OK;
 }
@@ -967,6 +983,7 @@ __MINGW_INTSAFE_API HRESULT SSIZETAdd(_In_ SSIZE_T x, _In_ SSIZE_T y, _Out_ SSIZ
 __MINGW_INTSAFE_API HRESULT ULongLongAdd(_In_ ULONGLONG x, _In_ ULONGLONG y, _Out_ ULONGLONG * result)
 {
     *result = 0;
+    if (y > ULLONG_MAX - x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = x + y;
     return S_OK;
 }

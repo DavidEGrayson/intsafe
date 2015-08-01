@@ -147,6 +147,8 @@ def write_function_aliases(cenv)
 end
 
 def write_function(cenv, func_name, args, ret=nil)
+  raise if !(ApiFunctionNames.include?(func_name) ||
+             func_name.start_with?('__mingw_intsafe_'))
   ret ||= '__MINGW_INTSAFE_API HRESULT'
   cenv.puts "#{ret} #{func_name}(#{args})"
   cenv.puts '{'
