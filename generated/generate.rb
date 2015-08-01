@@ -172,10 +172,10 @@ def cenv_where_upper_check_needed(cenv, type_src, type_dest)
   case
   when type_src.unsigned? && type_dest.unsigned? && !dest_enough_bytes
     # Both are unsigned and the destination type is not guaranteed to
-    # be larger, so let's do the comparison.  This will be unneeded in
-    # some cases (like comparing a UINT to a UINT_PTR on a 32-bit
-    # system) but the optimizer should have no problem removing those
-    # cases, and there is no risk of doing a signed/unsigned
+    # be large enough, so let's do the comparison.  This will be
+    # unneeded in some cases (like comparing a UINT to a UINT_PTR on a
+    # 32-bit system) but the optimizer should have no problem removing
+    # those cases, and there is no risk of doing a signed/unsigned
     # comparison.
     yield cenv
   when type_dest.unsigned? && dest_enough_bytes
