@@ -7,7 +7,7 @@ def sub_function_name(type)
 end
 
 def mult_function_name(type)
-  "#{type.camel_name}Mult__"  # TODO: fix
+  "#{type.camel_name}Mult"
 end
 
 def math_function_names(type)
@@ -18,7 +18,6 @@ def write_add_function(cenv, type)
   func_name = add_function_name(type)
   return if !function_body_needed?(func_name)
 
-  ret = '__MINGW_INTSAFE_API HRESULT'
   args = "_In_ #{type} x, _In_ #{type} y, _Out_ #{type} * result"
   write_function(cenv, func_name, args) do |cenv|
     cenv.puts "*result = 0;"
@@ -61,6 +60,32 @@ def write_sub_function(cenv, type)
   end
 end
 
+def write_mult_function(cenv, type)
+  func_name = mult_function_name(type)
+  return if !function_body_needed?(func_name)
+
+  FunctionAliases.each_key { |k| FunctionAliases.delete(k) if k.end_with? 'Mult' } # tmphax
+  return if type.signed?  # tmphax
+
+  args = "_In_ #{type} x, _In_ #{type} y, _Out_ #{type} * result"
+  write_function(cenv, func_name, args) do |cenv|
+    cenv.puts "*result = 0;"
+
+    if type.signed?
+      too_big = nil
+      too_small = nil
+    else
+      too_big = "y > 0 && x > #{type.max_str} / y"  # TODO: surely this isn't good enough
+      too_small = nil
+    end
+
+    cenv.puts "if (#{too_big}) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
+    cenv.puts "if (#{too_small}) return INTSAFE_E_ARITHMETIC_OVERFLOW;" if too_small
+    cenv.puts "*result = x * y;"
+    cenv.puts "return S_OK;"
+  end
+end
+
 def calculate_math_function_aliases
   aliases = {}
   Types.each do |type|
@@ -81,7 +106,13 @@ end
 def write_math_functions(cenv)
   Types.each do |type|
     write_add_function(cenv, type)
+  end
+
+  Types.each do |type|
     write_sub_function(cenv, type)
-    # TODO: write_mult_function(cenv, type)
+  end
+
+  Types.each do |type|
+    write_mult_function(cenv, type)
   end
 end

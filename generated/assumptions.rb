@@ -45,15 +45,17 @@ def write_limit_assumptions(cenv)
     if !tested.include?(type.max_str)
       tested << type.max_str
       unless std_max_name == type.max_str
-        cenv.puts_ct_assert "#{std_max_name} == #{type.max_str}"
+        cenv.puts_ct_assert "#{type.max_str} == #{std_max_name}"
       end
     end
 
     if type.min_str != 0 && !tested.include?(type.min_str)
       tested << type.max_str
       unless std_min_name == type.min_str
-        cenv.puts_ct_assert "#{std_min_name} == #{type.min_str}"
+        cenv.puts_ct_assert "#{type.min_str} == #{std_min_name}"
       end
+
+      cenv.puts_ct_assert "#{type.min_str} == -#{type.max_str} - 1"
     end
   end
   cenv.puts
