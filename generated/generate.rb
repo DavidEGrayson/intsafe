@@ -1,20 +1,5 @@
-# The license for this file and all files in this directory is:
-LICENSE = <<END
-/* This file is free and unencumbered software released into the
- * public domain. */
-END
-
-INFO = <<END
-/* This file is an implementation of Microsoft's intsafe.h header, which
- * provides inline functions for safe integer conversions and math operations:
- *
- *     https://msdn.microsoft.com/en-us/library/windows/desktop/ff521693
- *
- * It was mostly auto-generated using a script that can be found at:
- *
- *     https://github.com/DavidEGrayson/intsafe
- */
-END
+# This file and the files in this directory are unencumbered software
+# released into the public domain.
 
 require 'stringio'
 
@@ -300,26 +285,37 @@ def write_function(cenv, func_name, args, ret=nil)
   GeneratedFunctions << func_name
 end
 
+def upper_check_needed(type_src, type_dest)
+  case
+  when type_dest.more_bytes_than?(type_src)
+    # On every system we care about, the destination type has more
+    # bytes, so skip the comparison.
+    false
+
+  when type_dest.unsigned? && type_dest.as_many_bytes_as?(type_src)
+    # We shouldn't need an upper comparison because the destination
+    # type is unsigned and guaranteed to have at least as many bytes
+    # as the source type.
+    false
+
+  when type_src.signed? == type_dest.signed? && type_dest.as_many_bytes_as?(type_src)
+    # If the two types have equal signs and the destination is big
+    # enough, we can skip the comparison.
+    false
+
+  else
+    true
+  end
+end
+
 # Yields zero or more C environments to the caller where we definitely
 # need to do an upper bound check because it is possible that a value
 # of type type_src is too big to be represented in type_dest.  We
 # generate such environments either using ifdefs or our knowledge of
 # the possibilities incarnations that each type has.
 def cenv_where_upper_check_needed(cenv, type_src, type_dest)
+  return if !upper_check_needed(type_src, type_dest)
   case
-  when type_dest.more_bytes_than?(type_src)
-    # On every system we care about, the destination type has more
-    # bytes, so skip the comparison.
-
-  when type_dest.unsigned? && type_dest.as_many_bytes_as?(type_src)
-    # We shouldn't need an upper comparison because the destination
-    # type is unsigned and guaranteed to have at least as many bytes
-    # as the source type.
-
-  when type_src.signed? == type_dest.signed? && type_dest.as_many_bytes_as?(type_src)
-    # If the two types have equal signs and the destination is big
-    # enough, we can skip the comparison.
-
   when type_src.type_id == -PointerSizeDummy && type_dest.type_id == 4
     # On 64-bit systems, we need to do an upper check because signed
     # pointers can be bigger than unsigned ints.
@@ -352,23 +348,29 @@ def cenv_where_upper_check_needed(cenv, type_src, type_dest)
   end
 end
 
+def lower_check_needed(type_src, type_dest)
+  case
+  when type_src.unsigned?
+    # The source is unsigned, so it can't be less than 0, so it will
+    # never be too small.
+    false
+  when type_src.signed? && type_dest.signed? && type_dest.as_many_bytes_as?(type_src)
+    # It is a signed-to-signed conversion and the destination will
+    # always be big enough.
+    false
+  else
+    true
+  end
+end
+
 # Yields zero or more C environments to the caller where we definitely
 # need to do a lower bound check because it is possible that a value
 # of type type_src is too big to be represented in type_dest.  We
 # generate such environments either using ifdefs or our knowledge of
 # the possibilities incarnations that each type has.
 def cenv_where_lower_check_needed(cenv, type_src, type_dest)
-  case
-  when type_src.unsigned?
-    # The source is unsigned, so it can't be less than 0, so it will
-    # never be too small.
-  when type_src.signed? && type_dest.signed? && type_dest.as_many_bytes_as?(type_src)
-    # It is a signed-to-signed conversion and the destination will
-    # always be big enough.
-  else
-    # Otherwise perform the check.
-    yield cenv
-  end
+  return if !lower_check_needed(type_src, type_dest)
+  yield cenv
 end
 
 def write_conversion_function(cenv, type_src, type_dest)
@@ -377,7 +379,9 @@ def write_conversion_function(cenv, type_src, type_dest)
   func_name = conversion_function_name(type_src, type_dest)
   args = "_In_ #{type_src} operand, _Out_ #{type_dest} * result"
   write_function(cenv, func_name, args) do |cenv|
-    cenv.puts "*result = 0;"
+    if upper_check_needed(type_src, type_dest) || lower_check_needed(type_src, type_dest)
+      cenv.puts "*result = 0;"
+    end
 
     # Suppress this check if the source type is signed, the
     # destination type is unsigned, and the check is unnecessary.
@@ -480,10 +484,6 @@ def write_todos_for_missing_functions(cenv)
 end
 
 def write_top(cenv)
-  cenv.puts LICENSE
-  cenv.puts
-  cenv.puts INFO
-  cenv.puts
   cenv.puts File.read('top.h')
   cenv.puts
 end

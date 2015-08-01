@@ -1,3 +1,14 @@
+/* This file was auto-generated from https://github.com/DavidEGrayson/intsafe
+ *
+ * This file is an implementation of Microsoft's intsafe.h header, which
+ * provides inline functions for safe integer conversions and math operations:
+ *
+ *     https://msdn.microsoft.com/en-us/library/windows/desktop/ff521693
+ */
+
+/* This file is free and unencumbered software released into the
+ * public domain. */
+
 #pragma once
 
 #include <stdint.h>

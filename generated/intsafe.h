@@ -1,15 +1,13 @@
-/* This file is free and unencumbered software released into the
- * public domain. */
-
-/* This file is an implementation of Microsoft's intsafe.h header, which
+/* This file was auto-generated from https://github.com/DavidEGrayson/intsafe
+ *
+ * This file is an implementation of Microsoft's intsafe.h header, which
  * provides inline functions for safe integer conversions and math operations:
  *
  *     https://msdn.microsoft.com/en-us/library/windows/desktop/ff521693
- *
- * It was mostly auto-generated using a script that can be found at:
- *
- *     https://github.com/DavidEGrayson/intsafe
  */
+
+/* This file is free and unencumbered software released into the
+ * public domain. */
 
 #pragma once
 
@@ -239,7 +237,6 @@ __MINGW_INTSAFE_API HRESULT ULongToShort(_In_ ULONG operand, _Out_ SHORT * resul
 
 __MINGW_INTSAFE_API HRESULT ULongToUInt(_In_ ULONG operand, _Out_ UINT * result)
 {
-    *result = 0;
     *result = operand;
     return S_OK;
 }
@@ -262,7 +259,6 @@ __MINGW_INTSAFE_API HRESULT ULongToLong(_In_ ULONG operand, _Out_ LONG * result)
 
 __MINGW_INTSAFE_API HRESULT ULongToUIntPtr(_In_ ULONG operand, _Out_ UINT_PTR * result)
 {
-    *result = 0;
     *result = operand;
     return S_OK;
 }
@@ -395,7 +391,6 @@ __MINGW_INTSAFE_API HRESULT LongToULong(_In_ LONG operand, _Out_ ULONG * result)
 
 __MINGW_INTSAFE_API HRESULT LongToInt(_In_ LONG operand, _Out_ INT * result)
 {
-    *result = 0;
     *result = operand;
     return S_OK;
 }
@@ -418,7 +413,6 @@ __MINGW_INTSAFE_API HRESULT LongToDWordPtr(_In_ LONG operand, _Out_ DWORD_PTR * 
 
 __MINGW_INTSAFE_API HRESULT LongToIntPtr(_In_ LONG operand, _Out_ INT_PTR * result)
 {
-    *result = 0;
     *result = operand;
     return S_OK;
 }
@@ -521,7 +515,6 @@ __MINGW_INTSAFE_API HRESULT DWordPtrToLong(_In_ DWORD_PTR operand, _Out_ LONG * 
 
 __MINGW_INTSAFE_API HRESULT DWordPtrToUIntPtr(_In_ DWORD_PTR operand, _Out_ UINT_PTR * result)
 {
-    *result = 0;
     *result = operand;
     return S_OK;
 }
@@ -672,7 +665,6 @@ __MINGW_INTSAFE_API HRESULT SSIZETToDWordPtr(_In_ SSIZE_T operand, _Out_ DWORD_P
 
 __MINGW_INTSAFE_API HRESULT SSIZETToIntPtr(_In_ SSIZE_T operand, _Out_ INT_PTR * result)
 {
-    *result = 0;
     *result = operand;
     return S_OK;
 }
