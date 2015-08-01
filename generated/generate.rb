@@ -108,9 +108,9 @@ UnsignedCharType = CNumberType['CHAR', 'Char', 1, 'UCHAR_MAX', 0]
 # operations.
 Types = [
   CNumberType['UCHAR', 'UChar', 1, 'UCHAR_MAX', 0],
-  CNumberType['INT8', 'Int8', -1, 'INT8_MAX', 'INT8_MIN'],
   CNumberType['UINT8', 'UInt8', 1, 'UINT8_MAX', 0],
   CNumberType['BYTE', 'Byte', 1, '_', 0],
+  CNumberType['INT8', 'Int8', -1, 'INT8_MAX', 'INT8_MIN'],
   CNumberType['USHORT', 'UShort', 2, 'USHRT_MAX', 0],
   CNumberType['WORD', 'Word', 2, '_', 0],
   CNumberType['SHORT', 'Short', -2, 'SHRT_MAX', 'SHRT_MIN'],
@@ -131,6 +131,8 @@ Types = [
   CNumberType['INT64', 'Int64', -8, '_I64_MAX', '_I64_MIN'],
   CNumberType['LONGLONG', 'LongLong', -8, 'LLONG_MAX', 'LLONG_MIN'],
 ]
+
+raise "bad type ordering" if Types != Types.sort_by { |t| [t.type_id.abs, -t.type_id] }
 
 TypesByName = Types.each_with_object({}) { |type, h| h[type.name] = type }
 
