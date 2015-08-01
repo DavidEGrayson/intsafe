@@ -102,6 +102,10 @@ UnsignedCharType = CNumberType['CHAR', 'Char', 1, 'UCHAR_MAX', 0]
 # macros available to us.  We avoid ever actually emitting those
 # underscores because all the types using them are equivalent to types
 # without underscores, so function aliases are created.
+#
+# There are some gap we can't avoid, and that is why we use INTPTR
+# macros for LONG_PTR operations, and UINTPTR macros for ULONG_PTR
+# operations.
 Types = [
   CNumberType['UCHAR', 'UChar', 1, 'UCHAR_MAX', 0],
   CNumberType['INT8', 'Int8', -1, 'INT8_MAX', 'INT8_MIN'],
@@ -117,8 +121,8 @@ Types = [
   CNumberType['LONG', 'Long', -4, 'LONG_MAX', 'LONG_MIN'],
   CNumberType['UINT_PTR', 'UIntPtr', PointerSizeDummy, 'UINTPTR_MAX', 0],
   CNumberType['size_t', 'SizeT', PointerSizeDummy, 'SIZE_MAX', 0],  # not SIZE_T!
-  CNumberType['DWORD_PTR', 'DWordPtr', PointerSizeDummy, 'UINTPTR_MAX', 0],
-  CNumberType['ULONG_PTR', 'ULongPtr', PointerSizeDummy, '_', 0],
+  CNumberType['ULONG_PTR', 'ULongPtr', PointerSizeDummy, 'UINTPTR_MAX', 0],
+  CNumberType['DWORD_PTR', 'DWordPtr', PointerSizeDummy, '_', 0],
   CNumberType['INT_PTR', 'IntPtr', -PointerSizeDummy, 'INTPTR_MAX', 'INTPTR_MIN'],
   CNumberType['ptrdiff_t', 'PtrdiffT', -PointerSizeDummy, 'PTRDIFF_MAX', 'PTRDIFF_MIN'],
   CNumberType['LONG_PTR', 'LongPtr', -PointerSizeDummy, 'INTPTR_MAX', 'INTPTR_MIN'],
@@ -135,7 +139,7 @@ EquivalentTypes = [
   %w(USHORT WORD),
   %w(ULONG DWORD),
   %w(UINT_PTR size_t),
-  %w(DWORD_PTR ULONG_PTR),
+  %w(ULONG_PTR DWORD_PTR),
   %w(INT_PTR ptrdiff_t),
   %w(LONG_PTR SSIZE_T),
   %w(INT64 LONGLONG)
