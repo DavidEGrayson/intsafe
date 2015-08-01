@@ -64,24 +64,26 @@ def write_mult_function(cenv, type)
   func_name = mult_function_name(type)
   return if !function_body_needed?(func_name)
 
-  return if type.signed?  # tmphax
-
   args = "_In_ #{type} x, _In_ #{type} y, _Out_ #{type} * result"
   write_function(cenv, func_name, args) do |cenv|
     cenv.puts "*result = 0;"
 
-    if type.signed?
-      too_big = nil
-      too_small = nil
-    else
+    conds = []
+    if type.unsigned?
       # With unsigned types in C, max/y is the biggest number q such that q*y <= max.
       # Therefore, q*y is fine but (q + 1) * y would overflow.
-      too_big = "y > 0 && x > #{type.max_str} / y"
-      too_small = nil
+      conds << "y > 0 && x > #{type.max_str} / y"
+    else
+      # Similar logic applies for the four signed multiplication cases.
+      conds << "x > 0 && y > 0 && x > #{type.max_str} / y"
+      conds << "x < 0 && y > 0 && x < #{type.min_str} / y"
+      conds << "x > 0 && y < 0 && y < #{type.min_str} / x"
+      conds << "x < 0 && y < 0 && (x <= #{type.min_str} || y <= #{type.min_str} || -x > #{type.max_str} / -y)"
     end
 
-    cenv.puts "if (#{too_big}) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
-    cenv.puts "if (#{too_small}) return INTSAFE_E_ARITHMETIC_OVERFLOW;" if too_small
+    conds.each do |cond|
+      cenv.puts "if (#{cond}) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
+    end
     cenv.puts "*result = x * y;"
     cenv.puts "return S_OK;"
   end

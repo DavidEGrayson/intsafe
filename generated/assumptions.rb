@@ -55,7 +55,10 @@ def write_limit_assumptions(cenv)
         cenv.puts_ct_assert "#{type.min_str} == #{std_min_name}"
       end
 
-      cenv.puts_ct_assert "#{type.min_str} == -#{type.max_str} - 1"
+      # We don't really need to assert this; GCC only supports two's
+      # complement types according to the section about integers in
+      # the manual.
+      # cenv.puts_ct_assert "#{type.min_str} == -#{type.max_str} - 1"
     end
   end
   cenv.puts

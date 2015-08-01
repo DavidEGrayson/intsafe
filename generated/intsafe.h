@@ -101,27 +101,19 @@ C_ASSERT(UCHAR_MAX == UINT8_MAX);
 C_ASSERT(USHRT_MAX == UINT16_MAX);
 C_ASSERT(SHRT_MAX == INT16_MAX);
 C_ASSERT(SHRT_MIN == INT16_MIN);
-C_ASSERT(SHRT_MIN == -SHRT_MAX - 1);
 C_ASSERT(UINT_MAX == UINT32_MAX);
 C_ASSERT(ULONG_MAX == UINT32_MAX);
 C_ASSERT(INT_MAX == INT32_MAX);
 C_ASSERT(INT_MIN == INT32_MIN);
-C_ASSERT(INT_MIN == -INT_MAX - 1);
 C_ASSERT(LONG_MAX == INT32_MAX);
 C_ASSERT(LONG_MIN == INT32_MIN);
-C_ASSERT(LONG_MIN == -LONG_MAX - 1);
 C_ASSERT(SIZE_MAX == UINTPTR_MAX);
-C_ASSERT(INTPTR_MIN == -INTPTR_MAX - 1);
 C_ASSERT(PTRDIFF_MAX == INTPTR_MAX);
 C_ASSERT(PTRDIFF_MIN == INTPTR_MIN);
-C_ASSERT(PTRDIFF_MIN == -PTRDIFF_MAX - 1);
 C_ASSERT(SSIZE_MAX == INTPTR_MAX);
-C_ASSERT(INTPTR_MIN == -SSIZE_MAX - 1);
-C_ASSERT(INTPTR_MIN == -INTPTR_MAX - 1);
 C_ASSERT(ULLONG_MAX == UINT64_MAX);
 C_ASSERT(_I64_MAX == INT64_MAX);
 C_ASSERT(_I64_MIN == INT64_MIN);
-C_ASSERT(_I64_MIN == -_I64_MAX - 1);
 
 #ifndef __cplusplus
 C_ASSERT(__builtin_types_compatible_p(UCHAR, BYTE));
@@ -1101,6 +1093,17 @@ __MINGW_INTSAFE_API HRESULT UShortMult(_In_ USHORT x, _In_ USHORT y, _Out_ USHOR
     return S_OK;
 }
 
+__MINGW_INTSAFE_API HRESULT ShortMult(_In_ SHORT x, _In_ SHORT y, _Out_ SHORT * result)
+{
+    *result = 0;
+    if (x > 0 && y > 0 && x > SHRT_MAX / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x < 0 && y > 0 && x < SHRT_MIN / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x > 0 && y < 0 && y < SHRT_MIN / x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x < 0 && y < 0 && (x <= SHRT_MIN || y <= SHRT_MIN || -x > SHRT_MAX / -y)) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    *result = x * y;
+    return S_OK;
+}
+
 __MINGW_INTSAFE_API HRESULT UIntMult(_In_ UINT x, _In_ UINT y, _Out_ UINT * result)
 {
     *result = 0;
@@ -1117,6 +1120,28 @@ __MINGW_INTSAFE_API HRESULT ULongMult(_In_ ULONG x, _In_ ULONG y, _Out_ ULONG * 
     return S_OK;
 }
 
+__MINGW_INTSAFE_API HRESULT IntMult(_In_ INT x, _In_ INT y, _Out_ INT * result)
+{
+    *result = 0;
+    if (x > 0 && y > 0 && x > INT_MAX / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x < 0 && y > 0 && x < INT_MIN / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x > 0 && y < 0 && y < INT_MIN / x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x < 0 && y < 0 && (x <= INT_MIN || y <= INT_MIN || -x > INT_MAX / -y)) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    *result = x * y;
+    return S_OK;
+}
+
+__MINGW_INTSAFE_API HRESULT LongMult(_In_ LONG x, _In_ LONG y, _Out_ LONG * result)
+{
+    *result = 0;
+    if (x > 0 && y > 0 && x > LONG_MAX / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x < 0 && y > 0 && x < LONG_MIN / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x > 0 && y < 0 && y < LONG_MIN / x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x < 0 && y < 0 && (x <= LONG_MIN || y <= LONG_MIN || -x > LONG_MAX / -y)) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    *result = x * y;
+    return S_OK;
+}
+
 __MINGW_INTSAFE_API HRESULT UIntPtrMult(_In_ UINT_PTR x, _In_ UINT_PTR y, _Out_ UINT_PTR * result)
 {
     *result = 0;
@@ -1129,6 +1154,28 @@ __MINGW_INTSAFE_API HRESULT DWordPtrMult(_In_ DWORD_PTR x, _In_ DWORD_PTR y, _Ou
 {
     *result = 0;
     if (y > 0 && x > SIZE_MAX / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    *result = x * y;
+    return S_OK;
+}
+
+__MINGW_INTSAFE_API HRESULT IntPtrMult(_In_ INT_PTR x, _In_ INT_PTR y, _Out_ INT_PTR * result)
+{
+    *result = 0;
+    if (x > 0 && y > 0 && x > INTPTR_MAX / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x < 0 && y > 0 && x < INTPTR_MIN / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x > 0 && y < 0 && y < INTPTR_MIN / x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x < 0 && y < 0 && (x <= INTPTR_MIN || y <= INTPTR_MIN || -x > INTPTR_MAX / -y)) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    *result = x * y;
+    return S_OK;
+}
+
+__MINGW_INTSAFE_API HRESULT SSIZETMult(_In_ SSIZE_T x, _In_ SSIZE_T y, _Out_ SSIZE_T * result)
+{
+    *result = 0;
+    if (x > 0 && y > 0 && x > SSIZE_MAX / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x < 0 && y > 0 && x < INTPTR_MIN / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x > 0 && y < 0 && y < INTPTR_MIN / x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (x < 0 && y < 0 && (x <= INTPTR_MIN || y <= INTPTR_MIN || -x > SSIZE_MAX / -y)) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = x * y;
     return S_OK;
 }
@@ -1256,7 +1303,9 @@ __MINGW_INTSAFE_API HRESULT ULongLongMult(_In_ ULONGLONG x, _In_ ULONGLONG y, _O
 #define ULongPtrMult DWordPtrMult
 #define PtrdiffTAdd IntPtrAdd
 #define PtrdiffTSub IntPtrSub
+#define PtrdiffTMult IntPtrMult
 #define LongPtrAdd SSIZETAdd
 #define LongPtrSub SSIZETSub
+#define LongPtrMult SSIZETMult
 
-/* TODO: add 16 missing functions */
+/* TODO: add 9 missing functions */
