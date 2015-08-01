@@ -132,12 +132,10 @@ Types = [
   CNumberType['LONGLONG', 'LongLong', -8, 'LLONG_MAX', 'LLONG_MIN'],
 ]
 
-raise "bad type ordering" if Types != Types.sort_by { |t| [t.type_id.abs, -t.type_id] }
-
 TypesByName = Types.each_with_object({}) { |type, h| h[type.name] = type }
 
 EquivalentTypes = [
-  %w(UCHAR BYTE UINT8),
+  %w(UCHAR UINT8 BYTE),
   %w(USHORT WORD),
   %w(ULONG DWORD),
   %w(UINT_PTR size_t),
@@ -146,6 +144,14 @@ EquivalentTypes = [
   %w(LONG_PTR SSIZE_T),
   %w(INT64 LONGLONG)
 ]
+
+# Consistent sorting for types.
+Types.replace Types.sort_by { |t|
+  ec = EquivalentTypes.find { |ec| ec.include?(t.name) }
+  class_order = EquivalentTypes.index(ec) || -1
+  inner_class_order = ec ? ec.index(t.name) : -1
+  [t.type_id.abs, -t.type_id, class_order, inner_class_order]
+}
 
 def EquivalentTypes.for_type(type)
   names = find { |ns| ns.include? type.name } or return [type]

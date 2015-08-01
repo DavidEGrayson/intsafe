@@ -124,8 +124,8 @@ C_ASSERT(LLONG_MAX == INT64_MAX);
 C_ASSERT(LLONG_MIN == INT64_MIN);
 
 #ifndef __cplusplus
-C_ASSERT(__builtin_types_compatible_p(UCHAR, BYTE));
 C_ASSERT(__builtin_types_compatible_p(UCHAR, UINT8));
+C_ASSERT(__builtin_types_compatible_p(UCHAR, BYTE));
 C_ASSERT(__builtin_types_compatible_p(USHORT, WORD));
 C_ASSERT(__builtin_types_compatible_p(ULONG, DWORD));
 C_ASSERT(__builtin_types_compatible_p(UINT_PTR, size_t));
