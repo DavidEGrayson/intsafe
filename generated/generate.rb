@@ -362,21 +362,36 @@ END
   cenv.puts
 end
 
-def write_specific_char_conversions(cenv, char_type)
-  Types.each do |type|
-    write_conversion_function(cenv, type, char_type)
+def write_conversion_to_char(cenv, type)
+  func_name = "#{type.camel_name}ToChar"
+  return if !ApiFunctionNames.include?(func_name)
+  args = "_In_ #{type} operand, _Out_ CHAR * result"
+  write_function(cenv, func_name, args) do |cenv|
+    cenv.puts "*result = 0;"
+    cenv.puts "if (operand > __MINGW_INTSAFE_CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
+    if type.signed?
+      cenv.puts "if (operand < __MINGW_INTSAFE_CHAR_MIN) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
+    end
+    cenv.puts "*result = operand;"
+    cenv.puts "return S_OK;"
   end
 end
 
 def write_char_conversions(cenv)
   cenv.puts "#ifdef __CHAR_UNSIGNED__"
-  cenv.puts
   write_unsigned_char_aliases(cenv, UnsignedCharType)
-  write_specific_char_conversions(cenv, UnsignedCharType)
-  cenv.puts "#else /* char is signed */"
-  cenv.puts
-  write_specific_char_conversions(cenv, SignedCharType)
+  cenv.puts_comment 'this logic should be moved to limits.h'
+  cenv.puts "#define __MINGW_INTSAFE_CHAR_MIN 0"
+  cenv.puts "#define __MINGW_INTSAFE_CHAR_MAX 0xff"
+  cenv.puts "#else"
+  cenv.puts "#define __MINGW_INTSAFE_CHAR_MIN -0x80"
+  cenv.puts "#define __MINGW_INTSAFE_CHAR_MAX 0x7f"
   cenv.puts "#endif"
+  cenv.puts
+
+  Types.each do |type|
+    write_conversion_to_char(cenv, type)
+  end
 end
 
 # Write functions for converting from one type to another.
