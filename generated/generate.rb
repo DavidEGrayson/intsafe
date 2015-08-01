@@ -20,7 +20,11 @@ Dir.chdir(File.dirname(__FILE__))
 ApiFunctionNames = File.readlines('function_names.txt').map(&:strip).reject(&:empty?)
 GeneratedFunctions = []
 
+Indent = '    '
+
 class CEnv
+  attr_accessor :indent_level
+
   def self.write_file(filename)
     File.open(filename, 'w') do |file|
       yield new(file)
@@ -29,14 +33,23 @@ class CEnv
 
   def initialize(io)
     @io = io
+    self.indent_level = 0
   end
 
   def puts(*args)
+    @io.print Indent * indent_level unless args.empty?
     @io.puts *args
   end
+
+  def puts_indent(*args)
+    self.indent_level += 1
+    puts *args
+    self.indent_level -= 1
+  end
+
 end
 
-class CNumberType < Struct.new(:name, :camel_name, :type_id, :min_str, :max_str)
+class CNumberType < Struct.new(:name, :camel_name, :type_id, :max_str, :min_str)
   def signed?
     type_id < 0
   end
@@ -55,6 +68,7 @@ end
 # This value can be negated for signed types.
 PointerSizeDummy = 7
 
+
 Types = [
   CNumberType['UCHAR', 'UChar', 1, 'UCHAR_MAX', 0],
   CNumberType['INT8', 'Int8', -1, 'SCHAR_MAX', 'SCHAR_MIN'],  # special type
@@ -70,7 +84,7 @@ Types = [
   CNumberType['ULONGLONG', 'ULongLong', 8, 'ULLONG_MAX', 0],
   CNumberType['INT64', 'Int64', -8, '_I64_MAX', '_I64_MIN'],
   CNumberType['UINT_PTR', 'UIntPtr', PointerSizeDummy, 'SIZE_MAX', 0],
-  CNumberType['SIZE_T', 'SizeT', PointerSizeDummy, 'SIZE_MAX', 0],
+  CNumberType['size_t', 'SizeT', PointerSizeDummy, 'SIZE_MAX', 0],  # not SIZE_T!
   CNumberType['DWORD_PTR', 'DWordPtr', PointerSizeDummy, 'SIZE_MAX', 0],
   CNumberType['ULONG_PTR', 'ULongPtr', PointerSizeDummy, 'SIZE_MAX', 0],
   CNumberType['INT_PTR', 'IntPtr', -PointerSizeDummy, 'SSIZE_MAX', 'SSIZE_MIN'],
@@ -87,9 +101,9 @@ TypeAliases = {
   'ULONG' => 'UINT',  # I think this isn't true; fix it when the compiler complains
   'DWORD' => 'UINT',  # probably not true either
   'LONG'  => 'INT',   # probably not true either
-  'UINT_PTR' => 'SIZE_T',
-  'DWORD_PTR' => 'SIZE_T',
-  'ULONG_PTR' => 'SIZE_T',
+  'UINT_PTR' => 'size_t',
+  'DWORD_PTR' => 'size_t',
+  'ULONG_PTR' => 'size_t',
   'INT_PTR' => 'SSIZE_T',
   'LONG_PTR' => 'SSIZE_T',
   'ptrdiff_t' => 'SSIZE_T',
@@ -104,7 +118,7 @@ MainTypes = [
   'INT',
   'ULONGLONG',
   'INT64',
-  'SIZE_T',
+  'size_t',
   'SSIZE_T'
 ].map(&TypesByName.method(:fetch))
 
@@ -129,7 +143,9 @@ end
 def write_function(cenv, func_name, args)
   cenv.puts "__MINGW_INTSAFE_API HRESULT #{func_name}(#{args})"
   cenv.puts '{'
+  cenv.indent_level += 1
   yield cenv
+  cenv.indent_level -= 1
   cenv.puts '}'
   cenv.puts
 end
@@ -139,7 +155,23 @@ def write_conversion_function(cenv, type_src, type_dest)
   args = "_In_ #{type_src} operand, _Out_ #{type_dest} * result"
   write_function(cenv, func_name, args) do |cenv|
     cenv.puts "*result = 0;"
-    cenv.puts "return INTSAFE_E_ARITHMETIC_OVERFLOW;"
+
+    # Suppress this check if the source type is signed, the
+    # destination type is unsigned, and the check is unnecessary.
+    unless type_src.signed? && type_dest.unsigned? && type_dest.type_id >= -type_src.type_id
+      cenv.puts "#if #{type_src.max_str} > #{type_dest.max_str}"
+      cenv.puts "if (operand > (#{type_src})#{type_dest.max_str}) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
+      cenv.puts "#endif"
+    end
+
+    # Suppress this check if the source type is unsigned because:
+    #   1) It is never needed when the source type is unsigned.
+    #   2) It causes a warnings about unsigned/signed comparison.
+    if type_src.signed?
+      cenv.puts "if (operand < #{type_dest.min_str}) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
+    end
+    cenv.puts "*result = operand;"
+    cenv.puts "return S_OK;"
   end
 end
 

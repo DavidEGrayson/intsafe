@@ -1,7 +1,12 @@
 #pragma once
 
-#include <ntdef.h>
+#include <wtypesbase.h>
 #include <limits.h>
+#include <sal.h>
+
+#ifndef S_OK
+#define S_OK ((HRESULT)0)
+#endif
 
 /* This should probably be in limits.h. */
 #ifndef SSIZE_MIN

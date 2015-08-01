@@ -8,7 +8,7 @@
 Dir.chdir(File.dirname(__FILE__))
 
 FunctionNames = File.readlines('function_names.txt').map(&:strip).reject(&:empty?)
-MissingFunctions = File.readlines('missing_functions.txt').map(&:strip)
+MissingFunctions = File.readlines('missing_functions.txt').map(&:strip).reject(&:empty?)
 TestedFunctions = []
 
 #module HexInt
