@@ -1,6 +1,8 @@
 # This file and the files in this directory are unencumbered software
 # released into the public domain.
 
+USE_GCC_BUILTINS = true
+
 require 'stringio'
 require_relative 'assumptions'
 require_relative 'conversions'
