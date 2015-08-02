@@ -185,9 +185,9 @@ def write_conversion_to_char(cenv, type)
   args = "_In_ #{type} operand, _Out_ CHAR * result"
   write_function(cenv, func_name, args, ret) do |cenv|
     cenv.puts "*result = 0;"
-    cenv.puts "if (operand > __MINGW_INTSAFE_CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
+    cenv.puts "if (operand > CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
     if type.signed?
-      cenv.puts "if (operand < __MINGW_INTSAFE_CHAR_MIN) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
+      cenv.puts "if (operand < CHAR_MIN) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
     end
     cenv.puts "*result = operand;"
     cenv.puts "return S_OK;"

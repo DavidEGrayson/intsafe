@@ -20,16 +20,6 @@
 #include <limits.h>
 #include <sal.h>
 
-/* TODO: This logic should be moved to limits.h
- * so we can use CHAR_MIN/CHAR_MAX. */
-#ifdef __CHAR_UNSIGNED__
-#define __MINGW_INTSAFE_CHAR_MIN 0
-#define __MINGW_INTSAFE_CHAR_MAX 0xff
-#else
-#define __MINGW_INTSAFE_CHAR_MIN -0x80
-#define __MINGW_INTSAFE_CHAR_MAX 0x7f
-#endif
-
 #define INTSAFE_E_ARITHMETIC_OVERFLOW ((HRESULT)0x80070216L)
 
 #ifndef S_OK

@@ -20,16 +20,6 @@
 #include <limits.h>
 #include <sal.h>
 
-/* TODO: This logic should be moved to limits.h
- * so we can use CHAR_MIN/CHAR_MAX. */
-#ifdef __CHAR_UNSIGNED__
-#define __MINGW_INTSAFE_CHAR_MIN 0
-#define __MINGW_INTSAFE_CHAR_MAX 0xff
-#else
-#define __MINGW_INTSAFE_CHAR_MIN -0x80
-#define __MINGW_INTSAFE_CHAR_MAX 0x7f
-#endif
-
 #define INTSAFE_E_ARITHMETIC_OVERFLOW ((HRESULT)0x80070216L)
 
 #ifndef S_OK
@@ -103,6 +93,13 @@ C_ASSERT((ULONG_PTR)-1 > 0);
 C_ASSERT((DWORD_PTR)-1 > 0);
 C_ASSERT((ULONGLONG)-1 > 0);
 
+#ifdef __CHAR_UNSIGNED__
+C_ASSERT(CHAR_MIN == 0);
+C_ASSERT(CHAR_MAX == UINT8_MAX);
+#else
+C_ASSERT(CHAR_MIN == INT8_MIN);
+C_ASSERT(CHAR_MAX == INT8_MAX);
+#endif
 C_ASSERT(UCHAR_MAX == UINT8_MAX);
 C_ASSERT(SHRT_MAX == INT16_MAX);
 C_ASSERT(SHRT_MIN == INT16_MIN);
@@ -959,7 +956,7 @@ __MINGW_INTSAFE_CHAR_API HRESULT
 UShortToChar(_In_ USHORT operand, _Out_ CHAR * result)
 {
     *result = 0;
-    if (operand > __MINGW_INTSAFE_CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (operand > CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = operand;
     return S_OK;
 }
@@ -968,8 +965,8 @@ __MINGW_INTSAFE_CHAR_API HRESULT
 ShortToChar(_In_ SHORT operand, _Out_ CHAR * result)
 {
     *result = 0;
-    if (operand > __MINGW_INTSAFE_CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    if (operand < __MINGW_INTSAFE_CHAR_MIN) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (operand > CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (operand < CHAR_MIN) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = operand;
     return S_OK;
 }
@@ -978,7 +975,7 @@ __MINGW_INTSAFE_CHAR_API HRESULT
 UIntToChar(_In_ UINT operand, _Out_ CHAR * result)
 {
     *result = 0;
-    if (operand > __MINGW_INTSAFE_CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (operand > CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = operand;
     return S_OK;
 }
@@ -987,7 +984,7 @@ __MINGW_INTSAFE_CHAR_API HRESULT
 ULongToChar(_In_ ULONG operand, _Out_ CHAR * result)
 {
     *result = 0;
-    if (operand > __MINGW_INTSAFE_CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (operand > CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = operand;
     return S_OK;
 }
@@ -996,8 +993,8 @@ __MINGW_INTSAFE_CHAR_API HRESULT
 IntToChar(_In_ INT operand, _Out_ CHAR * result)
 {
     *result = 0;
-    if (operand > __MINGW_INTSAFE_CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    if (operand < __MINGW_INTSAFE_CHAR_MIN) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (operand > CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (operand < CHAR_MIN) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = operand;
     return S_OK;
 }
@@ -1006,8 +1003,8 @@ __MINGW_INTSAFE_CHAR_API HRESULT
 LongToChar(_In_ LONG operand, _Out_ CHAR * result)
 {
     *result = 0;
-    if (operand > __MINGW_INTSAFE_CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
-    if (operand < __MINGW_INTSAFE_CHAR_MIN) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (operand > CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (operand < CHAR_MIN) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = operand;
     return S_OK;
 }

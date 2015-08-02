@@ -35,6 +35,14 @@ def write_sign_assumptions(cenv)
 end
 
 def write_limit_assumptions(cenv)
+  cenv.puts "#ifdef __CHAR_UNSIGNED__"
+  cenv.puts_ct_assert "CHAR_MIN == 0"
+  cenv.puts_ct_assert "CHAR_MAX == UINT8_MAX"
+  cenv.puts "#else"
+  cenv.puts_ct_assert "CHAR_MIN == INT8_MIN"
+  cenv.puts_ct_assert "CHAR_MAX == INT8_MAX"
+  cenv.puts "#endif"
+
   tested = []
   Types.each do |type|
     bits = type.type_id.abs * 8
