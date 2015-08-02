@@ -15,9 +15,6 @@
  *     https://msdn.microsoft.com/en-us/library/windows/desktop/ff521701
  */
 
-/* This file is free and unencumbered software released into the
- * public domain. */
-
 #pragma once
 
 #include <winapifamily.h>
