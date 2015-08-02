@@ -179,18 +179,23 @@ def write_function_aliases(cenv)
   cenv.puts
 end
 
-def write_function(cenv, func_name, args, ret=nil)
+def write_function(cenv, func_name, args, ret=nil, post=nil)
   raise if !(ApiFunctionNames.include?(func_name) ||
              func_name.start_with?('__mingw_intsafe_'))
   ret ||= '__MINGW_INTSAFE_API HRESULT'
   cenv.puts "#{ret}"
   cenv.puts "#{func_name}(#{args})"
-  cenv.puts '{'
-  cenv.indent_level += 1
-  yield cenv
-  cenv.indent_level -= 1
-  cenv.puts '}'
-  cenv.puts
+  if post
+    cenv.puts post
+  end
+  if block_given?
+    cenv.puts '{'
+    cenv.indent_level += 1
+    yield cenv
+    cenv.indent_level -= 1
+    cenv.puts '}'
+    cenv.puts
+  end
   GeneratedFunctions << func_name
 end
 
@@ -230,7 +235,7 @@ FunctionAliases = calculate_function_aliases
 
 CEnv.write_file('intsafe.h') do |cenv|
   write_top(cenv)
-  write_type_assumptions(cenv)
+  write_type_assumptions(cenv) unless USE_GCC_BUILTINS
   write_functions(cenv)
   write_function_aliases(cenv)
   write_todos_for_missing_functions(cenv)

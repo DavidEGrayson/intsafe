@@ -18,25 +18,27 @@ def write_add_function(cenv, type)
   func_name = add_function_name(type)
   return if !function_body_needed?(func_name)
 
+  if USE_GCC_BUILTINS
+    GeneratedFunctions << func_name
+    cenv.puts "__MINGW_INTSAFE_MATH(#{func_name}, #{type}, add)"
+    return
+  end
+
   args = "_In_ #{type} x, _In_ #{type} y, _Out_ #{type} * result"
   write_function(cenv, func_name, args) do |cenv|
-    if USE_GCC_BUILTINS
-      write_builtin(cenv, :add)
+    cenv.puts "*result = 0;"
+
+    if type.signed?
+      too_big = "x > 0 && y > #{type.max_str} - x"
+      too_small = "x < 0 && y < #{type.min_str} - x"
     else
-      cenv.puts "*result = 0;"
-
-      if type.signed?
-        too_big = "x > 0 && y > #{type.max_str} - x"
-        too_small = "x < 0 && y < #{type.min_str} - x"
-      else
-        too_big = "y > #{type.max_str} - x"
-        too_small = nil
-      end
-
-      cenv.puts "if (#{too_big}) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
-      cenv.puts "if (#{too_small}) return INTSAFE_E_ARITHMETIC_OVERFLOW;" if too_small
-      cenv.puts "*result = x + y;"
+      too_big = "y > #{type.max_str} - x"
+      too_small = nil
     end
+
+    cenv.puts "if (#{too_big}) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
+    cenv.puts "if (#{too_small}) return INTSAFE_E_ARITHMETIC_OVERFLOW;" if too_small
+    cenv.puts "*result = x + y;"
     cenv.puts "return S_OK;"
   end
 end
@@ -44,6 +46,12 @@ end
 def write_sub_function(cenv, type)
   func_name = sub_function_name(type)
   return if !function_body_needed?(func_name)
+
+  if USE_GCC_BUILTINS
+    GeneratedFunctions << func_name
+    cenv.puts "__MINGW_INTSAFE_MATH(#{func_name}, #{type}, sub)"
+    return
+  end
 
   args = "_In_ #{type} x, _In_ #{type} y, _Out_ #{type} * result"
   write_function(cenv, func_name, args) do |cenv|
@@ -69,6 +77,12 @@ end
 def write_mult_function(cenv, type)
   func_name = mult_function_name(type)
   return if !function_body_needed?(func_name)
+
+  if USE_GCC_BUILTINS
+    GeneratedFunctions << func_name
+    cenv.puts "__MINGW_INTSAFE_MATH(#{func_name}, #{type}, mul)"
+    return
+  end
 
   args = "_In_ #{type} x, _In_ #{type} y, _Out_ #{type} * result"
   write_function(cenv, func_name, args) do |cenv|
@@ -127,4 +141,6 @@ def write_math_functions(cenv)
   Types.each do |type|
     write_mult_function(cenv, type)
   end
+
+  cenv.puts if USE_GCC_BUILTINS
 end

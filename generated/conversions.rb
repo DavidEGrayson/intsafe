@@ -142,21 +142,24 @@ def write_conversion_function(cenv, type_src, type_dest)
   return if !function_body_needed?(func_name)
 
   args = "_In_ #{type_src} operand, _Out_ #{type_dest} * result"
+
+  if USE_GCC_BUILTINS
+    GeneratedFunctions << func_name
+    cenv.puts "__MINGW_INTSAFE_CONV(#{func_name}, #{type_src}, #{type_dest})"
+    return
+  end
+
   write_function(cenv, func_name, args) do |cenv|
-    if USE_GCC_BUILTINS
-      write_builtin(cenv, :add, 'operand', '0')
-    else
-      if upper_check_needed(type_src, type_dest) || lower_check_needed(type_src, type_dest)
-        cenv.puts "*result = 0;"
-      end
-      cenv_where_upper_check_needed(cenv, type_src, type_dest) do |cenv|
-        cenv.puts "if (operand > #{type_dest.max_str}) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
-      end
-      cenv_where_lower_check_needed(cenv, type_src, type_dest) do |cenv|
-        cenv.puts "if (operand < #{type_dest.min_str}) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
-      end
-      cenv.puts "*result = operand;"
+    if upper_check_needed(type_src, type_dest) || lower_check_needed(type_src, type_dest)
+      cenv.puts "*result = 0;"
     end
+    cenv_where_upper_check_needed(cenv, type_src, type_dest) do |cenv|
+      cenv.puts "if (operand > #{type_dest.max_str}) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
+    end
+    cenv_where_lower_check_needed(cenv, type_src, type_dest) do |cenv|
+      cenv.puts "if (operand < #{type_dest.min_str}) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
+    end
+    cenv.puts "*result = operand;"
     cenv.puts "return S_OK;"
   end
 end
@@ -180,19 +183,22 @@ end
 def write_conversion_to_char(cenv, type)
   func_name = "#{type.camel_name}ToChar"
   return if !function_body_needed?(func_name)
+
+  if USE_GCC_BUILTINS
+    GeneratedFunctions << func_name
+    cenv.puts "__MINGW_INTSAFE_CONV(#{func_name}, #{type}, CHAR)"
+    return
+  end
+
   ret = '__MINGW_INTSAFE_CHAR_API HRESULT'
   args = "_In_ #{type} operand, _Out_ CHAR * result"
   write_function(cenv, func_name, args, ret) do |cenv|
-    if USE_GCC_BUILTINS
-      write_builtin(cenv, :add, 'operand', '0')
-    else
-      cenv.puts "*result = 0;"
-      cenv.puts "if (operand > CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
-      if type.signed?
-        cenv.puts "if (operand < CHAR_MIN) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
-      end
-      cenv.puts "*result = operand;"
+    cenv.puts "*result = 0;"
+    cenv.puts "if (operand > CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
+    if type.signed?
+      cenv.puts "if (operand < CHAR_MIN) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
     end
+    cenv.puts "*result = operand;"
     cenv.puts "return S_OK;"
   end
 end
@@ -217,8 +223,10 @@ def write_conversion_functions(cenv)
       write_conversion_function(cenv, type1, type2)
     end
   end
+  cenv.puts if USE_GCC_BUILTINS
 
   write_char_conversions(cenv)
+  cenv.puts if USE_GCC_BUILTINS
 end
 
 def visualize_needed_conversions
