@@ -112,7 +112,7 @@ Types = [
   CNumberType['UINT8', 'UInt8', 1, 'UINT8_MAX', 0],
   CNumberType['BYTE', 'Byte', 1, '_', 0],
   CNumberType['INT8', 'Int8', -1, 'INT8_MAX', 'INT8_MIN'],
-  CNumberType['USHORT', 'UShort', 2, 'USHRT_MAX', 0],
+  CNumberType['USHORT', 'UShort', 2, 'UINT16_MAX', 0],
   CNumberType['WORD', 'Word', 2, '_', 0],
   CNumberType['SHORT', 'Short', -2, 'SHRT_MAX', 'SHRT_MIN'],
   CNumberType['UINT', 'UInt', 4, 'UINT_MAX', 0],

@@ -104,7 +104,6 @@ C_ASSERT((DWORD_PTR)-1 > 0);
 C_ASSERT((ULONGLONG)-1 > 0);
 
 C_ASSERT(UCHAR_MAX == UINT8_MAX);
-C_ASSERT(USHRT_MAX == UINT16_MAX);
 C_ASSERT(SHRT_MAX == INT16_MAX);
 C_ASSERT(SHRT_MIN == INT16_MIN);
 C_ASSERT(UINT_MAX == UINT32_MAX);
@@ -185,7 +184,7 @@ __MINGW_INTSAFE_API HRESULT
 UIntToUShort(_In_ UINT operand, _Out_ USHORT * result)
 {
     *result = 0;
-    if (operand > USHRT_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (operand > UINT16_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = operand;
     return S_OK;
 }
@@ -252,7 +251,7 @@ __MINGW_INTSAFE_API HRESULT
 ULongToUShort(_In_ ULONG operand, _Out_ USHORT * result)
 {
     *result = 0;
-    if (operand > USHRT_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (operand > UINT16_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = operand;
     return S_OK;
 }
@@ -334,7 +333,7 @@ __MINGW_INTSAFE_API HRESULT
 IntToUShort(_In_ INT operand, _Out_ USHORT * result)
 {
     *result = 0;
-    if (operand > USHRT_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (operand > UINT16_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     if (operand < 0) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = operand;
     return S_OK;
@@ -409,7 +408,7 @@ __MINGW_INTSAFE_API HRESULT
 LongToUShort(_In_ LONG operand, _Out_ USHORT * result)
 {
     *result = 0;
-    if (operand > USHRT_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (operand > UINT16_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     if (operand < 0) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = operand;
     return S_OK;
@@ -1036,7 +1035,7 @@ __MINGW_INTSAFE_API HRESULT
 UShortAdd(_In_ USHORT x, _In_ USHORT y, _Out_ USHORT * result)
 {
     *result = 0;
-    if (y > USHRT_MAX - x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (y > UINT16_MAX - x) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = x + y;
     return S_OK;
 }
@@ -1305,7 +1304,7 @@ __MINGW_INTSAFE_API HRESULT
 UShortMult(_In_ USHORT x, _In_ USHORT y, _Out_ USHORT * result)
 {
     *result = 0;
-    if (y > 0 && x > USHRT_MAX / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    if (y > 0 && x > UINT16_MAX / y) return INTSAFE_E_ARITHMETIC_OVERFLOW;
     *result = x * y;
     return S_OK;
 }
