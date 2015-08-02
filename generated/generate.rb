@@ -208,6 +208,12 @@ end
 def write_top(cenv)
   cenv.puts File.read('top.h')
   cenv.puts
+
+  if !USE_GCC_BUILTINS
+    cenv.puts '#include <stdint.h>'
+    cenv.puts '#include <limits.h>'
+    cenv.puts
+  end
 end
 
 def write_bottom(cenv)

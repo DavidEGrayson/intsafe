@@ -21,10 +21,7 @@
 
 #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
 
-#include <stdint.h>
 #include <wtypesbase.h>
-#include <limits.h>
-#include <sal.h>
 #include <specstrings.h>
 
 #define INTSAFE_E_ARITHMETIC_OVERFLOW ((HRESULT)0x80070216)
