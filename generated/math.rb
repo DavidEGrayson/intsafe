@@ -78,7 +78,7 @@ def write_mult_function(cenv, type)
       conds << "x > 0 && y > 0 && x > #{type.max_str} / y"
       conds << "x < 0 && y > 0 && x < #{type.min_str} / y"
       conds << "x > 0 && y < 0 && y < #{type.min_str} / x"
-      conds << "x < 0 && y < 0 && (x <= #{type.min_str} || y <= #{type.min_str} || -x > #{type.max_str} / -y)"
+      conds << "x < 0 && y < 0 && x < #{type.max_str} / y"
     end
 
     conds.each do |cond|
