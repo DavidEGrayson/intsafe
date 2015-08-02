@@ -215,9 +215,14 @@ def write_bottom(cenv)
 end
 
 def calculate_function_aliases
-  aliases = {}
-  aliases.merge! calculate_conversion_function_aliases
-  aliases.merge! calculate_math_function_aliases
+  if USE_GCC_BUILTINS
+    # No need for aliases because every function is one line.
+    {}
+  else
+    aliases = {}
+    aliases.merge! calculate_conversion_function_aliases
+    aliases.merge! calculate_math_function_aliases
+  end
 end
 
 def write_functions(cenv)

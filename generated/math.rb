@@ -134,13 +134,16 @@ def write_math_functions(cenv)
     write_add_function(cenv, type)
   end
 
+  cenv.puts if USE_GCC_BUILTINS
+
   Types.each do |type|
     write_sub_function(cenv, type)
   end
+
+  cenv.puts if USE_GCC_BUILTINS
 
   Types.each do |type|
     write_mult_function(cenv, type)
   end
 
-  cenv.puts if USE_GCC_BUILTINS
 end
