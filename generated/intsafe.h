@@ -59,16 +59,33 @@
     HRESULT name(_In_ type x, _In_ type y, _Out_ type * result) \
     __MINGW_INTSAFE_BODY(operation, x, y)
 
+/* If CHAR is unsigned, use different symbol names.
+The avoids the risk of linking to the wrong function when different
+translation units with different types of chars are linked together. */
+#ifdef __CHAR_UNSIGNED__
+#define UShortToChar __mingw_intsafe_uchar_UShortToChar
+#define WordToChar __mingw_intsafe_uchar_WordToChar
+#define ShortToChar __mingw_intsafe_uchar_ShortToChar
+#define UIntToChar __mingw_intsafe_uchar_UIntToChar
+#define ULongToChar __mingw_intsafe_uchar_ULongToChar
+#define DWordToChar __mingw_intsafe_uchar_DWordToChar
+#define IntToChar __mingw_intsafe_uchar_IntToChar
+#define LongToChar __mingw_intsafe_uchar_LongToChar
+#endif
+
 __MINGW_INTSAFE_CONV(UShortToUChar, USHORT, UCHAR)
 __MINGW_INTSAFE_CONV(UShortToByte, USHORT, BYTE)
 __MINGW_INTSAFE_CONV(UShortToShort, USHORT, SHORT)
+__MINGW_INTSAFE_CONV(UShortToChar, USHORT, CHAR)
 __MINGW_INTSAFE_CONV(WordToUChar, WORD, UCHAR)
 __MINGW_INTSAFE_CONV(WordToByte, WORD, BYTE)
 __MINGW_INTSAFE_CONV(WordToShort, WORD, SHORT)
+__MINGW_INTSAFE_CONV(WordToChar, WORD, CHAR)
 __MINGW_INTSAFE_CONV(ShortToUChar, SHORT, UCHAR)
 __MINGW_INTSAFE_CONV(ShortToByte, SHORT, BYTE)
 __MINGW_INTSAFE_CONV(ShortToUShort, SHORT, USHORT)
 __MINGW_INTSAFE_CONV(ShortToWord, SHORT, WORD)
+__MINGW_INTSAFE_CONV(ShortToChar, SHORT, CHAR)
 __MINGW_INTSAFE_CONV(UIntToUChar, UINT, UCHAR)
 __MINGW_INTSAFE_CONV(UIntToByte, UINT, BYTE)
 __MINGW_INTSAFE_CONV(UIntToUShort, UINT, USHORT)
@@ -80,6 +97,7 @@ __MINGW_INTSAFE_CONV(UIntToIntPtr, UINT, INT_PTR)
 __MINGW_INTSAFE_CONV(UIntToPtrdiffT, UINT, ptrdiff_t)
 __MINGW_INTSAFE_CONV(UIntToLongPtr, UINT, LONG_PTR)
 __MINGW_INTSAFE_CONV(UIntToSSIZET, UINT, SSIZE_T)
+__MINGW_INTSAFE_CONV(UIntToChar, UINT, CHAR)
 __MINGW_INTSAFE_CONV(ULongToUChar, ULONG, UCHAR)
 __MINGW_INTSAFE_CONV(ULongToByte, ULONG, BYTE)
 __MINGW_INTSAFE_CONV(ULongToUShort, ULONG, USHORT)
@@ -93,6 +111,7 @@ __MINGW_INTSAFE_CONV(ULongToIntPtr, ULONG, INT_PTR)
 __MINGW_INTSAFE_CONV(ULongToPtrdiffT, ULONG, ptrdiff_t)
 __MINGW_INTSAFE_CONV(ULongToLongPtr, ULONG, LONG_PTR)
 __MINGW_INTSAFE_CONV(ULongToSSIZET, ULONG, SSIZE_T)
+__MINGW_INTSAFE_CONV(ULongToChar, ULONG, CHAR)
 __MINGW_INTSAFE_CONV(DWordToUChar, DWORD, UCHAR)
 __MINGW_INTSAFE_CONV(DWordToByte, DWORD, BYTE)
 __MINGW_INTSAFE_CONV(DWordToUShort, DWORD, USHORT)
@@ -106,6 +125,7 @@ __MINGW_INTSAFE_CONV(DWordToIntPtr, DWORD, INT_PTR)
 __MINGW_INTSAFE_CONV(DWordToPtrdiffT, DWORD, ptrdiff_t)
 __MINGW_INTSAFE_CONV(DWordToLongPtr, DWORD, LONG_PTR)
 __MINGW_INTSAFE_CONV(DWordToSSIZET, DWORD, SSIZE_T)
+__MINGW_INTSAFE_CONV(DWordToChar, DWORD, CHAR)
 __MINGW_INTSAFE_CONV(IntToUChar, INT, UCHAR)
 __MINGW_INTSAFE_CONV(IntToByte, INT, BYTE)
 __MINGW_INTSAFE_CONV(IntToUShort, INT, USHORT)
@@ -119,6 +139,7 @@ __MINGW_INTSAFE_CONV(IntToSizeT, INT, size_t)
 __MINGW_INTSAFE_CONV(IntToULongPtr, INT, ULONG_PTR)
 __MINGW_INTSAFE_CONV(IntToDWordPtr, INT, DWORD_PTR)
 __MINGW_INTSAFE_CONV(IntToULongLong, INT, ULONGLONG)
+__MINGW_INTSAFE_CONV(IntToChar, INT, CHAR)
 __MINGW_INTSAFE_CONV(LongToUChar, LONG, UCHAR)
 __MINGW_INTSAFE_CONV(LongToByte, LONG, BYTE)
 __MINGW_INTSAFE_CONV(LongToUShort, LONG, USHORT)
@@ -135,6 +156,7 @@ __MINGW_INTSAFE_CONV(LongToDWordPtr, LONG, DWORD_PTR)
 __MINGW_INTSAFE_CONV(LongToIntPtr, LONG, INT_PTR)
 __MINGW_INTSAFE_CONV(LongToPtrdiffT, LONG, ptrdiff_t)
 __MINGW_INTSAFE_CONV(LongToULongLong, LONG, ULONGLONG)
+__MINGW_INTSAFE_CONV(LongToChar, LONG, CHAR)
 __MINGW_INTSAFE_CONV(UIntPtrToUInt, UINT_PTR, UINT)
 __MINGW_INTSAFE_CONV(UIntPtrToULong, UINT_PTR, ULONG)
 __MINGW_INTSAFE_CONV(UIntPtrToDWord, UINT_PTR, DWORD)
@@ -244,29 +266,6 @@ __MINGW_INTSAFE_CONV(Int64ToPtrdiffT, INT64, ptrdiff_t)
 __MINGW_INTSAFE_CONV(Int64ToLongPtr, INT64, LONG_PTR)
 __MINGW_INTSAFE_CONV(Int64ToSSIZET, INT64, SSIZE_T)
 __MINGW_INTSAFE_CONV(Int64ToULongLong, INT64, ULONGLONG)
-
-/* If CHAR is unsigned, use different symbol names.
-The avoids the risk of linking to the wrong function when different
-translation units with different types of chars are linked together. */
-#ifdef __CHAR_UNSIGNED__
-#define UShortToChar __mingw_intsafe_uchar_UShortToChar
-#define WordToChar __mingw_intsafe_uchar_WordToChar
-#define ShortToChar __mingw_intsafe_uchar_ShortToChar
-#define UIntToChar __mingw_intsafe_uchar_UIntToChar
-#define ULongToChar __mingw_intsafe_uchar_ULongToChar
-#define DWordToChar __mingw_intsafe_uchar_DWordToChar
-#define IntToChar __mingw_intsafe_uchar_IntToChar
-#define LongToChar __mingw_intsafe_uchar_LongToChar
-#endif
-
-__MINGW_INTSAFE_CONV(UShortToChar, USHORT, CHAR)
-__MINGW_INTSAFE_CONV(WordToChar, WORD, CHAR)
-__MINGW_INTSAFE_CONV(ShortToChar, SHORT, CHAR)
-__MINGW_INTSAFE_CONV(UIntToChar, UINT, CHAR)
-__MINGW_INTSAFE_CONV(ULongToChar, ULONG, CHAR)
-__MINGW_INTSAFE_CONV(DWordToChar, DWORD, CHAR)
-__MINGW_INTSAFE_CONV(IntToChar, INT, CHAR)
-__MINGW_INTSAFE_CONV(LongToChar, LONG, CHAR)
 
 __MINGW_INTSAFE_MATH(UInt8Add, UINT8, add)
 __MINGW_INTSAFE_MATH(Int8Add, INT8, add)

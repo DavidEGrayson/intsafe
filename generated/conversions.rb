@@ -164,7 +164,8 @@ def write_conversion_function(cenv, type_src, type_dest)
   end
 end
 
-def write_unsigned_char_aliases(cenv, char_type)
+def write_unsigned_char_aliases(cenv)
+  char_type = UnsignedCharType
   cenv.puts_comment <<END
 If CHAR is unsigned, use different symbol names.
 The avoids the risk of linking to the wrong function when different
@@ -178,6 +179,7 @@ END
     end
   end
   cenv.puts "#endif"
+  cenv.puts
 end
 
 def write_conversion_to_char(cenv, type)
@@ -203,14 +205,6 @@ def write_conversion_to_char(cenv, type)
   end
 end
 
-def write_char_conversions(cenv)
-  write_unsigned_char_aliases(cenv, UnsignedCharType)
-  cenv.puts
-  Types.each do |type|
-    write_conversion_to_char(cenv, type)
-  end
-end
-
 # Write functions for converting from one type to another.
 def write_conversion_functions(cenv)
   # To make the header shorter, we have a list of "main types" and we
@@ -218,15 +212,21 @@ def write_conversion_functions(cenv)
   # All the other functions are preprocessor macros pointing to a
   # conversion function that operates on "main types".
 
-  Types.each do |type1|
-    Types.each do |type2|
-      write_conversion_function(cenv, type1, type2)
+  types = Types + [SignedCharType]
+
+  types.each do |type1|
+    types.each do |type2|
+      if type1.name == 'CHAR'
+        # this function is not needed
+      elsif type2.name == 'CHAR'
+        write_conversion_to_char(cenv, type1)
+      else
+        write_conversion_function(cenv, type1, type2)
+      end
     end
   end
   cenv.puts if USE_GCC_BUILTINS
 
-  write_char_conversions(cenv)
-  cenv.puts if USE_GCC_BUILTINS
 end
 
 def visualize_needed_conversions
