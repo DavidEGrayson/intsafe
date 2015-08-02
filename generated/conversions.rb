@@ -145,7 +145,7 @@ def write_conversion_function(cenv, type_src, type_dest)
 
   if USE_GCC_BUILTINS
     GeneratedFunctions << func_name
-    cenv.puts "__MINGW_INTSAFE_CONV(#{func_name}, #{type_src}, #{type_dest})"
+    cenv.puts "__MINGW_INTSAFE_API __MINGW_INTSAFE_CONV(#{func_name}, #{type_src}, #{type_dest})"
     return
   end
 
@@ -188,7 +188,7 @@ def write_conversion_to_char(cenv, type)
 
   if USE_GCC_BUILTINS
     GeneratedFunctions << func_name
-    cenv.puts "__MINGW_INTSAFE_CONV(#{func_name}, #{type}, CHAR)"
+    cenv.puts "__MINGW_INTSAFE_CHAR_API __MINGW_INTSAFE_CONV(#{func_name}, #{type}, CHAR)"
     return
   end
 

@@ -20,7 +20,7 @@ def write_add_function(cenv, type)
 
   if USE_GCC_BUILTINS
     GeneratedFunctions << func_name
-    cenv.puts "__MINGW_INTSAFE_MATH(#{func_name}, #{type}, add)"
+    cenv.puts "__MINGW_INTSAFE_API __MINGW_INTSAFE_MATH(#{func_name}, #{type}, add)"
     return
   end
 
@@ -49,7 +49,7 @@ def write_sub_function(cenv, type)
 
   if USE_GCC_BUILTINS
     GeneratedFunctions << func_name
-    cenv.puts "__MINGW_INTSAFE_MATH(#{func_name}, #{type}, sub)"
+    cenv.puts "__MINGW_INTSAFE_API __MINGW_INTSAFE_MATH(#{func_name}, #{type}, sub)"
     return
   end
 
@@ -80,7 +80,7 @@ def write_mult_function(cenv, type)
 
   if USE_GCC_BUILTINS
     GeneratedFunctions << func_name
-    cenv.puts "__MINGW_INTSAFE_MATH(#{func_name}, #{type}, mul)"
+    cenv.puts "__MINGW_INTSAFE_API __MINGW_INTSAFE_MATH(#{func_name}, #{type}, mul)"
     return
   end
 
