@@ -195,6 +195,10 @@ def write_top(cenv)
   cenv.puts
 end
 
+def write_bottom(cenv)
+  cenv.puts File.read('bottom.h').strip
+end
+
 def calculate_function_aliases
   aliases = {}
   aliases.merge! calculate_conversion_function_aliases
@@ -220,4 +224,5 @@ CEnv.write_file('intsafe.h') do |cenv|
   write_functions(cenv)
   write_function_aliases(cenv)
   write_todos_for_missing_functions(cenv)
+  write_bottom(cenv)
 end

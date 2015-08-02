@@ -15,12 +15,17 @@
 
 #pragma once
 
+#include <winapifamily.h>
+
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
+
 #include <stdint.h>
 #include <wtypesbase.h>
 #include <limits.h>
 #include <sal.h>
+#include <specstrings.h>
 
-#define INTSAFE_E_ARITHMETIC_OVERFLOW ((HRESULT)0x80070216L)
+#define INTSAFE_E_ARITHMETIC_OVERFLOW ((HRESULT)0x80070216)
 
 #ifndef S_OK
 #define S_OK ((HRESULT)0)
