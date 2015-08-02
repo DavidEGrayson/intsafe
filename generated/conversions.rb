@@ -143,21 +143,20 @@ def write_conversion_function(cenv, type_src, type_dest)
 
   args = "_In_ #{type_src} operand, _Out_ #{type_dest} * result"
   write_function(cenv, func_name, args) do |cenv|
-    if upper_check_needed(type_src, type_dest) || lower_check_needed(type_src, type_dest)
-      cenv.puts "*result = 0;"
+    if USE_GCC_BUILTINS
+      write_builtin(cenv, :add, 'operand', '0')
+    else
+      if upper_check_needed(type_src, type_dest) || lower_check_needed(type_src, type_dest)
+        cenv.puts "*result = 0;"
+      end
+      cenv_where_upper_check_needed(cenv, type_src, type_dest) do |cenv|
+        cenv.puts "if (operand > #{type_dest.max_str}) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
+      end
+      cenv_where_lower_check_needed(cenv, type_src, type_dest) do |cenv|
+        cenv.puts "if (operand < #{type_dest.min_str}) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
+      end
+      cenv.puts "*result = operand;"
     end
-
-    # Suppress this check if the source type is signed, the
-    # destination type is unsigned, and the check is unnecessary.
-    cenv_where_upper_check_needed(cenv, type_src, type_dest) do |cenv|
-      cenv.puts "if (operand > #{type_dest.max_str}) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
-    end
-
-    cenv_where_lower_check_needed(cenv, type_src, type_dest) do |cenv|
-      cenv.puts "if (operand < #{type_dest.min_str}) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
-    end
-
-    cenv.puts "*result = operand;"
     cenv.puts "return S_OK;"
   end
 end
@@ -184,12 +183,16 @@ def write_conversion_to_char(cenv, type)
   ret = '__MINGW_INTSAFE_CHAR_API HRESULT'
   args = "_In_ #{type} operand, _Out_ CHAR * result"
   write_function(cenv, func_name, args, ret) do |cenv|
-    cenv.puts "*result = 0;"
-    cenv.puts "if (operand > CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
-    if type.signed?
-      cenv.puts "if (operand < CHAR_MIN) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
+    if USE_GCC_BUILTINS
+      write_builtin(cenv, :add, 'operand', '0')
+    else
+      cenv.puts "*result = 0;"
+      cenv.puts "if (operand > CHAR_MAX) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
+      if type.signed?
+        cenv.puts "if (operand < CHAR_MIN) return INTSAFE_E_ARITHMETIC_OVERFLOW;"
+      end
+      cenv.puts "*result = operand;"
     end
-    cenv.puts "*result = operand;"
     cenv.puts "return S_OK;"
   end
 end

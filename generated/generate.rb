@@ -161,6 +161,14 @@ def EquivalentTypes.for_type(type)
   names.map { |n| TypesByName.fetch(n) }
 end
 
+def write_builtin(cenv, operation, x = 'x', y = 'y')
+  cenv.puts "if (__builtin_#{operation}_overflow(#{x}, #{y}, result))"
+  cenv.puts "{"
+  cenv.puts_indent "*result = 0;"
+  cenv.puts_indent "return INTSAFE_E_ARITHMETIC_OVERFLOW;"
+  cenv.puts "}"
+end if USE_GCC_BUILTINS
+
 def write_function_aliases(cenv)
   FunctionAliases.each do |api_func_name, real_name|
     if GeneratedFunctions.include? real_name

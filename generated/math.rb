@@ -21,11 +21,7 @@ def write_add_function(cenv, type)
   args = "_In_ #{type} x, _In_ #{type} y, _Out_ #{type} * result"
   write_function(cenv, func_name, args) do |cenv|
     if USE_GCC_BUILTINS
-      cenv.puts "if (__builtin_add_overflow(x, y, result))"
-      cenv.puts "{"
-      cenv.puts_indent "*result = 0;"
-      cenv.puts_indent "return INTSAFE_E_ARITHMETIC_OVERFLOW;"
-      cenv.puts "}"
+      write_builtin(cenv, :add)
     else
       cenv.puts "*result = 0;"
 
@@ -52,11 +48,7 @@ def write_sub_function(cenv, type)
   args = "_In_ #{type} x, _In_ #{type} y, _Out_ #{type} * result"
   write_function(cenv, func_name, args) do |cenv|
     if USE_GCC_BUILTINS
-      cenv.puts "if (__builtin_sub_overflow(x, y, result))"
-      cenv.puts "{"
-      cenv.puts_indent "*result = 0;"
-      cenv.puts_indent "return INTSAFE_E_ARITHMETIC_OVERFLOW;"
-      cenv.puts "}"
+      write_builtin(cenv, :sub)
     else
       cenv.puts "*result = 0;"
       if type.signed?
@@ -81,11 +73,7 @@ def write_mult_function(cenv, type)
   args = "_In_ #{type} x, _In_ #{type} y, _Out_ #{type} * result"
   write_function(cenv, func_name, args) do |cenv|
     if USE_GCC_BUILTINS
-      cenv.puts "if (__builtin_mul_overflow(x, y, result))"
-      cenv.puts "{"
-      cenv.puts_indent "*result = 0;"
-      cenv.puts_indent "return INTSAFE_E_ARITHMETIC_OVERFLOW;"
-      cenv.puts "}"
+      write_builtin(cenv, :mul)
     else
       cenv.puts "*result = 0;"
       conds = []
