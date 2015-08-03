@@ -22,7 +22,7 @@
 #if __GNUC__ >= 5
 
 #ifndef __MINGW_INTSAFE_API
-#define __MINGW_INTSAFE_API inline
+#define __MINGW_INTSAFE_API FORCEINLINE
 #endif
 
 #ifndef __MINGW_INTSAFE_CHAR_API
