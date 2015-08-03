@@ -44,5 +44,5 @@
     __MINGW_INTSAFE_BODY(add, operand, 0)
 
 #define __MINGW_INTSAFE_MATH(name, type, operation) \
-    HRESULT name(type x, _In_ type y, type * result) \
+    HRESULT name(type x, type y, type * result) \
     __MINGW_INTSAFE_BODY(operation, x, y)
