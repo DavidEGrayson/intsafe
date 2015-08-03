@@ -2,17 +2,6 @@
  * This file has no copyright assigned and is placed in the Public Domain.
  * This file is part of the mingw-w64 runtime package.
  * No warranty is given; refer to the file DISCLAIMER.PD within this package.
- *
- * This file was auto-generated from https://github.com/DavidEGrayson/intsafe
- *
- * This file is an implementation of Microsoft's intsafe.h header, which
- * provides inline functions for safe integer conversions and math operations:
- *
- *     https://msdn.microsoft.com/en-us/library/windows/desktop/ff521693
- *
- * The full list of math functions is only available here:
- *
- *     https://msdn.microsoft.com/en-us/library/windows/desktop/ff521701
  */
 
 #pragma once
