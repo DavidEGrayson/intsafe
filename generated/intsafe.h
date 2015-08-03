@@ -40,11 +40,11 @@
 }
 
 #define __MINGW_INTSAFE_CONV(name, type_src, type_dest) \
-    HRESULT name(_In_ type_src operand, _Out_ type_dest * result) \
+    HRESULT name(type_src operand, type_dest * result) \
     __MINGW_INTSAFE_BODY(add, operand, 0)
 
 #define __MINGW_INTSAFE_MATH(name, type, operation) \
-    HRESULT name(_In_ type x, _In_ type y, _Out_ type * result) \
+    HRESULT name(type x, _In_ type y, type * result) \
     __MINGW_INTSAFE_BODY(operation, x, y)
 
 /* If CHAR is unsigned, use different symbol names.
