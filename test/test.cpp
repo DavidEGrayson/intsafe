@@ -7,16 +7,16 @@
 
 #define INITIAL_VALUE 78
 
-void error(const char * format, ...) __attribute__((format (printf, 1, 2)));
+static void error(const char * format, ...) __attribute__((format (printf, 1, 2)));
 
-void test_should_include_specstrings()
+static void test_should_include_specstrings()
 {
     #ifndef __specstrings
     error("intsafe.h did not include specstrings.h");
     #endif
 }
 
-void test_arithmetic_overflow_value()
+static void test_arithmetic_overflow_value()
 {
     // 0x80070216L is used in the coreclr implementation.
     if (INTSAFE_E_ARITHMETIC_OVERFLOW != (HRESULT)0x80070216L)
@@ -25,7 +25,8 @@ void test_arithmetic_overflow_value()
     }
 }
 
-void tests_manual()
+static void tests_manual()
 {
+    test_arithmetic_overflow_value();
     test_should_include_specstrings();
 }
