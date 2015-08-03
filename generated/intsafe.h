@@ -30,6 +30,8 @@
 #define S_OK ((HRESULT)0)
 #endif
 
+#if __GNUC__ >= 5
+
 #ifndef __MINGW_INTSAFE_API
 #define __MINGW_INTSAFE_API inline
 #endif
@@ -327,4 +329,5 @@ __MINGW_INTSAFE_API __MINGW_INTSAFE_MATH(SSIZETMult, SSIZE_T, mul)
 __MINGW_INTSAFE_API __MINGW_INTSAFE_MATH(ULongLongMult, ULONGLONG, mul)
 __MINGW_INTSAFE_API __MINGW_INTSAFE_MATH(LongLongMult, LONGLONG, mul)
 
+#endif /* __GNUC__ >= 5 */
 #endif /* WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) */

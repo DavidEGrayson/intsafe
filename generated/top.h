@@ -30,6 +30,8 @@
 #define S_OK ((HRESULT)0)
 #endif
 
+#if __GNUC__ >= 5
+
 #ifndef __MINGW_INTSAFE_API
 #define __MINGW_INTSAFE_API inline
 #endif
