@@ -26,7 +26,7 @@
 #define __MINGW_INTSAFE_API FORCEINLINE
 #endif
 
-/* If CHAR is unsigned, use static inline for functions that operate
+/** If CHAR is unsigned, use static inline for functions that operate
 on chars.  This avoids the risk of linking to the wrong function when
 different translation units with different types of chars are linked
 together, and code using signed chars will not be affected. */
