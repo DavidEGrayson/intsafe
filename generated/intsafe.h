@@ -26,8 +26,16 @@
 #define __MINGW_INTSAFE_API FORCEINLINE
 #endif
 
+/* If CHAR is unsigned, use static inline for functions that operate
+on chars.  This avoids the risk of linking to the wrong function when
+different translation units with different types of chars are linked
+together, and code using signed chars will not be affected. */
 #ifndef __MINGW_INTSAFE_CHAR_API
+#ifdef __CHAR_UNSIGNED__
+#define __MINGW_INTSAFE_CHAR_API static inline
+#else
 #define __MINGW_INTSAFE_CHAR_API __MINGW_INTSAFE_API
+#endif
 #endif
 
 #define __MINGW_INTSAFE_BODY(operation, x, y) \
@@ -47,20 +55,6 @@
 #define __MINGW_INTSAFE_MATH(name, type, operation) \
     HRESULT name(type x, type y, type * result) \
     __MINGW_INTSAFE_BODY(operation, x, y)
-
-/* If CHAR is unsigned, use different symbol names.
-The avoids the risk of linking to the wrong function when different
-translation units with different types of chars are linked together. */
-#ifdef __CHAR_UNSIGNED__
-#define UShortToChar __mingw_intsafe_uchar_UShortToChar
-#define WordToChar __mingw_intsafe_uchar_WordToChar
-#define ShortToChar __mingw_intsafe_uchar_ShortToChar
-#define UIntToChar __mingw_intsafe_uchar_UIntToChar
-#define ULongToChar __mingw_intsafe_uchar_ULongToChar
-#define DWordToChar __mingw_intsafe_uchar_DWordToChar
-#define IntToChar __mingw_intsafe_uchar_IntToChar
-#define LongToChar __mingw_intsafe_uchar_LongToChar
-#endif
 
 __MINGW_INTSAFE_API __MINGW_INTSAFE_CONV(UShortToUChar, USHORT, UCHAR)
 __MINGW_INTSAFE_API __MINGW_INTSAFE_CONV(UShortToByte, USHORT, BYTE)

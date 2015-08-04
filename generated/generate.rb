@@ -246,7 +246,7 @@ FunctionAliases = calculate_function_aliases
 
 CEnv.write_file('intsafe.h') do |cenv|
   write_top(cenv)
-  write_unsigned_char_aliases(cenv)
+  #write_unsigned_char_aliases(cenv)
   write_type_assumptions(cenv) unless USE_GCC_BUILTINS
   write_functions(cenv)
   write_function_aliases(cenv)
