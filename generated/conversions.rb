@@ -168,7 +168,7 @@ def write_unsigned_char_aliases(cenv)
   char_type = UnsignedCharType
   cenv.puts_comment <<END
 If CHAR is unsigned, use different symbol names.
-The avoids the risk of linking to the wrong function when different
+This avoids the risk of linking to the wrong function when different
 translation units with different types of chars are linked together.
 END
   cenv.puts "#ifdef __CHAR_UNSIGNED__"
