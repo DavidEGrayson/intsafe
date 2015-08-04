@@ -19,6 +19,7 @@
 #define S_OK ((HRESULT)0)
 #endif
 
+/** The builtins we use were added in GCC 5. */
 #if __GNUC__ >= 5
 
 #ifndef __MINGW_INTSAFE_API
@@ -44,7 +45,7 @@
     __MINGW_INTSAFE_BODY(add, operand, 0)
 
 #define __MINGW_INTSAFE_MATH(name, type, operation) \
-    HRESULT name(type x, _In_ type y, type * result) \
+    HRESULT name(type x, type y, type * result) \
     __MINGW_INTSAFE_BODY(operation, x, y)
 
 /* If CHAR is unsigned, use different symbol names.

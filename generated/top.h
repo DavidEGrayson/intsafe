@@ -19,6 +19,7 @@
 #define S_OK ((HRESULT)0)
 #endif
 
+/** The builtins we use were added in GCC 5. */
 #if __GNUC__ >= 5
 
 #ifndef __MINGW_INTSAFE_API
