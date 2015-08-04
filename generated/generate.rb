@@ -114,8 +114,10 @@ Types = [
   CNumberType['UINT8', 'UInt8', 1, 'UINT8_MAX', 0],
   CNumberType['BYTE', 'Byte', 1, '_', 0],
   CNumberType['INT8', 'Int8', -1, 'INT8_MAX', 'INT8_MIN'],
+  CNumberType['UINT16', 'UInt16', 2, '_', '_'],
   CNumberType['USHORT', 'UShort', 2, 'UINT16_MAX', 0],
   CNumberType['WORD', 'Word', 2, '_', 0],
+  CNumberType['INT16', 'Int16', -2, '_', '_'],
   CNumberType['SHORT', 'Short', -2, 'SHRT_MAX', 'SHRT_MIN'],
   CNumberType['UINT', 'UInt', 4, 'UINT_MAX', 0],
   CNumberType['ULONG', 'ULong', 4, 'ULONG_MAX', 0],
@@ -139,7 +141,9 @@ TypesByName = Types.each_with_object({}) { |type, h| h[type.name] = type }
 
 EquivalentTypes = [
   %w(UCHAR UINT8 BYTE),
-  %w(USHORT WORD),
+  %w(UINT16 USHORT WORD),
+  %w(INT16 SHORT),
+  %w(UINT),
   %w(ULONG DWORD),
   %w(UINT_PTR size_t),
   %w(ULONG_PTR DWORD_PTR),
