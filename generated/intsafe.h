@@ -4,7 +4,8 @@
  * No warranty is given; refer to the file DISCLAIMER.PD within this package.
  */
 
-#pragma once
+#ifndef _INTSAFE_H_INCLUDED_
+#define _INTSAFE_H_INCLUDED_
 
 #include <winapifamily.h>
 
@@ -394,3 +395,4 @@ __MINGW_INTSAFE_API __MINGW_INTSAFE_MATH(LongLongMult, LONGLONG, mul)
 
 #endif /* __GNUC__ >= 5 */
 #endif /* WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) */
+#endif /* _INTSAFE_H_INCLUDED_ */

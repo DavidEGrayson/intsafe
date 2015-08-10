@@ -4,7 +4,8 @@
  * No warranty is given; refer to the file DISCLAIMER.PD within this package.
  */
 
-#pragma once
+#ifndef _INTSAFE_H_INCLUDED_
+#define _INTSAFE_H_INCLUDED_
 
 #include <winapifamily.h>
 
