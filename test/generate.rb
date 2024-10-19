@@ -75,25 +75,44 @@ def generate_types(pointer_size, char_signed)
     CNumberType['UCHAR', 'UChar', 1],
     CNumberType['UINT8', 'UInt8', 1],
     CNumberType['BYTE', 'Byte', 1],
+
     CNumberType['CHAR', 'Char', char_type],
+
     CNumberType['INT8', 'Int8', -1],
+
     CNumberType['UINT16', 'UInt16', 2],
     CNumberType['USHORT', 'UShort', 2],
     CNumberType['WORD', 'Word', 2],
+
     CNumberType['INT16', 'Int16', -2],
     CNumberType['SHORT', 'Short', -2],
+
     CNumberType['UINT', 'UInt', 4],
     CNumberType['ULONG', 'ULong', 4],
     CNumberType['DWORD', 'DWord', 4],
+    CNumberType['UINT32', 'UInt32', 4],        # new
+    CNumberType['DWORDLONG', 'DWordLong', 4],  # new
+
     CNumberType['INT', 'Int', -4],
     CNumberType['LONG', 'Long', -4],
+    CNumberType['INT32', 'Int32', -4],         # new
+    CNumberType['LONG32', 'Long32', -4],       # new
+
     CNumberType['ULONGLONG', 'ULongLong', 8],
+    CNumberType['ULONG64', 'ULong64', 8],      # new
+    CNumberType['DWORD64', 'DWord64', 8],      # new
+    CNumberType['UINT64', 'UInt64', 8],        # new
+
     CNumberType['INT64', 'Int64', -8],
     CNumberType['LONGLONG', 'LongLong', -8],
+    CNumberType['LONG64', 'Long64', -8],       # new
+
     CNumberType['UINT_PTR', 'UIntPtr', pointer_size],
     CNumberType['size_t', 'SizeT', pointer_size],
     CNumberType['DWORD_PTR', 'DWordPtr', pointer_size],
     CNumberType['ULONG_PTR', 'ULongPtr', pointer_size],
+    CNumberType['SIZE_T', 'SIZET', pointer_size],   # new
+
     CNumberType['INT_PTR', 'IntPtr', -pointer_size],
     CNumberType['LONG_PTR', 'LongPtr', -pointer_size],
     CNumberType['ptrdiff_t', 'PtrdiffT', -pointer_size],
@@ -506,7 +525,8 @@ def find_redefinitions
     reject_line = false
     if (line.match(/#define ([0-9A-Za-z_]+)\b/) \
       || line.match(/API.+\b__MINGW_INTSAFE_[A-Z_]+\(([0-9A-Za-z_]+),/)) \
-      && !$1.start_with?('_')
+      && !$1.start_with?('_') \
+      && !['S_OK', 'INTSAFE_E_ARITHMETIC_OVERFLOW'].include?($1)
       name = $1
       if defs.include?(name)
         puts "Function #{name} gets redefined on line #{line_number}!"
@@ -514,6 +534,9 @@ def find_redefinitions
         reject_line = true
       else
         defs << name
+        if !FunctionNames.include?(name)
+          puts "WARNING: intsafe.h defines something we aren't testing: #{name}"
+        end
       end
     end
     filtered_lines << line unless reject_line
