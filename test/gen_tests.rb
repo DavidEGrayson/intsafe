@@ -10,23 +10,28 @@ require 'set'
 Dir.chdir(File.dirname(__FILE__))
 
 IntsafeCode = File.read('intsafe.h')
-FunctionNames = File.readlines('../function_names.txt').map(&:strip).reject(&:empty?)
-MissingFunctions = []
-TestedFunctions = []
 
-def function_testable?(func_name)
-  if !FunctionNames.include?(func_name)
-    # This function is not in the Microsoft documentation.
-    return false
-  end
+# FuncInfo holds info about all the functions that could potentially exist and
+# the metadata defining what they do so we can know how to test them.
+#
+# FuncInfo keys are function names as symbols
+# FuncInfo values are hashes with these keys:
+#   :name               => Symbol
+#   :operation          => :add, :mult, :sub, or :convert
+#   :type_src           => Symbol
+#   :type_dest          => Symbol
+#   :defined_by_msft    => true if found in function_names.txt
+#   :defined_by_intsafe => true if found in intsafe.h
+FuncInfo = {}
 
-  if MissingFunctions.include?(func_name)
-    # The implementation we are tested does not have this function.
-    return false
-  end
-
-  true
-end
+# TypeInfo keys are integer type names (as written in C/C++ variable
+# declarations).
+# TypeInfo values are hashes with these keys:
+#   :name               => Symbol
+#   :camel_name         => Symbol
+#   :concrete           => CNumberType (changes depending on which system
+#                          we are currently targeting)
+TypeInfo = {}
 
 class CNumberType < Struct.new(:name, :camel_name, :type_id)
   def byte_count
@@ -70,7 +75,7 @@ end
 
 def generate_types(pointer_size, char_signed)
   char_type = char_signed ? -1 : 1
-  [
+  concrete_types = [
     CNumberType['UCHAR', 'UChar', 1],
     CNumberType['UINT8', 'UInt8', 1],
     CNumberType['BYTE', 'Byte', 1],
@@ -117,6 +122,18 @@ def generate_types(pointer_size, char_signed)
     CNumberType['ptrdiff_t', 'PtrdiffT', -pointer_size],
     CNumberType['SSIZE_T', 'SSIZET', -pointer_size],
   ]
+
+  TypeInfo.clear
+  concrete_types.each do |ctype|
+    name = ctype.name.to_sym
+    TypeInfo[name] = {
+      name: name,
+      camel_name: ctype.camel_name.to_sym,
+    }
+    TypeInfo[name][:concrete] = ctype unless pointer_size == 0
+  end
+
+  nil
 end
 
 Indent = "    "
@@ -174,9 +191,10 @@ def collect_tests(io, name)
 end
 
 # These tests makes sure our database of types is correct.
-def write_type_tests(io, types)
+def write_type_tests(io)
   collect_tests(io, 'run_type_tests') do |tc|
-    types.each do |type|
+    TypeInfo.each_value do |t|
+      type = t.fetch(:concrete)
       comparison = type.signed? ? '<' : '>';
       tc << write_test(io, "test_type_#{type}") do |test|
 
@@ -220,18 +238,25 @@ def write_require_conversion(io, func_name, num)
   io.puts
 end
 
-def write_require_conversion_error(io, func_name, num, type_dest)
-  num_str = nice_num_str(num)
-  io.puts "if(INTSAFE_E_ARITHMETIC_OVERFLOW != #{func_name}(#{num_str}, &out))"
-  io.puts_indent %Q{error("#{func_name} did not overflow when given #{num_str}");}
-  # This is pretty arbitrary, but it's how the Microsoft header behaves
-  if type_dest.name == 'UCHAR' || type_dest.name == 'CHAR' && !type_dest.signed?
+def write_check_overflow_output(io, func_name)
+  type_dest = FuncInfo.fetch(func_name.to_sym).fetch(:type_dest)
+  ctype_dest = TypeInfo.fetch(type_dest).fetch(:concrete)
+  # This is pretty arbitrary, but it's how the Microsoft header behaves (TODO: right?)
+  if ctype_dest.name == 'UCHAR' || ctype_dest.name == 'CHAR' && !ctype_dest.signed?
     desired = '0'
   else
     desired = "(#{type_dest})-1"
   end
+
   io.puts "if (out != #{desired})"
   io.puts_indent %Q{error("#{func_name} gave wrong overflow output");}
+end
+
+def write_require_conversion_error(io, func_name, num)
+  num_str = nice_num_str(num)
+  io.puts "if(INTSAFE_E_ARITHMETIC_OVERFLOW != #{func_name}(#{num_str}, &out))"
+  io.puts_indent %Q{error("#{func_name} did not overflow when given #{num_str}");}
+  write_check_overflow_output(io, func_name)
   io.puts
 end
 
@@ -246,11 +271,10 @@ def write_type_checker(io, func_name, return_type, arg_types)
   end
 end
 
-def write_conversion_test(io, type_src, type_dest)
-  func_name = type_src.camel_name + 'To' + type_dest.camel_name
-
-  return nil if !function_testable?(func_name)
-  TestedFunctions << func_name
+def write_conversion_test(io, func)
+  func_name = func.fetch(:name)
+  type_src = TypeInfo.fetch(func.fetch(:type_src)).fetch(:concrete)
+  type_dest = TypeInfo.fetch(func.fetch(:type_dest)).fetch(:concrete)
 
   max = [type_src.max, type_dest.max].min
   min = [type_src.min, type_dest.min].max
@@ -266,22 +290,21 @@ def write_conversion_test(io, type_src, type_dest)
     write_require_conversion(test, func_name, min) if min != 0
 
     if type_src.max > type_dest.max
-      write_require_conversion_error(test, func_name, type_dest.max + 1, type_dest)
+      write_require_conversion_error(test, func_name, type_dest.max + 1)
     end
 
     if type_src.min < type_dest.min
-      write_require_conversion_error(test, func_name, type_dest.min - 1, type_dest);
+      write_require_conversion_error(test, func_name, type_dest.min - 1)
     end
   end
 end
 
-def write_conversion_tests(io, types)
+def write_conversion_tests(io)
   collect_tests(io, 'run_conversion_tests') do |tc|
-    types.each do |type1|
-      types.each do |type2|
-        next if type1 == type2
-        tc << write_conversion_test(io, type1, type2)
-      end
+    FuncInfo.each_value do |func|
+      next if func.fetch(:operation) != :convert
+      next if !func.fetch(:defined_by_intsafe)
+      tc << write_conversion_test(io, func)
     end
   end
 end
@@ -303,6 +326,7 @@ def write_require_binop_error(io, func_name, num1, num2)
   num2_str = nice_num_str(num2)
   io.puts "if (#{func_name}(#{num1_str}, #{num2_str}, &out) != INTSAFE_E_ARITHMETIC_OVERFLOW)"
   io.puts_indent %Q{error("#{func_name} did not overflow given #{num1_str}, #{num2_str}.");}
+  write_check_overflow_output(io, func_name)
   io.puts
 end
 
@@ -344,9 +368,6 @@ def write_require_subtraction_error(io, func_name, num1, num2)
 end
 
 def write_binop_test(io, type, func_name)
-  return nil if !function_testable?(func_name)
-  TestedFunctions << func_name
-
   write_test(io, "test_#{func_name}") do |test|
     test.puts "#{type} out;"
     test.puts
@@ -358,8 +379,9 @@ def write_binop_test(io, type, func_name)
   end
 end
 
-def write_addition_test(io, type)
-  func_name = "#{type.camel_name}Add"
+def write_addition_test(io, func_name)
+  type_name = FuncInfo.fetch(func_name).fetch(:type_dest)
+  type = TypeInfo.fetch(type_name).fetch(:concrete)
 
   write_binop_test(io, type, func_name) do |test|
     write_require_addition(test, func_name, 0, 0)
@@ -378,8 +400,10 @@ def write_addition_test(io, type)
   end
 end
 
-def write_subtraction_test(io, type)
-  func_name = "#{type.camel_name}Sub"
+def write_subtraction_test(io, func_name)
+  type_name = FuncInfo.fetch(func_name).fetch(:type_dest)
+  type = TypeInfo.fetch(type_name).fetch(:concrete)
+
   write_binop_test(io, type, func_name) do |test|
     if type.unsigned?
       # Lower left
@@ -435,8 +459,9 @@ def write_subtraction_test(io, type)
   end
 end
 
-def write_multiplication_test(io, type)
-  func_name = "#{type.camel_name}Mult"
+def write_multiplication_test(io, func_name)
+  type_name = FuncInfo.fetch(func_name).fetch(:type_dest)
+  type = TypeInfo.fetch(type_name).fetch(:concrete)
 
   write_binop_test(io, type, func_name) do |test|
     write_require_multiplication(test, func_name, 0, 0)
@@ -482,47 +507,36 @@ def write_multiplication_test(io, type)
   end
 end
 
-def write_math_tests(io, types)
+def write_math_tests(io)
   collect_tests(io, 'run_math_tests') do |tc|
-    types.each do |type|
-      tc << write_addition_test(io, type)
-      tc << write_subtraction_test(io, type)
-      tc << write_multiplication_test(io, type)
+    FuncInfo.each_value do |func|
+      next if !func.fetch(:defined_by_intsafe)
+      op = func.fetch(:operation)
+      if op == :add
+        tc << write_addition_test(io, func.fetch(:name))
+      elsif op == :sub
+        tc << write_subtraction_test(io, func.fetch(:name))
+      elsif op == :mult
+        tc << write_multiplication_test(io, func.fetch(:name))
+      end
     end
   end
 end
 
-def write_missing_function_test(io)
-  return nil if MissingFunctions.empty?
-  write_test(io, "test_missing_functions") do |test|
-    test.puts %Q{error("#{MissingFunctions.size} functions are missing and will not be tested");}
-  end
-end
-
-def write_tests(io, types)
+def write_tests(io)
   collect_tests(io, 'run_all_tests') do |tc|
-    tc << write_missing_function_test(io)
-    tc << write_type_tests(io, types)
-    tc << write_conversion_tests(io, types)
-    tc << write_math_tests(io, types)
-  end
-end
-
-def find_missing_functions
-  raise if MissingFunctions != []
-  matches = IntsafeCode.scan(/\b[0-9A-Za-z_]+\b/)
-  intsafe_names = Set.new(matches)
-  FunctionNames.each do |name|
-    if !intsafe_names.include?(name)
-      MissingFunctions << name
-    end
-  end
-  if MissingFunctions.size > 0
-    puts "warning: #{MissingFunctions.size} functions are missing and tests were not generated for them"
+    tc << write_type_tests(io)
+    tc << write_conversion_tests(io)
+    tc << write_math_tests(io)
   end
 end
 
 def find_redefinitions
+  if !IntsafeCode.include?('__MINGW_INTSAFE')
+    # We don't understand the coding of this header enough to find redifintions.
+    return
+  end
+
   line_number = 0
   defs = Set.new
   redefs = Set.new
@@ -541,8 +555,8 @@ def find_redefinitions
         reject_line = true
       else
         defs << name
-        if !FunctionNames.include?(name)
-          puts "WARNING: intsafe.h defines something we aren't testing: #{name}"
+        if !FuncInfo[name.to_sym]
+          puts "warning: intsafe.h defines something we don't know how to test: #{name}"
         end
       end
     end
@@ -562,7 +576,64 @@ def find_redefinitions
   exit 1
 end
 
-find_missing_functions
+def init_func_info
+  generate_types(0, false)
+
+  TypeInfo.each_value do |type_src|
+    TypeInfo.each_value do |type_dest|
+      next if type_src == type_dest
+      name = "#{type_src.fetch(:camel_name)}To#{type_dest.fetch(:camel_name)}".to_sym
+      FuncInfo[name] = {
+        name: name,
+        operation: :convert,
+        type_src: type_src.fetch(:name),
+        type_dest: type_dest.fetch(:name),
+      }
+    end
+  end
+
+  TypeInfo.each_value do |type|
+    type_name = type.fetch(:name)
+    add_sym = "#{type.fetch(:camel_name)}Add".to_sym
+    sub_sym = "#{type.fetch(:camel_name)}Sub".to_sym
+    mult_sym = "#{type.fetch(:camel_name)}Mult".to_sym
+    FuncInfo[add_sym] = {
+      name: add_sym,
+      operation: :add,
+      type_dest: type_name,
+    }
+    FuncInfo[sub_sym] = {
+      name: sub_sym,
+      operation: :sub,
+      type_dest: type_name,
+    }
+    FuncInfo[mult_sym] = {
+      name: mult_sym,
+      operation: :mult,
+      type_dest: type_name,
+    }
+  end
+
+  matches = IntsafeCode.scan(/\b[0-9A-Za-z_]+\b/)
+  intsafe_names = Set.new(matches)
+  msft_func_names = Set.new(File.readlines('../function_names.txt').map(&:strip).reject(&:empty?))
+
+  FuncInfo.each_value do |func|
+    name = func.fetch(:name).to_s
+    func[:defined_by_intsafe] = intsafe_names.include?(name)
+    func[:defined_by_msft] = msft_func_names.include?(name)
+
+    if func.fetch(:defined_by_msft) && !func.fetch(:defined_by_intsafe)
+      puts "warning: missing function will not be tested: #{name}"
+    end
+
+    if !func.fetch(:defined_by_msft) && func.fetch(:defined_by_intsafe)
+      puts "warning: intsafe.h has extra function: #{name}"
+    end
+  end
+end
+
+init_func_info
 
 find_redefinitions
 
@@ -570,24 +641,22 @@ File.open('generated.cpp', 'w') do |output|
   output.puts "#ifdef _WIN64"
 
   output.puts "#ifdef __CHAR_UNSIGNED__"
-  write_tests output, generate_types(8, false)
+  generate_types(8, false)
+  write_tests output
   output.puts "#else /* __CHAR_UNSIGNED__ */"
-  write_tests output, generate_types(8, true)
+  generate_types(8, true)
+  write_tests output
   output.puts "#endif /* __CHAR_UNSIGNED__ else */"
 
   output.puts "#else /* _WIN64 */"
 
   output.puts "#ifdef __CHAR_UNSIGNED__"
-  write_tests output, generate_types(4, false)
+  generate_types(4, false)
+  write_tests output
   output.puts "#else /* __CHAR_UNSIGNED__ */"
-  write_tests output, generate_types(4, true)
+  generate_types(4, true)
+  write_tests output
   output.puts "#endif /* __CHAR_UNSIGNED__ else */"
 
   output.puts "#endif /* _WIN64 else */"
-end
-
-untested_functions = FunctionNames - TestedFunctions - MissingFunctions
-if untested_functions.size > 0
-  puts "warning: #{untested_functions.size} functions do not have tests yet, " \
-    "for example: #{untested_functions.first}"
 end

@@ -55,8 +55,8 @@ test_machine() {
   language=c++ extra_args="-funsigned-char" test_config
 }
 
-machine=clang32 test_machine
-machine=clang64 test_machine
 machine=mingw32 test_machine
 machine=mingw64 test_machine
+machine=clang32 test_machine
+machine=clang64 test_machine
 machine=clangarm64 test_machine

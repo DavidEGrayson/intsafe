@@ -1,3 +1,4 @@
+/sdk10*
 *.exe
 test/intsafe.h
 test/generated.cpp
