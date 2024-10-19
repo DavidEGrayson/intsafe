@@ -220,10 +220,18 @@ def write_require_conversion(io, func_name, num)
   io.puts
 end
 
-def write_require_conversion_error(io, func_name, num)
+def write_require_conversion_error(io, func_name, num, type_dest)
   num_str = nice_num_str(num)
   io.puts "if(INTSAFE_E_ARITHMETIC_OVERFLOW != #{func_name}(#{num_str}, &out))"
   io.puts_indent %Q{error("#{func_name} did not overflow when given #{num_str}");}
+  # This is pretty arbitrary, but it's how the Microsoft header behaves
+  if type_dest.name == 'UCHAR' || type_dest.name == 'CHAR' && !type_dest.signed?
+    desired = '0'
+  else
+    desired = "(#{type_dest})-1"
+  end
+  io.puts "if (out != #{desired})"
+  io.puts_indent %Q{error("#{func_name} gave wrong overflow output");}
   io.puts
 end
 
@@ -258,11 +266,11 @@ def write_conversion_test(io, type_src, type_dest)
     write_require_conversion(test, func_name, min) if min != 0
 
     if type_src.max > type_dest.max
-      write_require_conversion_error(test, func_name, type_dest.max + 1)
+      write_require_conversion_error(test, func_name, type_dest.max + 1, type_dest)
     end
 
     if type_src.min < type_dest.min
-      write_require_conversion_error(test, func_name, type_dest.min - 1);
+      write_require_conversion_error(test, func_name, type_dest.min - 1, type_dest);
     end
   end
 end
