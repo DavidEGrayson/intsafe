@@ -10,6 +10,7 @@ require 'set'
 Dir.chdir(File.dirname(__FILE__))
 
 VER = ENV.fetch('VER')
+IntsafeCode = File.read("../#{VER}/intsafe.h")
 FunctionNames = File.readlines('function_names.txt').map(&:strip).reject(&:empty?)
 MissingFunctions = []
 TestedFunctions = []
@@ -483,8 +484,7 @@ end
 
 def find_missing_functions
   raise if MissingFunctions != []
-  intsafe_code = File.read("../#{VER}/intsafe.h")
-  matches = intsafe_code.scan(/\b[0-9A-Za-z_]+\b/)
+  matches = IntsafeCode.scan(/\b[0-9A-Za-z_]+\b/)
   intsafe_names = Set.new(matches)
   FunctionNames.each do |name|
     if !intsafe_names.include?(name)
@@ -496,8 +496,45 @@ def find_missing_functions
   end
 end
 
+def find_redefinitions
+  line_number = 0
+  defs = Set.new
+  redefs = Set.new
+  filtered_lines = []
+  IntsafeCode.each_line do |line|
+    line_number += 1
+    reject_line = false
+    if (line.match(/#define ([0-9A-Za-z_]+)\b/) \
+      || line.match(/API.+\b__MINGW_INTSAFE_[A-Z_]+\(([0-9A-Za-z_]+),/)) \
+      && !$1.start_with?('_')
+      name = $1
+      if defs.include?(name)
+        puts "Function #{name} gets redefined on line #{line_number}!"
+        redefs << name
+        reject_line = true
+      else
+        defs << name
+      end
+    end
+    filtered_lines << line unless reject_line
+  end
+  return if redefs.empty?
+  puts "Found #{redefs.size} function redefinitions!"
+
+  File.open("../#{VER}/filtered.h", "wb") do |file|
+    filtered_lines.each do |line|
+      file.puts line
+    end
+  end
+
+  puts "Wrote a new version to filtered.h."
+  puts "Please review and then do: mv filtered.h intsafe.h"
+  exit 1
+end
+
 find_missing_functions
-exit 2
+
+find_redefinitions
 
 File.open('generated_tests.cpp', 'w') do |output|
   output.puts File.read('test.cpp')
