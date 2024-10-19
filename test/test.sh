@@ -37,7 +37,7 @@ test_config() {
   # Note: We add -O1 to avoid getting undefined reference errors for the
   # inline functions without optimizations.
   CFLAGS="-Wall -Werror -pedantic -O1"
-  if [[ $machine == clang* ]]; then
+  if [[ $machine == clang32 || $machine == clang64 ]]; then
     CFLAGS+=" -fsanitize=undefined"
   fi
 
