@@ -5,20 +5,14 @@
 #   architecture: win32 or win64
 #   char type: signed or unsigned (-funsigned-char)
 
+require 'set'
+
 Dir.chdir(File.dirname(__FILE__))
 
+VER = ENV.fetch('VER')
 FunctionNames = File.readlines('function_names.txt').map(&:strip).reject(&:empty?)
-MissingFunctions = File.readlines('missing_functions.txt').map(&:strip).reject(&:empty?)
+MissingFunctions = []
 TestedFunctions = []
-
-#module HexInt
-#  refine Integer do
-#    def hex
-#      '%#x' % self
-#    end
-#  end
-#end
-#using HexInt
 
 def function_testable?(func_name)
   if !FunctionNames.include?(func_name)
@@ -487,6 +481,24 @@ def write_tests(io, types)
   end
 end
 
+def find_missing_functions
+  raise if MissingFunctions != []
+  intsafe_code = File.read("../#{VER}/intsafe.h")
+  matches = intsafe_code.scan(/\b[0-9A-Za-z_]+\b/)
+  intsafe_names = Set.new(matches)
+  FunctionNames.each do |name|
+    if !intsafe_names.include?(name)
+      MissingFunctions << name
+    end
+  end
+  if MissingFunctions.size > 0
+    puts "warning: #{MissingFunctions.size} functions are missing and tests were not generated for them"
+  end
+end
+
+find_missing_functions
+exit 2
+
 File.open('generated_tests.cpp', 'w') do |output|
   output.puts File.read('test.cpp')
   output.puts
@@ -510,10 +522,6 @@ File.open('generated_tests.cpp', 'w') do |output|
   output.puts "#endif /* _WIN64 else */"
 
   output.puts File.read('test_bottom.cpp')
-end
-
-if MissingFunctions.size > 0
-  puts "warning: #{MissingFunctions.size} functions are missing and tests were not generated for them"
 end
 
 untested_functions = FunctionNames - TestedFunctions - MissingFunctions

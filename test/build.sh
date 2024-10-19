@@ -8,9 +8,6 @@ echo "intsafe version: $VER"
 
 set -ue
 
-echo "Checking for missing functions"
-sh grepcheck.sh
-
 echo "Generating tests"
 ruby generate.rb
 
