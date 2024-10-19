@@ -1,4 +1,4 @@
 *.exe
 test/intsafe.h
-test/generated_tests.cpp
+test/generated.cpp
 

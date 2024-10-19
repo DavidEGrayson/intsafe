@@ -26,9 +26,9 @@ ruby gen_tests.rb
 # We add -O1 to avoid getting undefined reference errors for the
 # inline functions without optimizations.  This should probably be fixed.
 # Some day, we should add -fsanitize=undefined here.
-CARGS="-Wall -Werror -pedantic -O1 generated_tests.cpp"
+CFLAGS="-Wall -Werror -pedantic -O1"
 
-test_config () {
+test_config() {
   if [ "$machine" == "clangarm64" ]; then
     compiler="/opt/bin/aarch64-w64-mingw32-"
     runtime_path=
@@ -44,14 +44,14 @@ test_config () {
   else
     compiler+="gcc -x c --std=gnu99"
   fi
-  PATH=$runtime_path:$PATH $compiler $CARGS $extra_args -o run_test.exe
+  PATH=$runtime_path:$PATH $compiler $CFLAGS $extra_args run_tests.cpp -o run_tests.exe
 
   if [ -n "$runtime_path" ]; then
-    PATH=$runtime_path:$PATH ./run_test
+    PATH=$runtime_path:$PATH ./run_tests
   fi
 }
 
-test_machine () {
+test_machine() {
   language=c extra_args="-fno-unsigned-char" test_config
   language=c extra_args="-funsigned-char" test_config
   language=c++ extra_args="-fno-unsigned-char" test_config

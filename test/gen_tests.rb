@@ -558,10 +558,7 @@ find_missing_functions
 
 find_redefinitions
 
-File.open('generated_tests.cpp', 'w') do |output|
-  output.puts File.read('top.cpp')
-  output.puts
-
+File.open('generated.cpp', 'w') do |output|
   output.puts "#ifdef _WIN64"
 
   output.puts "#ifdef __CHAR_UNSIGNED__"
@@ -579,8 +576,6 @@ File.open('generated_tests.cpp', 'w') do |output|
   output.puts "#endif /* __CHAR_UNSIGNED__ else */"
 
   output.puts "#endif /* _WIN64 else */"
-
-  output.puts File.read('bottom.cpp')
 end
 
 untested_functions = FunctionNames - TestedFunctions - MissingFunctions
