@@ -91,7 +91,6 @@ def generate_types(pointer_size, char_signed)
     CNumberType['ULONG', 'ULong', 4],
     CNumberType['DWORD', 'DWord', 4],
     CNumberType['UINT32', 'UInt32', 4],        # new
-    CNumberType['DWORDLONG', 'DWordLong', 4],  # new
 
     CNumberType['INT', 'Int', -4],
     CNumberType['LONG', 'Long', -4],
@@ -100,8 +99,9 @@ def generate_types(pointer_size, char_signed)
 
     CNumberType['ULONGLONG', 'ULongLong', 8],
     CNumberType['ULONG64', 'ULong64', 8],      # new
-    CNumberType['DWORD64', 'DWord64', 8],      # new
     CNumberType['UINT64', 'UInt64', 8],        # new
+    CNumberType['DWORD64', 'DWord64', 8],      # new
+    CNumberType['DWORDLONG', 'DWordLong', 8],  # new
 
     CNumberType['INT64', 'Int64', -8],
     CNumberType['LONGLONG', 'LongLong', -8],
