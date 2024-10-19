@@ -13,7 +13,7 @@ static void error(const char * format, ...) __attribute__((format (printf, 1, 2)
 
 #include "generated.cpp"
 
-int main()
+int main(void)
 {
     run_all_tests();
     return error_count != 0;

@@ -148,7 +148,7 @@ def write_bracketed_section(io)
 end
 
 def write_static_void_func(io, name, &block)
-  io.puts "static void #{name}()"
+  io.puts "static void #{name}(void)"
   write_bracketed_section(io, &block)
   name
 end

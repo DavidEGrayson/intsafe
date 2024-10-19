@@ -17,17 +17,6 @@ cd $(dirname $0)
 echo "Generating tests"
 ruby gen_tests.rb
 
-# To test using clang, edit the script below:
-# - change -O1 to -O3
-# - add -fsanitized=undefined
-# - change "g++" and "gcc" to "clang"
-# - comment out things that don't work (c++ didn't work for me)
-
-# We add -O1 to avoid getting undefined reference errors for the
-# inline functions without optimizations.  This should probably be fixed.
-# Some day, we should add -fsanitize=undefined here.
-CFLAGS="-Wall -Werror -pedantic -O1"
-
 test_config() {
   if [ "$machine" == "clangarm64" ]; then
     compiler="/opt/bin/aarch64-w64-mingw32-"
@@ -44,6 +33,14 @@ test_config() {
   else
     compiler+="gcc -x c --std=gnu99"
   fi
+
+  # Note: We add -O1 to avoid getting undefined reference errors for the
+  # inline functions without optimizations.
+  CFLAGS="-Wall -Werror -pedantic -O1"
+  if [[ $machine == clang* ]]; then
+    CFLAGS+=" -fsanitize=undefined"
+  fi
+
   PATH=$runtime_path:$PATH $compiler $CFLAGS $extra_args run_tests.cpp -o run_tests.exe
 
   if [ -n "$runtime_path" ]; then
@@ -58,6 +55,8 @@ test_machine() {
   language=c++ extra_args="-funsigned-char" test_config
 }
 
+machine=clang32 test_machine
+machine=clang64 test_machine
 machine=mingw32 test_machine
 machine=mingw64 test_machine
 machine=clangarm64 test_machine
