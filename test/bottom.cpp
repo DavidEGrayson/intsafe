@@ -1,12 +1,6 @@
-void tests_all()
-{
-    tests_manual();
-    tests_auto();
-}
-
 int main()
 {
-    tests_all();
+    run_all_tests();
     return 0;
 }
 

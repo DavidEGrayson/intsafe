@@ -175,10 +175,10 @@ end
 
 # These tests makes sure our database of types is correct.
 def write_type_tests(io, types)
-  collect_tests(io, 'tests_types') do |tc|
+  collect_tests(io, 'run_type_tests') do |tc|
     types.each do |type|
       comparison = type.signed? ? '<' : '>';
-      tc << write_test(io, "test_#{type}_eq_#{type.c99_name}") do |test|
+      tc << write_test(io, "test_type_#{type}") do |test|
 
         # Check the size of the type.
         test.puts "if(sizeof(#{type}) != #{type.byte_count})"
@@ -268,7 +268,7 @@ def write_conversion_test(io, type_src, type_dest)
 end
 
 def write_conversion_tests(io, types)
-  collect_tests(io, 'tests_conversions') do |tc|
+  collect_tests(io, 'run_conversion_tests') do |tc|
     types.each do |type1|
       types.each do |type2|
         next if type1 == type2
@@ -475,7 +475,7 @@ def write_multiplication_test(io, type)
 end
 
 def write_math_tests(io, types)
-  collect_tests(io, 'tests_math') do |tc|
+  collect_tests(io, 'run_math_tests') do |tc|
     types.each do |type|
       tc << write_addition_test(io, type)
       tc << write_subtraction_test(io, type)
@@ -492,7 +492,7 @@ def write_missing_function_test(io)
 end
 
 def write_tests(io, types)
-  collect_tests(io, 'tests_auto') do |tc|
+  collect_tests(io, 'run_all_tests') do |tc|
     tc << write_missing_function_test(io)
     tc << write_type_tests(io, types)
     tc << write_conversion_tests(io, types)

@@ -29,14 +29,26 @@ ruby gen_tests.rb
 CARGS="-Wall -Werror -pedantic -O1 generated_tests.cpp"
 
 test_config () {
-  echo "Testing $machine, $language, $extra_args"
-  if [ "$language" = "c++" ]; then
-    compiler="g++ -x c++ --std=gnu++11"
+  if [ "$machine" == "clangarm64" ]; then
+    compiler="/opt/bin/aarch64-w64-mingw32-"
+    runtime_path=
   else
-    compiler="gcc -x c --std=gnu99"
+    compiler="/$machine/bin/"
+    runtime_path="/$machine/bin/"
   fi
-  $compiler $CARGS ${extra_args} -o run_test.exe
-  ./run_test
+
+  echo "Compiling${runtime_path:+ and running} tests for $machine, $language, $extra_args"
+
+  if [ "$language" = "c++" ]; then
+    compiler+="g++ -x c++ --std=gnu++11"
+  else
+    compiler+="gcc -x c --std=gnu99"
+  fi
+  PATH=$runtime_path:$PATH $compiler $CARGS $extra_args -o run_test.exe
+
+  if [ -n "$runtime_path" ]; then
+    PATH=$runtime_path:$PATH ./run_test
+  fi
 }
 
 test_machine () {
@@ -46,5 +58,6 @@ test_machine () {
   language=c++ extra_args="-funsigned-char" test_config
 }
 
-machine=mingw32 PATH=/mingw32/bin:$PATH test_machine
-machine=mingw64 PATH=/mingw64/bin:$PATH test_machine
+machine=mingw32 test_machine
+machine=mingw64 test_machine
+machine=clangarm64 test_machine
