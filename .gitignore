@@ -1,5 +1,4 @@
-sdk10
 *.exe
-test/missing_functions.txt
+test/intsafe.h
 test/generated_tests.cpp
 

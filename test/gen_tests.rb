@@ -9,9 +9,8 @@ require 'set'
 
 Dir.chdir(File.dirname(__FILE__))
 
-VER = ENV.fetch('VER')
-IntsafeCode = File.read("../#{VER}/intsafe.h")
-FunctionNames = File.readlines('function_names.txt').map(&:strip).reject(&:empty?)
+IntsafeCode = File.read('intsafe.h')
+FunctionNames = File.readlines('../function_names.txt').map(&:strip).reject(&:empty?)
 MissingFunctions = []
 TestedFunctions = []
 
@@ -544,7 +543,7 @@ def find_redefinitions
   return if redefs.empty?
   puts "Found #{redefs.size} function redefinitions!"
 
-  File.open("../#{VER}/filtered.h", "wb") do |file|
+  File.open("filtered.h", "wb") do |file|
     filtered_lines.each do |line|
       file.puts line
     end
@@ -560,7 +559,7 @@ find_missing_functions
 find_redefinitions
 
 File.open('generated_tests.cpp', 'w') do |output|
-  output.puts File.read('test.cpp')
+  output.puts File.read('top.cpp')
   output.puts
 
   output.puts "#ifdef _WIN64"
@@ -581,7 +580,7 @@ File.open('generated_tests.cpp', 'w') do |output|
 
   output.puts "#endif /* _WIN64 else */"
 
-  output.puts File.read('test_bottom.cpp')
+  output.puts File.read('bottom.cpp')
 end
 
 untested_functions = FunctionNames - TestedFunctions - MissingFunctions
