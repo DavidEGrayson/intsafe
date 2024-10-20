@@ -20,8 +20,8 @@ IntsafeCode = File.read('intsafe.h')
 #   :operation          => :add, :mult, :sub, or :convert
 #   :type_src           => Symbol
 #   :type_dest          => Symbol
-#   :defined_by_msft    => true if found in function_names.txt
-#   :defined_by_intsafe => true if found in intsafe.h
+#   :defined_by_msft    => true if name found in function_names.txt
+#   :defined_by_intsafe => true if name found in intsafe.h
 FuncInfo = {}
 
 # TypeInfo keys are integer type names (as written in C/C++ variable
