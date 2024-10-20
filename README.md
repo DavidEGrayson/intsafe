@@ -9,10 +9,11 @@ contributors have added things since then.
 
 ## How to run tests
 
-To run an auto-generated testsuite for intsafe.h, first install MSYS2 and
-run this command to install prerequisites:
+To run an auto-generated testsuite for intsafe.h, first install MSYS2, then
+open a MINGW64 shell (or any other environment where the pacman command below runs
+successfully) and run this command to install prerequisites:
 
-    pacman --needed -S mingw-w64-{i686,x86_64,clang-i686,clang-x86_64,cross-mingwarm64}-gcc
+    pacman --needed -S mingw-w64-{i686,x86_64,clang-i686,clang-x86_64,cross-mingwarm64}-gcc $MINGW_PACKAGE_PREFIX-ruby
 
 Then run `./test/test.sh INTSAFE`, where `INTSAFE` is the path to the
 header you want to test.  Some examples:
