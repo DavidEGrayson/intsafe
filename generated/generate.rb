@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby
+
 # This file and the files in this directory are unencumbered software
 # released into the public domain.
 
@@ -9,7 +11,7 @@ require_relative 'conversions'
 require_relative 'math'
 
 Dir.chdir(File.dirname(__FILE__))
-ApiFunctionNames = File.readlines('function_names.txt').map(&:strip).reject(&:empty?)
+ApiFunctionNames = File.readlines('../function_names.txt').map(&:strip).reject(&:empty?)
 GeneratedFunctions = []
 
 Indent = '    '
