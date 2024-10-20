@@ -1,0 +1,227 @@
+diff -ur -w sdk10.0.26100.0/intsafe.h sdk/intsafe.h
+--- sdk10.0.26100.0/intsafe.h	2024-10-20 11:24:19.146367900 -0700
++++ sdk/intsafe.h	2024-10-20 11:27:48.259160600 -0700
+@@ -9,6 +9,20 @@
+ #ifndef _INTSAFE_H_INCLUDED_
+ #define _INTSAFE_H_INCLUDED_
+ 
++// Junk added by David to make tests compile.
++#ifdef __CHAR_UNSIGNED__
++#error This header does not support 'char' being unsigned.
++#endif
++#define __int64 long long
++#define _M_IX86
++#ifdef __clang
++#pragma GCC diagnostic ignored "-Wtypedef-redefinition"
++#endif
++#define __forceinline   inline
++#define __inline        inline
++#define ENABLE_INTSAFE_SIGNED_FUNCTIONS
++
++
+ #include <winapifamily.h>
+ 
+ 
+@@ -173,7 +187,8 @@
+ #define INTSAFE_E_ARITHMETIC_OVERFLOW   ((HRESULT)0x80070216L)  // 0x216 = 534 = ERROR_ARITHMETIC_OVERFLOW
+ #ifndef SORTPP_PASS 
+ // compiletime asserts (failure results in error C2118: negative subscript)
+-#define C_ASSERT(e) typedef char __C_ASSERT__[(e)?1:-1]
++#include <assert.h>
++#define C_ASSERT(e) static_assert(e, "")
+ #else
+ #define C_ASSERT(e)
+ #endif
+@@ -197,7 +212,7 @@
+ //
+ // Min/Max type values
+ //
+-#define INT8_MIN        (-127i8 - 1)
++#define INT8_MIN        (((INT8)-127) - 1)
+ #define SHORT_MIN       (-32768)
+ #define INT16_MIN       (-32767i16 - 1)
+ #ifndef INT_MIN
+@@ -207,9 +222,9 @@
+ #ifndef LONG_MIN
+ #define LONG_MIN        (-2147483647L - 1)
+ #endif
+-#define LONGLONG_MIN    (-9223372036854775807i64 - 1)
+-#define LONG64_MIN      (-9223372036854775807i64 - 1)
+-#define INT64_MIN       (-9223372036854775807i64 - 1)
++#define LONGLONG_MIN    ((INT64)-9223372036854775807 - 1)
++#define LONG64_MIN      ((INT64)-9223372036854775807 - 1)
++#define INT64_MIN       ((INT64)-9223372036854775807 - 1)
+ #define INT128_MIN      (-170141183460469231731687303715884105727i128 - 1)
+ 
+ #ifdef _WIN64
+@@ -224,22 +239,22 @@
+ #define SSIZE_T_MIN     (-2147483647L - 1)
+ #endif
+ 
+-#define INT8_MAX        127i8
+-#define UINT8_MAX       0xffui8
++#define INT8_MAX        ((INT8)127)
++#define UINT8_MAX       ((UINT8)0xff)
+ #define BYTE_MAX        0xff
+ #define SHORT_MAX       32767
+-#define INT16_MAX       32767i16
++#define INT16_MAX       ((INT16)32767)
+ #define USHORT_MAX      0xffff
+-#define UINT16_MAX      0xffffui16
++#define UINT16_MAX      ((UINT16)0xffff)
+ #define WORD_MAX        0xffff
+ #ifndef INT_MAX
+ #define INT_MAX         2147483647
+ #endif
+-#define INT32_MAX       2147483647i32
++#define INT32_MAX       ((INT32)2147483647)
+ #ifndef UINT_MAX
+ #define UINT_MAX        0xffffffff
+ #endif
+-#define UINT32_MAX      0xffffffffui32
++#define UINT32_MAX      ((UINT32)0xffffffff)
+ #ifndef LONG_MAX
+ #define LONG_MAX        2147483647L
+ #endif
+@@ -247,29 +262,29 @@
+ #define ULONG_MAX       0xffffffffUL
+ #endif
+ #define DWORD_MAX       0xffffffffUL
+-#define LONGLONG_MAX    9223372036854775807i64
+-#define LONG64_MAX      9223372036854775807i64
+-#define INT64_MAX       9223372036854775807i64
+-#define ULONGLONG_MAX   0xffffffffffffffffui64
+-#define DWORDLONG_MAX   0xffffffffffffffffui64
+-#define ULONG64_MAX     0xffffffffffffffffui64
+-#define DWORD64_MAX     0xffffffffffffffffui64
+-#define UINT64_MAX      0xffffffffffffffffui64
++#define LONGLONG_MAX    ((INT64)9223372036854775807)
++#define LONG64_MAX      ((INT64)9223372036854775807)
++#define INT64_MAX       ((INT64)9223372036854775807)
++#define ULONGLONG_MAX   ((UINT64)0xffffffffffffffff)
++#define DWORDLONG_MAX   ((UINT64)0xffffffffffffffff)
++#define ULONG64_MAX     ((UINT64)0xffffffffffffffff)
++#define DWORD64_MAX     ((UINT64)0xffffffffffffffff)
++#define UINT64_MAX      ((UINT64)0xffffffffffffffff)
+ #define INT128_MAX      170141183460469231731687303715884105727i128
+ #define UINT128_MAX     0xffffffffffffffffffffffffffffffffui128
+ 
+ #undef SIZE_T_MAX
+ 
+ #ifdef _WIN64
+-#define INT_PTR_MAX     9223372036854775807i64
+-#define UINT_PTR_MAX    0xffffffffffffffffui64
+-#define LONG_PTR_MAX    9223372036854775807i64
+-#define ULONG_PTR_MAX   0xffffffffffffffffui64
+-#define DWORD_PTR_MAX   0xffffffffffffffffui64
+-#define PTRDIFF_T_MAX   9223372036854775807i64
+-#define SIZE_T_MAX      0xffffffffffffffffui64
+-#define SSIZE_T_MAX     9223372036854775807i64
+-#define _SIZE_T_MAX     0xffffffffffffffffui64
++#define INT_PTR_MAX     ((INT64)9223372036854775807)
++#define UINT_PTR_MAX    ((UINT64)0xffffffffffffffff)
++#define LONG_PTR_MAX    ((INT64)9223372036854775807)
++#define ULONG_PTR_MAX   ((UINT64)0xffffffffffffffff)
++#define DWORD_PTR_MAX   ((UINT64)0xffffffffffffffff)
++#define PTRDIFF_T_MAX   ((INT64)9223372036854775807)
++#define SIZE_T_MAX      ((UINT64)0xffffffffffffffff)
++#define SSIZE_T_MAX     ((INT64)9223372036854775807)
++#define _SIZE_T_MAX     ((UINT64)0xffffffffffffffff)
+ #else
+ #define INT_PTR_MAX     2147483647 
+ #define UINT_PTR_MAX    0xffffffff
+@@ -286,39 +301,39 @@
+ //
+ // It is common for -1 to be used as an error value
+ //
+-#define INT8_ERROR      (-1i8)
+-#define UINT8_ERROR     0xffui8
++#define INT8_ERROR      ((INT8)-1)
++#define UINT8_ERROR     ((UINT8)0xff)
+ #define BYTE_ERROR      0xff
+ #define SHORT_ERROR     (-1)
+-#define INT16_ERROR     (-1i16)
++#define INT16_ERROR     ((INT16)-1)
+ #define USHORT_ERROR    0xffff
+-#define UINT16_ERROR    0xffffui16
++#define UINT16_ERROR    ((UINT16)0xffff)
+ #define WORD_ERROR      0xffff
+ #define INT_ERROR       (-1)
+ #define INT32_ERROR     (-1i32)
+ #define UINT_ERROR      0xffffffff
+-#define UINT32_ERROR    0xffffffffui32
++#define UINT32_ERROR    ((UINT32)0xffffffff)
+ #define LONG_ERROR      (-1L)
+ #define ULONG_ERROR     0xffffffffUL
+ #define DWORD_ERROR     0xffffffffUL
+-#define LONGLONG_ERROR  (-1i64)
+-#define LONG64_ERROR    (-1i64)
+-#define INT64_ERROR     (-1i64)
+-#define ULONGLONG_ERROR 0xffffffffffffffffui64
+-#define DWORDLONG_ERROR 0xffffffffffffffffui64
+-#define ULONG64_ERROR   0xffffffffffffffffui64
+-#define UINT64_ERROR    0xffffffffffffffffui64
+-
+-#ifdef _WIN64
+-#define INT_PTR_ERROR   (-1i64)
+-#define UINT_PTR_ERROR  0xffffffffffffffffui64
+-#define LONG_PTR_ERROR  (-1i64)
+-#define ULONG_PTR_ERROR 0xffffffffffffffffui64
+-#define DWORD_PTR_ERROR 0xffffffffffffffffui64
+-#define PTRDIFF_T_ERROR (-1i64)
+-#define SIZE_T_ERROR    0xffffffffffffffffui64
+-#define SSIZE_T_ERROR   (-1i64)
+-#define _SIZE_T_ERROR   0xffffffffffffffffui64
++#define LONGLONG_ERROR  ((INT64)-1)
++#define LONG64_ERROR    ((INT64)-1)
++#define INT64_ERROR     ((INT64)-1)
++#define ULONGLONG_ERROR ((ULONGLONG)0xffffffffffffffff)
++#define DWORDLONG_ERROR ((DWORDLONG)0xffffffffffffffff)
++#define ULONG64_ERROR   ((ULONG64)0xffffffffffffffff)
++#define UINT64_ERROR    ((UINT64)0xffffffffffffffff)
++
++#ifdef _WIN64
++#define INT_PTR_ERROR   ((INT64)-1)
++#define UINT_PTR_ERROR  ((UINT_PTR)0xffffffffffffffff)
++#define LONG_PTR_ERROR  ((INT64)-1)
++#define ULONG_PTR_ERROR ((ULONG_PTR)0xffffffffffffffff)
++#define DWORD_PTR_ERROR ((DWORD_PTR)0xffffffffffffffff)
++#define PTRDIFF_T_ERROR ((INT64)-1)
++#define SIZE_T_ERROR    ((SIZE_T)0xffffffffffffffff)
++#define SSIZE_T_ERROR   ((INT64)-1)
++#define _SIZE_T_ERROR   ((_SIZE_T)0xffffffffffffffff)
+ #else
+ #define INT_PTR_ERROR   (-1) 
+ #define UINT_PTR_ERROR  0xffffffff
+@@ -7739,8 +7754,7 @@
+ //
+ // ULONGLONG multiplication
+ //
+-_Must_inspect_result_
+-__inline
++static inline
+ HRESULT
+ ULongLongMult(
+     _In_ ULONGLONG ullMultiplicand,
+@@ -7841,7 +7855,7 @@
+     {
+         *pullResult = ULONGLONG_ERROR;
+     }
+-#pragma warning(suppress:26071)
++//#pragma warning(suppress:26071)
+ #endif // _USE_INTRINSIC_MULTIPLY128
+     return hr;
+ }
+@@ -8505,8 +8519,9 @@
+ //
+ // LONGLONG multiplication
+ //
+-_Must_inspect_result_
+-__inline
++//_Must_inspect_result_
++//__inline
++static inline
+ HRESULT
+ LongLongMult(
+     _In_ LONGLONG llMultiplicand,
+Only in sdk: intsafe_10.0.26100.0.patch
