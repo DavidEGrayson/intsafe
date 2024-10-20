@@ -593,6 +593,8 @@ __MINGW_INTSAFE_API __MINGW_INTSAFE_MATH(LongLongMult, LONGLONG, mul)
 #define LongLongToWord LongLongToUShort
 #define LongLongToInt32 LongLongToInt
 #define LongLongToUInt32 LongLongToUInt
+#define LongLongToUIntPtr Int64ToUIntPtr
+#define LongLongToULongPtr Int64ToULongPtr
 #define LongLongToDWord LongLongToULong
 #define LongLongToDWordPtr LongLongToULongPtr
 #define LongLongToDWordLong LongLongToULongLong
@@ -603,8 +605,6 @@ __MINGW_INTSAFE_API __MINGW_INTSAFE_MATH(LongLongMult, LONGLONG, mul)
 #define LongLongToSizeT LongLongToUIntPtr
 #define LongLongToSSIZET LongLongToLongPtr
 #define LongLongToSIZET LongLongToULongPtr
-#define LongLongToUIntPtr Int64ToUIntPtr
-#define LongLongToULongPtr Int64ToULongPtr
 #define Long64ToChar LongLongToChar
 #define Long64ToInt8 LongLongToInt8
 #define Long64ToUChar LongLongToUChar
