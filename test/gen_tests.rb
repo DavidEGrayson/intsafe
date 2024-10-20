@@ -223,8 +223,11 @@ end
 def nice_num_str(num)
   case
   when num.is_a?(String) then num
-  when num < 0 then '(-' + nice_num_str(-num - 1) + 'll - 1)'
-  else '%#x' % num
+  when num == 0 then '0'
+  when num > 0 then '%#x' % num
+  when num >= -0x7FFF_FFFF then '-%#x' % -num
+  when num >= -0x7FFF_FFFF_FFFF_FFFF then '-%#xll' % -num
+  else '(-' + nice_num_str(-num - 1) + 'll - 1)'
   end
 end
 
@@ -241,7 +244,7 @@ end
 def write_check_overflow_output(io, func_name)
   type_dest = FuncInfo.fetch(func_name.to_sym).fetch(:type_dest)
   ctype_dest = TypeInfo.fetch(type_dest).fetch(:concrete)
-  # This is pretty arbitrary, but it's how the Microsoft header behaves (TODO: right?)
+  # This is pretty arbitrary, but it's how the Microsoft header behaves
   if ctype_dest.name == 'UCHAR' || ctype_dest.name == 'CHAR' && !ctype_dest.signed?
     desired = '0'
   else
