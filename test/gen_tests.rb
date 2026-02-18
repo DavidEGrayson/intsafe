@@ -33,6 +33,13 @@ FuncInfo = {}
 #                          we are currently targeting)
 TypeInfo = {}
 
+# RangeMacroInfo keys are macro names as symbols (e.g. :DWORD_MAX).
+# RangeMacroInfo values are hashes with these keys:
+#   :name               => Symbol
+#   :type               => Symbol (e.g. :DWORD)
+#   :end                => :max or :min
+RangeMacroInfo = {}
+
 class CNumberType < Struct.new(:name, :camel_name, :type_id)
   def byte_count
     type_id.abs
@@ -199,20 +206,20 @@ def write_type_tests(io)
       tc << write_test(io, "test_type_#{type}") do |test|
 
         # Check the size of the type.
-        test.puts "if(sizeof(#{type}) != #{type.byte_count})"
+        test.puts "if (sizeof(#{type}) != #{type.byte_count})"
         test.puts_indent %Q{error("#{type} is actually %d bytes", (int)sizeof(#{type}));}
 
         # Check the signedness of the type.
         test.puts "#{type} x = 0;"
-        test.puts "if(!((#{type})(x - 1) #{comparison} x))"
+        test.puts "if (!((#{type})(x - 1) #{comparison} x))"
         test.puts_indent %Q{error("#{type} sign check failed");}
 
         # Do additional checks if possible.
         test.puts "#ifdef __cplusplus"
-        test.puts "if(std::is_pointer<#{type}>::value)"
+        test.puts "if (std::is_pointer<#{type}>::value)"
         test.puts_indent %Q{error("#{type} is a pointer");}
         #test.puts "#else"
-        #test.puts "if(!__builtin_types_compatible_p(#{type}, #{type.c99_name}))"
+        #test.puts "if (!__builtin_types_compatible_p(#{type}, #{type.c99_name}))"
         #test.puts_indent %Q{error("#{type} is not compatible with #{type.c99_name}");}
         test.puts "#endif"
       end
@@ -234,9 +241,9 @@ end
 def write_require_conversion(io, func_name, num)
   num_str = nice_num_str(num)
   io.puts "out = INITIAL_VALUE;"
-  io.puts "if(#{func_name}(#{num_str}, &out) != 0)"
+  io.puts "if (#{func_name}(#{num_str}, &out) != 0)"
   io.puts_indent %Q{error("#{func_name} failed to convert #{num_str}");}
-  io.puts "if(out != #{num_str})"
+  io.puts "if (out != #{num_str})"
   io.puts_indent %Q{error("#{func_name} changed #{num_str} to something else.");}
   io.puts
 end
@@ -257,7 +264,7 @@ end
 
 def write_require_conversion_error(io, func_name, num)
   num_str = nice_num_str(num)
-  io.puts "if(INTSAFE_E_ARITHMETIC_OVERFLOW != #{func_name}(#{num_str}, &out))"
+  io.puts "if (INTSAFE_E_ARITHMETIC_OVERFLOW != #{func_name}(#{num_str}, &out))"
   io.puts_indent %Q{error("#{func_name} did not overflow when given #{num_str}");}
   write_check_overflow_output(io, func_name)
   io.puts
@@ -268,7 +275,7 @@ def write_type_checker(io, func_name, return_type, arg_types)
     sec.puts "#{return_type} (*tmp)(#{arg_types}) __attribute__((unused)) = &#{func_name};"
     sec.puts "#ifdef __cplusplus"
     type_signature = "#{return_type} (*)(#{arg_types})"
-    sec.puts "if(!std::is_same<decltype(&#{func_name}), #{type_signature}>::value)"
+    sec.puts "if (!std::is_same<decltype(&#{func_name}), #{type_signature}>::value)"
     sec.puts_indent %Q{error("#{func_name} does not have the right signature");}
     sec.puts "#endif"
   end
@@ -526,11 +533,47 @@ def write_math_tests(io)
   end
 end
 
+def write_range_macro_test(io, macro_name)
+  macro_info = RangeMacroInfo.fetch(macro_name.to_sym)
+  type_name = macro_info.fetch(:type)
+  type = TypeInfo.fetch(macro_info.fetch(:type)).fetch(:concrete)
+  expected_value = macro_info.fetch(:end) == :max ? type.max : type.min
+  skip_clang_cpp = type.byte_count < 4 && false # tmphax
+  write_test(io, "test_#{macro_name}") do |test|
+    test.puts "#{type_name} expected = #{nice_num_str(expected_value)};"
+    test.puts "if (#{macro_name} != expected)"
+    test.puts_indent %Q{error("#{macro_name} has wrong value");}
+    test.puts "#ifdef __cplusplus"
+    if skip_clang_cpp
+      test.puts "#ifdef __clang__"
+      test.puts "if (0) /** clang's is_same is weird **/"
+      test.puts "#else"
+    end
+    test.puts "if (!std::is_same<decltype(#{macro_name}), #{type_name}>::value)"
+    if skip_clang_cpp
+      test.puts "#endif"
+    end
+    test.puts "#else"
+    test.puts "if (!_Generic(#{macro_name}, #{type_name}: 1, default: 0))"
+    test.puts "#endif"
+    test.puts_indent %Q{error("#{macro_name} has wrong type");}
+  end
+end
+
+def write_range_macro_tests(io)
+  collect_tests(io, 'run_range_macro_tests') do |tc|
+    RangeMacroInfo.each_value do |macro|
+      tc << write_range_macro_test(io, macro.fetch(:name))
+    end
+  end
+end
+
 def write_tests(io)
   collect_tests(io, 'run_all_tests') do |tc|
     tc << write_type_tests(io)
     tc << write_conversion_tests(io)
     tc << write_math_tests(io)
+    tc << write_range_macro_tests(io)
   end
 end
 
@@ -550,7 +593,9 @@ def find_redefinitions
     if (line.match(/#define ([0-9A-Za-z_]+)\b/) \
       || line.match(/API.+\b__MINGW_INTSAFE_[A-Z_]+\(([0-9A-Za-z_]+),/)) \
       && !$1.start_with?('_') \
-      && !['S_OK', 'INTSAFE_E_ARITHMETIC_OVERFLOW'].include?($1)
+      && !['S_OK', 'INTSAFE_E_ARITHMETIC_OVERFLOW'].include?($1) \
+      && !$1.end_with?('_MIN') \
+      && !$1.end_with?('_MAX')
       name = $1
       if defs.include?(name)
         puts "Function #{name} gets redefined on line #{line_number}!"
@@ -558,7 +603,7 @@ def find_redefinitions
         reject_line = true
       else
         defs << name
-        if !FuncInfo[name.to_sym]
+        if !FuncInfo[name.to_sym] && !RangeMacroInfo[name.to_sym]
           puts "warning: intsafe.h defines something we don't know how to test: #{name}"
         end
       end
@@ -636,7 +681,87 @@ def init_func_info
   end
 end
 
+def init_range_macro_info
+  msft_range_macro_names = Set.new %w{
+    INT8_MIN
+    SHORT_MIN
+    INT16_MIN
+    INT_MIN
+    INT32_MIN
+    LONG_MIN
+    LONGLONG_MIN
+    LONG64_MIN
+    INT64_MIN
+    INT128_MIN
+    INT_PTR_MIN
+    LONG_PTR_MIN
+    PTRDIFF_T_MIN
+    SSIZE_T_MIN
+    INT8_MAX
+    UINT8_MAX
+    BYTE_MAX
+    SHORT_MAX
+    INT16_MAX
+    USHORT_MAX
+    UINT16_MAX
+    WORD_MAX
+    INT_MAX
+    INT32_MAX
+    UINT_MAX
+    UINT32_MAX
+    LONG_MAX
+    ULONG_MAX
+    DWORD_MAX
+    LONGLONG_MAX
+    LONG64_MAX
+    INT64_MAX
+    ULONGLONG_MAX
+    DWORDLOG_MAX
+    ULONG64_MAX
+    DWORD64_MAX
+    UINT64_MAX
+    INT128_MAX
+    UINT128_MAX
+    SIZE_T_MAX
+    INT_PTR_MAX
+    UINT_PTR_MAX
+    LONG_PTR_MAX
+    ULONG_PTR_MAX
+    DWORD_PTR_MAX
+    PTRDIFF_T_MAX
+    SIZE_T_MAX
+    SSIZE_T_MAX
+    _SIZE_T_MAX
+  }
+
+  matches = IntsafeCode.scan(/\b([0-9A-Za-z_]+_(MIN|MAX))\b/)
+  intsafe_names = Set.new(matches.map(&:first))
+
+  RangeMacroInfo.clear
+  TypeInfo.each_value do |type|
+    ['MIN', 'MAX'].each do |end_type|
+      name = "#{type.fetch(:name)}_#{end_type}"
+      defined_by_intsafe = intsafe_names.include?(name)
+      defined_by_msft = msft_range_macro_names.include?(name)
+      if defined_by_msft && !defined_by_intsafe
+        puts "warning: missing range macro will not be tested: #{name}"
+      end
+      if !defined_by_msft && defined_by_intsafe
+        puts "warning: intsafe.h has extra range macro: #{name}"
+      end
+      if defined_by_intsafe
+        RangeMacroInfo[name.to_sym] = {
+          name: name.to_sym,
+          type: type.fetch(:name),
+          end: end_type == 'MAX' ? :max : :min,
+        }
+      end
+    end
+  end
+end
+
 init_func_info
+init_range_macro_info
 
 find_redefinitions
 

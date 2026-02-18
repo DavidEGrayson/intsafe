@@ -31,7 +31,7 @@ test_config() {
   if [ "$language" = "c++" ]; then
     compiler+="g++ -x c++ --std=gnu++11"
   else
-    compiler+="gcc -x c --std=gnu99"
+    compiler+="gcc -x c --std=gnu23"
   fi
 
   # Note: We add -O1 to avoid getting undefined reference errors for the
@@ -55,9 +55,9 @@ test_machine() {
   language=c++ extra_args="-funsigned-char" test_config
 }
 
+machine=ucrt64 test_machine
 machine=mingw32 test_machine
 machine=mingw64 test_machine
-machine=clang32 test_machine
 machine=clang64 test_machine
 machine=clangarm64 test_machine
 echo Success.
