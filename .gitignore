@@ -2,4 +2,6 @@ sdk*/intsafe.h
 *.exe
 test/intsafe.h
 test/generated.cpp
-
+test/build.ninja
+test/ninja-out
+.ninja_log
