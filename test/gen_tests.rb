@@ -227,6 +227,16 @@ def write_type_tests(io)
   end
 end
 
+def cpp_num_str(num)
+  if num >= (1 << 63)
+    num.to_s + "U"
+  elsif num <= -(1 << 63)
+    "-#{0x7FFF_FFFF_FFFF_FFFF} - #{-num - 0x7FFF_FFFF_FFFF_FFFF}"
+  else
+    num.to_s
+  end
+end
+
 def nice_num_str(num)
   case
   when num.is_a?(String) then num
@@ -535,26 +545,30 @@ end
 
 def write_range_macro_test(io, macro_name)
   macro_info = RangeMacroInfo.fetch(macro_name.to_sym)
-  type_name = macro_info.fetch(:type)
-  type = TypeInfo.fetch(macro_info.fetch(:type)).fetch(:concrete)
-  expected_value = macro_info.fetch(:end) == :max ? type.max : type.min
-  skip_clang_cpp = type.byte_count < 4 && false # tmphax
+  type1_name = macro_info.fetch(:type)
+  type1 = TypeInfo.fetch(macro_info.fetch(:type)).fetch(:concrete)
+  expected_value = macro_info.fetch(:end) == :max ? type1.max : type1.min
+  type2 = type1.byte_count < 4 ? TypeInfo.fetch(:INT).fetch(:concrete) : type1
   write_test(io, "test_#{macro_name}") do |test|
-    test.puts "#{type_name} expected = #{nice_num_str(expected_value)};"
+    test.puts "#if #{macro_name} != #{cpp_num_str(expected_value)}"
+    test.puts %Q{error("#{macro_name} has wrong preprocessor value");}
+    extra_tests = [ "#{macro_name} == 0" ]
+    if expected_value > -0x8000_0000_0000_0000
+      extra_tests << "#{macro_name} == #{cpp_num_str(expected_value - 1)}"
+    end
+    if expected_value < 0xFFFF_FFFF_FFFF_FFFF
+      extra_tests << "#{macro_name} == #{cpp_num_str(expected_value + 1)}"
+    end
+    test.puts "#elif " + extra_tests.join(" || ")
+    test.puts %Q{error("#{macro_name} test confuses the preprocessor");}
+    test.puts "#endif"
+    test.puts "#{type2.name} expected = #{nice_num_str(expected_value)};"
     test.puts "if (#{macro_name} != expected)"
     test.puts_indent %Q{error("#{macro_name} has wrong value");}
     test.puts "#ifdef __cplusplus"
-    if skip_clang_cpp
-      test.puts "#ifdef __clang__"
-      test.puts "if (0) /** clang's is_same is weird **/"
-      test.puts "#else"
-    end
-    test.puts "if (!std::is_same<decltype(#{macro_name}), #{type_name}>::value)"
-    if skip_clang_cpp
-      test.puts "#endif"
-    end
+    test.puts "if (!std::is_same<decltype(#{macro_name}), #{type2.name}>::value)"
     test.puts "#else"
-    test.puts "if (!_Generic(#{macro_name}, #{type_name}: 1, default: 0))"
+    test.puts "if (!_Generic(#{macro_name}, #{type2.name}: 1, default: 0))"
     test.puts "#endif"
     test.puts_indent %Q{error("#{macro_name} has wrong type");}
   end

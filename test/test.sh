@@ -49,10 +49,10 @@ test_config() {
 }
 
 test_machine() {
-  language=c extra_args="-fno-unsigned-char" test_config
+  language=c extra_args="" test_config
+  language=c extra_args="-DINCLUDE_STYLE=1" test_config
   language=c extra_args="-funsigned-char" test_config
-  language=c++ extra_args="-fno-unsigned-char" test_config
-  language=c++ extra_args="-funsigned-char" test_config
+  language=c++ extra_args="" test_config
 }
 
 machine=ucrt64 test_machine
