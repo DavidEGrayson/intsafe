@@ -24,12 +24,37 @@ mkdir -p "$outdir"
 
 echo "Generating ninja build file"
 
-# Track stamp outputs as we generate them (can't ls them yet).
 stamps=()
 
-# Helpers for writing Ninja safely
-ninja_escape() {
-  sed -e 's/\$/$$/g' -e ':a;N;$!ba;s/\n/ /g'
+# Replace literal $ with $$ for Ninja.
+ninja_escape_dollars() {
+  local s="$1"
+  s=${s//\$/\$\$}
+  printf '%s' "$s"
+}
+
+# For cmd: also collapse newlines to spaces.
+ninja_escape_cmd() {
+  local s="$1"
+  s=${s//$'\n'/ }
+  s=${s//\$/\$\$}
+  printf '%s' "$s"
+}
+
+# Sanitize extra_args into a filename-ish chunk, without spawning tr/sed.
+sanitize_id() {
+  # Keep only [A-Za-z0-9_=-], turn space and / into _
+  local s="$1"
+  s=${s//[\/ ]/_}
+  local out="" c
+  local i
+  for ((i=0; i<${#s}; i++)); do
+    c=${s:i:1}
+    case "$c" in
+      [A-Za-z0-9_=\-]) out+="$c" ;;
+    esac
+  done
+  printf '%s' "$out"
 }
 
 cat > build.ninja <<'EOF'
@@ -68,32 +93,29 @@ add_test() {
 
   local id="${machine}_${language}"
   if [ -n "$extra_args" ]; then
-    id+="_$(echo "$extra_args" | tr ' /' '__' | tr -cd 'A-Za-z0-9_=-')"
+    id+="_$(sanitize_id "$extra_args")"
   fi
 
   local exe="$outdir/run_tests_${id}.exe"
   local stamp="$outdir/${id}.stamp"
-
   stamps+=("$stamp")
+
+  local path_prefix=""
+  if [ -n "$runtime_path" ]; then
+    path_prefix="PATH=\"$runtime_path:\$PATH\" "
+  fi
 
   local run_part=":"
   if [ -n "$runtime_path" ]; then
-    run_part="PATH=\"$runtime_path:\$PATH\" \"$exe\""
+    run_part="$path_prefix \"$exe\""
   fi
 
-  local cmd_str
-  cmd_str=$(
-    cat <<EOF
-PATH="$runtime_path:\$PATH" $cc $cflags $extra_args run_tests.cpp -o "$exe" &&
-$run_part &&
-touch "$stamp"
-EOF
-  )
+  local cmd_str="${path_prefix}$cc $cflags $extra_args run_tests.cpp -o \"$exe\" && $run_part && touch \"$stamp\""
 
   local desc="Compiling${runtime_path:+ and running} tests for $machine $language${extra_args:+ $extra_args}"
 
-  cmd_str="$(printf "%s" "$cmd_str" | ninja_escape)"
-  desc="$(printf "%s" "$desc" | ninja_escape)"
+  cmd_str="$(ninja_escape_cmd "$cmd_str")"
+  desc="$(ninja_escape_dollars "$desc")"
 
   {
     echo
