@@ -53,6 +53,10 @@ class CType
     end
   end
 
+  def always_signed?
+    signed?({ char_signed: false })
+  end
+
   def max(cenv)
     if signed?(cenv)
       (1 << (byte_count(cenv) * 8 - 1)) - 1
@@ -105,6 +109,9 @@ CTypeTable = {
   INT64: CType.new(:INT64, :Int64, -8),
   LONGLONG: CType.new(:LONGLONG, :LongLong, -8),
   LONG64: CType.new(:LONG64, :Long64, -8),
+
+  #INT128: CType.new(:INT128, :Int128, -16),
+  #UINT128: CType.new(:UINT128, :UInt128, 16),
 
   UINT_PTR: CType.new(:UINT_PTR, :UIntPtr, :pointer),
   size_t: CType.new(:size_t, :SizeT, :pointer),
@@ -639,8 +646,11 @@ end
 
 def init_feature_info(intsafe_code)
   CTypeTable.each_value do |type|
+    type_name = type.name
+    type_name = '_SIZE_T' if type_name == :size_t
     [:min, :max].each do |operation|
-      name = "#{type.name}_#{operation.to_s.upcase}".to_sym
+      next if operation == :min && !type.always_signed?
+      name = "#{type_name.upcase}_#{operation.to_s.upcase}".to_sym
       FeatureInfo[name] = { name: name, operation: operation, type_dest: type }
     end
   end
