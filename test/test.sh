@@ -15,7 +15,7 @@ cp "$1" $(dirname $0)/intsafe.h
 cd $(dirname $0)
 
 echo "Generating tests"
-ruby gen_tests.rb
+./gen_tests.rb
 
 echo "Cleaning up"
 outdir="ninja-out"

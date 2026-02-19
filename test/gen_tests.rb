@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby
+
 # Run this to generate generated_tests.cpp
 #
 # Environment variations to be aware of:
@@ -11,6 +13,117 @@ Dir.chdir(File.dirname(__FILE__))
 
 IntsafeCode = File.read('intsafe.h')
 
+# Define a CType class which is a very convenient way to hold types, and we'll use it everywhere.
+class CType
+  attr_reader :name, :camel_name, :essence
+
+  def initialize(name, camel_name, essence)
+    @name = name.to_sym
+    @camel_name = camel_name.to_sym
+    @essence = essence
+  end
+
+  def to_s
+    @name.to_s
+  end
+
+  def inspect
+    "CType(:#{@name})"
+  end
+
+  def byte_count(cenv)
+    case @essence
+    when :pointer, :pointer_signed
+      cenv.fetch(:pointer_size)
+    when :char
+      1
+    else
+      @essence.abs
+    end
+  end
+
+  def signed?(cenv)
+    case @essence
+    when :pointer
+      false
+    when :pointer_signed
+      true
+    when :char
+      cenv.fetch(:char_signed) && true
+    else
+      @essence < 0
+    end
+  end
+
+  def max(cenv)
+    if signed?(cenv)
+      (1 << (byte_count(cenv) * 8 - 1)) - 1
+    else
+      (1 << (byte_count(cenv) * 8)) - 1
+    end
+  end
+
+  def min(cenv)
+    if signed?(cenv)
+      -(1 << (byte_count(cenv) * 8 - 1))
+    else
+      0
+    end
+  end
+end
+
+CTypeTable = {
+  UCHAR: CType.new(:UCHAR, :UChar, 1),
+  UINT8: CType.new(:UINT8, :UInt8, 1),
+  BYTE: CType.new(:BYTE, :Byte, 1),
+
+  CHAR: CType.new(:CHAR, :Char, :char),
+
+  INT8: CType.new(:INT8, :Int8, -1),
+
+  UINT16: CType.new(:UINT16, :UInt16, 2),
+  USHORT: CType.new(:USHORT, :UShort, 2),
+  WORD: CType.new(:WORD, :Word, 2),
+
+  INT16: CType.new(:INT16, :Int16, -2),
+  SHORT: CType.new(:SHORT, :Short, -2),
+
+  UINT: CType.new(:UINT, :UInt, 4),
+  ULONG: CType.new(:ULONG, :ULong, 4),
+  DWORD: CType.new(:DWORD, :DWord, 4),
+  UINT32: CType.new(:UINT32, :UInt32, 4),
+
+  INT: CType.new(:INT, :Int, -4),
+  LONG: CType.new(:LONG, :Long, -4),
+  INT32: CType.new(:INT32, :Int32, -4),
+  LONG32: CType.new(:LONG32, :Long32, -4),
+
+  ULONGLONG: CType.new(:ULONGLONG, :ULongLong, 8),
+  ULONG64: CType.new(:ULONG64, :ULong64, 8),
+  UINT64: CType.new(:UINT64, :UInt64, 8),
+  DWORD64: CType.new(:DWORD64, :DWord64, 8),
+  DWORDLONG: CType.new(:DWORDLONG, :DWordLong, 8),
+
+  INT64: CType.new(:INT64, :Int64, -8),
+  LONGLONG: CType.new(:LONGLONG, :LongLong, -8),
+  LONG64: CType.new(:LONG64, :Long64, -8),
+
+  UINT_PTR: CType.new(:UINT_PTR, :UIntPtr, :pointer),
+  size_t: CType.new(:size_t, :SizeT, :pointer),
+  DWORD_PTR: CType.new(:DWORD_PTR, :DWordPtr, :pointer),
+  ULONG_PTR: CType.new(:ULONG_PTR, :ULongPtr, :pointer),
+  SIZE_T: CType.new(:SIZE_T, :SIZET, :pointer),
+
+  INT_PTR: CType.new(:INT_PTR, :IntPtr, :pointer_signed),
+  LONG_PTR: CType.new(:LONG_PTR, :LongPtr, :pointer_signed),
+  ptrdiff_t: CType.new(:ptrdiff_t, :PtrdiffT, :pointer_signed),
+  SSIZE_T: CType.new(:SSIZE_T, :SSIZET, :pointer_signed),
+}
+
+def CType(name)
+  CTypeTable.fetch(name.to_sym)
+end
+
 # FuncInfo holds info about all the functions that could potentially exist and
 # the metadata defining what they do so we can know how to test them.
 #
@@ -18,155 +131,53 @@ IntsafeCode = File.read('intsafe.h')
 # FuncInfo values are hashes with these keys:
 #   :name               => Symbol
 #   :operation          => :add, :mult, :sub, or :convert
-#   :type_src           => Symbol
-#   :type_dest          => Symbol
+#   :type_src           => CType
+#   :type_dest          => CType
 #   :defined_by_msft    => true if name found in function_names.txt
 #   :defined_by_intsafe => true if name found in intsafe.h
 FuncInfo = {}
 
-# TypeInfo keys are integer type names (as written in C/C++ variable
-# declarations).
-# TypeInfo values are hashes with these keys:
-#   :name               => Symbol
-#   :camel_name         => Symbol
-#   :concrete           => CNumberType (changes depending on which system
-#                          we are currently targeting)
-TypeInfo = {}
-
 # RangeMacroInfo keys are macro names as symbols (e.g. :DWORD_MAX).
 # RangeMacroInfo values are hashes with these keys:
 #   :name               => Symbol
-#   :type               => Symbol (e.g. :DWORD)
+#   :type               => CType
 #   :end                => :max or :min
 RangeMacroInfo = {}
-
-class CNumberType < Struct.new(:name, :camel_name, :type_id)
-  def byte_count
-    type_id.abs
-  end
-
-  def signed?
-    type_id < 0
-  end
-
-  def unsigned?
-    !signed?
-  end
-
-  def to_s
-    name
-  end
-
-  def c99_name
-    str = ''
-    str << 'u' if type_id >= 0
-    str << "int#{type_id.abs * 8}_t"
-  end
-
-  def max
-    if signed?
-      (1 << (byte_count * 8 - 1)) - 1
-    else
-      (1 << (byte_count * 8)) - 1
-    end
-  end
-
-  def min
-    if signed?
-      -(1 << (byte_count * 8 - 1))
-    else
-      0
-    end
-  end
-end
-
-def generate_types(pointer_size, char_signed)
-  char_type = char_signed ? -1 : 1
-  concrete_types = [
-    CNumberType['UCHAR', 'UChar', 1],
-    CNumberType['UINT8', 'UInt8', 1],
-    CNumberType['BYTE', 'Byte', 1],
-
-    CNumberType['CHAR', 'Char', char_type],
-
-    CNumberType['INT8', 'Int8', -1],
-
-    CNumberType['UINT16', 'UInt16', 2],
-    CNumberType['USHORT', 'UShort', 2],
-    CNumberType['WORD', 'Word', 2],
-
-    CNumberType['INT16', 'Int16', -2],
-    CNumberType['SHORT', 'Short', -2],
-
-    CNumberType['UINT', 'UInt', 4],
-    CNumberType['ULONG', 'ULong', 4],
-    CNumberType['DWORD', 'DWord', 4],
-    CNumberType['UINT32', 'UInt32', 4],        # new
-
-    CNumberType['INT', 'Int', -4],
-    CNumberType['LONG', 'Long', -4],
-    CNumberType['INT32', 'Int32', -4],         # new
-    CNumberType['LONG32', 'Long32', -4],       # new
-
-    CNumberType['ULONGLONG', 'ULongLong', 8],
-    CNumberType['ULONG64', 'ULong64', 8],      # new
-    CNumberType['UINT64', 'UInt64', 8],        # new
-    CNumberType['DWORD64', 'DWord64', 8],      # new
-    CNumberType['DWORDLONG', 'DWordLong', 8],  # new
-
-    CNumberType['INT64', 'Int64', -8],
-    CNumberType['LONGLONG', 'LongLong', -8],
-    CNumberType['LONG64', 'Long64', -8],       # new
-
-    CNumberType['UINT_PTR', 'UIntPtr', pointer_size],
-    CNumberType['size_t', 'SizeT', pointer_size],
-    CNumberType['DWORD_PTR', 'DWordPtr', pointer_size],
-    CNumberType['ULONG_PTR', 'ULongPtr', pointer_size],
-    CNumberType['SIZE_T', 'SIZET', pointer_size],   # new
-
-    CNumberType['INT_PTR', 'IntPtr', -pointer_size],
-    CNumberType['LONG_PTR', 'LongPtr', -pointer_size],
-    CNumberType['ptrdiff_t', 'PtrdiffT', -pointer_size],
-    CNumberType['SSIZE_T', 'SSIZET', -pointer_size],
-  ]
-
-  TypeInfo.clear
-  concrete_types.each do |ctype|
-    name = ctype.name.to_sym
-    TypeInfo[name] = {
-      name: name,
-      camel_name: ctype.camel_name.to_sym,
-    }
-    TypeInfo[name][:concrete] = ctype unless pointer_size == 0
-  end
-
-  nil
-end
 
 Indent = "    "
 
 class IndentedIO
-  def initialize(io)
+  def initialize(io, indent='')
     @io = io
+    @indent = indent
+  end
+
+  def indented
+    tmp = dup
+    tmp.indent += Indent
+    tmp
   end
 
   def puts(*args)
-    @io.print Indent unless args.empty?
+    @io.print @indent unless args.empty?
     @io.puts *args
   end
 
   def puts_indent(*args)
-    IndentedIO.new(self).puts(*args)
+    indented.puts(*args)
   end
 
   def print(*args)
     @io.print *args
   end
+
+  attr_accessor :cenv
+  attr_accessor :indent
 end
 
 def write_bracketed_section(io)
   io.puts '{'
-  yield IndentedIO.new(io)
+  yield io.indented
   io.puts '}'
   io.puts
 end
@@ -189,7 +200,6 @@ end
 def collect_tests(io, name)
   tc = []
   yield tc
-
   write_static_void_func(io, name) do |io|
     tc.compact.each do |test_name|
       io.puts "#{test_name}();"
@@ -197,17 +207,16 @@ def collect_tests(io, name)
   end
 end
 
-# These tests makes sure our database of types is correct.
+# These tests make sure our database of types is correct.
 def write_type_tests(io)
   collect_tests(io, 'run_type_tests') do |tc|
-    TypeInfo.each_value do |t|
-      type = t.fetch(:concrete)
-      comparison = type.signed? ? '<' : '>';
+    CTypeTable.each_value do |type|
+      comparison = type.signed?(io.cenv) ? '<' : '>';
       tc << write_test(io, "test_type_#{type}") do |test|
 
         # Check the size of the type.
-        test.puts "if (sizeof(#{type}) != #{type.byte_count})"
-        test.puts_indent %Q{error("#{type} is actually %d bytes", (int)sizeof(#{type}));}
+        test.puts "if (sizeof(#{type}) != #{type.byte_count(io.cenv)})"
+        test.puts_indent %Q{error("#{type} is actually %d bytes", (int)sizeof(#{type.name}));}
 
         # Check the signedness of the type.
         test.puts "#{type} x = 0;"
@@ -218,9 +227,6 @@ def write_type_tests(io)
         test.puts "#ifdef __cplusplus"
         test.puts "if (std::is_pointer<#{type}>::value)"
         test.puts_indent %Q{error("#{type} is a pointer");}
-        #test.puts "#else"
-        #test.puts "if (!__builtin_types_compatible_p(#{type}, #{type.c99_name}))"
-        #test.puts_indent %Q{error("#{type} is not compatible with #{type.c99_name}");}
         test.puts "#endif"
       end
     end
@@ -260,14 +266,12 @@ end
 
 def write_check_overflow_output(io, func_name)
   type_dest = FuncInfo.fetch(func_name.to_sym).fetch(:type_dest)
-  ctype_dest = TypeInfo.fetch(type_dest).fetch(:concrete)
   # This is pretty arbitrary, but it's how the Microsoft header behaves
-  if ctype_dest.name == 'UCHAR' || ctype_dest.name == 'CHAR' && !ctype_dest.signed?
+  if type_dest.name == :UCHAR || type_dest.name == :CHAR && !type_dest.signed?(io.cenv)
     desired = '0'
   else
     desired = "(#{type_dest})-1"
   end
-
   io.puts "if (out != #{desired})"
   io.puts_indent %Q{error("#{func_name} gave wrong overflow output");}
 end
@@ -293,28 +297,32 @@ end
 
 def write_conversion_test(io, func)
   func_name = func.fetch(:name)
-  type_src = TypeInfo.fetch(func.fetch(:type_src)).fetch(:concrete)
-  type_dest = TypeInfo.fetch(func.fetch(:type_dest)).fetch(:concrete)
+  type_src = func.fetch(:type_src)
+  type_dest = func.fetch(:type_dest)
 
-  max = [type_src.max, type_dest.max].min
-  min = [type_src.min, type_dest.min].max
+  src_min = type_src.min(io.cenv)
+  src_max = type_src.max(io.cenv)
+  dest_min = type_dest.min(io.cenv)
+  dest_max = type_dest.max(io.cenv)
+  max = [src_max, dest_max].min
+  min = [src_min, dest_min].max
 
-  write_test(io, "test_#{func_name}") do |test|
-    test.puts "#{type_dest} out;"
+  write_test(io, "test_#{func_name}") do |io2|
+    io2.puts "#{type_dest} out;"
 
-    write_type_checker test, func_name, "HRESULT",
+    write_type_checker io2, func_name, "HRESULT",
       "_In_ #{type_src.name}, _Out_ #{type_dest} *"
 
-    write_require_conversion(test, func_name, 0)
-    write_require_conversion(test, func_name, max)
-    write_require_conversion(test, func_name, min) if min != 0
+    write_require_conversion(io2, func_name, 0)
+    write_require_conversion(io2, func_name, max)
+    write_require_conversion(io2, func_name, min) if min != 0
 
-    if type_src.max > type_dest.max
-      write_require_conversion_error(test, func_name, type_dest.max + 1)
+    if src_max > dest_max
+      write_require_conversion_error(io2, func_name, dest_max + 1)
     end
 
-    if type_src.min < type_dest.min
-      write_require_conversion_error(test, func_name, type_dest.min - 1)
+    if src_min < dest_min
+      write_require_conversion_error(io2, func_name, dest_min - 1)
     end
   end
 end
@@ -400,46 +408,45 @@ def write_binop_test(io, type, func_name)
 end
 
 def write_addition_test(io, func_name)
-  type_name = FuncInfo.fetch(func_name).fetch(:type_dest)
-  type = TypeInfo.fetch(type_name).fetch(:concrete)
-
+  type = FuncInfo.fetch(func_name).fetch(:type_dest)
+  min = type.min(io.cenv)
+  max = type.max(io.cenv)
   write_binop_test(io, type, func_name) do |test|
     write_require_addition(test, func_name, 0, 0)
     write_require_addition(test, func_name, 1, 3)
-    write_require_addition(test, func_name, 0, type.max)
-    write_require_addition_error(test, func_name, 1, type.max)
-    write_require_addition_error(test, func_name, type.max, type.max)
-
-    if type.signed?
-      write_require_addition(test, func_name, 0, type.min)
+    write_require_addition(test, func_name, 0, max)
+    write_require_addition_error(test, func_name, 1, max)
+    write_require_addition_error(test, func_name, max, max)
+    if min < 0
+      write_require_addition(test, func_name, 0, min)
       write_require_addition(test, func_name, -1, -3)
-      write_require_addition_error(test, func_name, -1, type.min)
-      write_require_addition_error(test, func_name, -1, type.min)
-      write_require_addition_error(test, func_name, type.min, type.min)
+      write_require_addition_error(test, func_name, -1, min)
+      write_require_addition_error(test, func_name, -1, min)
+      write_require_addition_error(test, func_name, min, min)
     end
   end
 end
 
 def write_subtraction_test(io, func_name)
-  type_name = FuncInfo.fetch(func_name).fetch(:type_dest)
-  type = TypeInfo.fetch(type_name).fetch(:concrete)
-
+  type = FuncInfo.fetch(func_name).fetch(:type_dest)
+  min = type.min(io.cenv)
+  max = type.max(io.cenv)
   write_binop_test(io, type, func_name) do |test|
-    if type.unsigned?
+    if min == 0
       # Lower left
       write_require_subtraction(test, func_name, 0, 0)
       write_require_subtraction_error(test, func_name, 0, 1)
       write_require_subtraction(test, func_name, 1, 1)
 
       # Lower right
-      write_require_subtraction(test, func_name, type.max, 0)
+      write_require_subtraction(test, func_name, max, 0)
 
       # Upper left
-      write_require_subtraction_error(test, func_name, 0, type.max)
+      write_require_subtraction_error(test, func_name, 0, max)
 
       # Upper right
-      write_require_subtraction(test, func_name, type.max, type.max)
-      write_require_subtraction_error(test, func_name, type.max - 1, type.max)
+      write_require_subtraction(test, func_name, max, max)
+      write_require_subtraction_error(test, func_name, max - 1, max)
     else
       # Center
       write_require_subtraction(test, func_name, 0, 0)
@@ -449,40 +456,40 @@ def write_subtraction_test(io, func_name)
       write_require_subtraction(test, func_name, -5, 10)
 
       # Upper left corner
-      write_require_subtraction_error(test, func_name, type.min, type.max)
+      write_require_subtraction_error(test, func_name, min, max)
 
       # Lower right corner
-      write_require_subtraction_error(test, func_name, type.max, type.min)
+      write_require_subtraction_error(test, func_name, max, min)
 
       # Upper right corner
-      write_require_subtraction(test, func_name, type.max, type.max)
+      write_require_subtraction(test, func_name, max, max)
 
       # Lower left corner
-      write_require_subtraction(test, func_name, type.min, type.min)
+      write_require_subtraction(test, func_name, min, min)
 
       # Left
-      write_require_subtraction(test, func_name, type.min, 0)
-      write_require_subtraction_error(test, func_name, type.min, 1)
+      write_require_subtraction(test, func_name, min, 0)
+      write_require_subtraction_error(test, func_name, min, 1)
 
       # Right
-      write_require_subtraction(test, func_name, type.max, 0)
-      write_require_subtraction_error(test, func_name, type.max, -1)
+      write_require_subtraction(test, func_name, max, 0)
+      write_require_subtraction_error(test, func_name, max, -1)
 
       # Top
-      write_require_subtraction(test, func_name, -1, type.max)
-      write_require_subtraction_error(test, func_name, -2, type.max)
+      write_require_subtraction(test, func_name, -1, max)
+      write_require_subtraction_error(test, func_name, -2, max)
 
       # Bottom
-      write_require_subtraction(test, func_name, -1, type.min)
-      write_require_subtraction_error(test, func_name, 0, type.min)
+      write_require_subtraction(test, func_name, -1, min)
+      write_require_subtraction_error(test, func_name, 0, min)
     end
   end
 end
 
 def write_multiplication_test(io, func_name)
-  type_name = FuncInfo.fetch(func_name).fetch(:type_dest)
-  type = TypeInfo.fetch(type_name).fetch(:concrete)
-
+  type = FuncInfo.fetch(func_name).fetch(:type_dest)
+  min = type.min(io.cenv)
+  max = type.max(io.cenv)
   write_binop_test(io, type, func_name) do |test|
     write_require_multiplication(test, func_name, 0, 0)
     write_require_multiplication(test, func_name, 0, 1)
@@ -490,39 +497,39 @@ def write_multiplication_test(io, func_name)
     write_require_multiplication(test, func_name, 1, 3)
     write_require_multiplication(test, func_name, 3, 3)
 
-    write_require_multiplication(test, func_name, 0, type.max)
-    write_require_multiplication(test, func_name, 1, type.max)
-    write_require_multiplication_error(test, func_name, 2, type.max)
+    write_require_multiplication(test, func_name, 0, max)
+    write_require_multiplication(test, func_name, 1, max)
+    write_require_multiplication_error(test, func_name, 2, max)
 
-    write_require_multiplication(test, func_name, 10, type.max / 10)
-    write_require_multiplication_error(test, func_name, 10, type.max / 10 + 1)
-    write_require_multiplication_error(test, func_name, 11, type.max / 10)
+    write_require_multiplication(test, func_name, 10, max / 10)
+    write_require_multiplication_error(test, func_name, 10, max / 10 + 1)
+    write_require_multiplication_error(test, func_name, 11, max / 10)
 
-    write_require_multiplication_error(test, func_name, type.max, type.max)
+    write_require_multiplication_error(test, func_name, max, max)
 
-    if type.signed?
-      write_require_multiplication(test, func_name, -1, type.max)
-      write_require_multiplication_error(test, func_name, -2, type.max)
+    if min < 0
+      write_require_multiplication(test, func_name, -1, max)
+      write_require_multiplication_error(test, func_name, -2, max)
 
-      write_require_multiplication(test, func_name, 1, type.min)
-      write_require_multiplication(test, func_name, -1, type.min + 1)
-      write_require_multiplication_error(test, func_name, -2, type.min + 1)
-      write_require_multiplication_error(test, func_name, -1, type.min)
+      write_require_multiplication(test, func_name, 1, min)
+      write_require_multiplication(test, func_name, -1, min + 1)
+      write_require_multiplication_error(test, func_name, -2, min + 1)
+      write_require_multiplication_error(test, func_name, -1, min)
 
-      write_require_multiplication_error(test, func_name, type.min, type.min)
-      write_require_multiplication_error(test, func_name, type.min, type.max)
+      write_require_multiplication_error(test, func_name, min, min)
+      write_require_multiplication_error(test, func_name, min, max)
 
-      write_require_multiplication(test, func_name, 10, -(-type.min / 10))
-      write_require_multiplication_error(test, func_name, 10, -(-type.min / 10) - 1)
-      write_require_multiplication_error(test, func_name, 11, -(-type.min / 10))
+      write_require_multiplication(test, func_name, 10, -(-min / 10))
+      write_require_multiplication_error(test, func_name, 10, -(-min / 10) - 1)
+      write_require_multiplication_error(test, func_name, 11, -(-min / 10))
 
-      write_require_multiplication(test, func_name, -10, (-type.min / 10))
-      write_require_multiplication_error(test, func_name, -10, (-type.min / 10) + 1)
-      write_require_multiplication_error(test, func_name, -11, (-type.min / 10))
+      write_require_multiplication(test, func_name, -10, (-min / 10))
+      write_require_multiplication_error(test, func_name, -10, (-min / 10) + 1)
+      write_require_multiplication_error(test, func_name, -11, (-min / 10))
 
-      write_require_multiplication(test, func_name, -10, -(type.max / 10))
-      write_require_multiplication_error(test, func_name, -10, -(type.max / 10) - 1)
-      write_require_multiplication_error(test, func_name, -11, -(type.max / 10))
+      write_require_multiplication(test, func_name, -10, -(max / 10))
+      write_require_multiplication_error(test, func_name, -10, -(max / 10) - 1)
+      write_require_multiplication_error(test, func_name, -11, -(max / 10))
     end
   end
 end
@@ -545,10 +552,9 @@ end
 
 def write_range_macro_test(io, macro_name)
   macro_info = RangeMacroInfo.fetch(macro_name.to_sym)
-  type1_name = macro_info.fetch(:type)
-  type1 = TypeInfo.fetch(macro_info.fetch(:type)).fetch(:concrete)
-  expected_value = macro_info.fetch(:end) == :max ? type1.max : type1.min
-  type2 = type1.byte_count < 4 ? TypeInfo.fetch(:INT).fetch(:concrete) : type1
+  type1 = macro_info.fetch(:type)
+  expected_value = macro_info.fetch(:end) == :max ? type1.max(io.cenv) : type1.min(io.cenv)
+  type2 = type1.byte_count(io.cenv) < 4 ? CType(:INT) : type1
   write_test(io, "test_#{macro_name}") do |test|
     test.puts "#if #{macro_name} != #{cpp_num_str(expected_value)}"
     test.puts %Q{error("#{macro_name} has wrong preprocessor value");}
@@ -639,40 +645,37 @@ def find_redefinitions
 end
 
 def init_func_info
-  generate_types(0, false)
-
-  TypeInfo.each_value do |type_src|
-    TypeInfo.each_value do |type_dest|
+  CTypeTable.each_value do |type_src|
+    CTypeTable.each_value do |type_dest|
       next if type_src == type_dest
-      name = "#{type_src.fetch(:camel_name)}To#{type_dest.fetch(:camel_name)}".to_sym
+      name = "#{type_src.camel_name}To#{type_dest.camel_name}".to_sym
       FuncInfo[name] = {
         name: name,
         operation: :convert,
-        type_src: type_src.fetch(:name),
-        type_dest: type_dest.fetch(:name),
+        type_src: type_src,
+        type_dest: type_dest,
       }
     end
   end
 
-  TypeInfo.each_value do |type|
-    type_name = type.fetch(:name)
-    add_sym = "#{type.fetch(:camel_name)}Add".to_sym
-    sub_sym = "#{type.fetch(:camel_name)}Sub".to_sym
-    mult_sym = "#{type.fetch(:camel_name)}Mult".to_sym
+  CTypeTable.each_value do |type|
+    add_sym = "#{type.camel_name}Add".to_sym
+    sub_sym = "#{type.camel_name}Sub".to_sym
+    mult_sym = "#{type.camel_name}Mult".to_sym
     FuncInfo[add_sym] = {
       name: add_sym,
       operation: :add,
-      type_dest: type_name,
+      type_dest: type,
     }
     FuncInfo[sub_sym] = {
       name: sub_sym,
       operation: :sub,
-      type_dest: type_name,
+      type_dest: type,
     }
     FuncInfo[mult_sym] = {
       name: mult_sym,
       operation: :mult,
-      type_dest: type_name,
+      type_dest: type,
     }
   end
 
@@ -752,9 +755,9 @@ def init_range_macro_info
   intsafe_names = Set.new(matches.map(&:first))
 
   RangeMacroInfo.clear
-  TypeInfo.each_value do |type|
+  CTypeTable.each_value do |type|
     ['MIN', 'MAX'].each do |end_type|
-      name = "#{type.fetch(:name)}_#{end_type}"
+      name = "#{type.name}_#{end_type}"
       defined_by_intsafe = intsafe_names.include?(name)
       defined_by_msft = msft_range_macro_names.include?(name)
       if defined_by_msft && !defined_by_intsafe
@@ -766,7 +769,7 @@ def init_range_macro_info
       if defined_by_intsafe
         RangeMacroInfo[name.to_sym] = {
           name: name.to_sym,
-          type: type.fetch(:name),
+          type: type,
           end: end_type == 'MAX' ? :max : :min,
         }
       end
@@ -779,26 +782,28 @@ init_range_macro_info
 
 find_redefinitions
 
-File.open('generated.cpp', 'w') do |output|
-  output.puts "#ifdef _WIN64"
+File.open('generated.cpp', 'w') do |io|
+  io = IndentedIO.new(io)
 
-  output.puts "#ifdef __CHAR_UNSIGNED__"
-  generate_types(8, false)
-  write_tests output
-  output.puts "#else /* __CHAR_UNSIGNED__ */"
-  generate_types(8, true)
-  write_tests output
-  output.puts "#endif /* __CHAR_UNSIGNED__ else */"
+  io.puts "#ifdef _WIN64"
 
-  output.puts "#else /* _WIN64 */"
+  io.puts "#ifdef __CHAR_UNSIGNED__"
+  io.cenv = { pointer_size: 8, char_signed: false }
+  write_tests io
+  io.puts "#else /* __CHAR_UNSIGNED__ */"
+  io.cenv = { pointer_size: 8, char_signed: true }
+  write_tests io
+  io.puts "#endif /* __CHAR_UNSIGNED__ else */"
 
-  output.puts "#ifdef __CHAR_UNSIGNED__"
-  generate_types(4, false)
-  write_tests output
-  output.puts "#else /* __CHAR_UNSIGNED__ */"
-  generate_types(4, true)
-  write_tests output
-  output.puts "#endif /* __CHAR_UNSIGNED__ else */"
+  io.puts "#else /* _WIN64 */"
 
-  output.puts "#endif /* _WIN64 else */"
+  io.puts "#ifdef __CHAR_UNSIGNED__"
+  io.cenv = { pointer_size: 4, char_signed: false }
+  write_tests io
+  io.puts "#else /* __CHAR_UNSIGNED__ */"
+  io.cenv = { pointer_size: 4, char_signed: true }
+  write_tests io
+  io.puts "#endif /* __CHAR_UNSIGNED__ else */"
+
+  io.puts "#endif /* _WIN64 else */"
 end
