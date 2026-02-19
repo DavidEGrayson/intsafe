@@ -194,38 +194,26 @@ def write_section(io, comment = nil, &block)
   write_bracketed_section(io, &block)
 end
 
-def collect_tests(io, name)
-  tc = []
-  yield tc
-  write_static_void_func(io, name) do |io|
-    tc.compact.each do |test_name|
-      io.puts "#{test_name}();"
-    end
-  end
-end
-
 # These tests make sure our database of types is correct.
 def write_type_tests(io)
-  collect_tests(io, 'run_type_tests') do |tc|
-    CTypeTable.each_value do |type|
-      comparison = type.signed?(io.cenv) ? '<' : '>';
-      tc << write_test(io, "test_type_#{type}") do |test|
+  CTypeTable.each_value do |type|
+    comparison = type.signed?(io.cenv) ? '<' : '>';
+    write_test(io, "test_type_#{type}") do |test|
 
-        # Check the size of the type.
-        test.puts "if (sizeof(#{type}) != #{type.byte_count(io.cenv)})"
-        test.puts_indent %Q{error("#{type} is actually %d bytes", (int)sizeof(#{type.name}));}
+      # Check the size of the type.
+      test.puts "if (sizeof(#{type}) != #{type.byte_count(io.cenv)})"
+      test.puts_indent %Q{error("#{type} is actually %d bytes", (int)sizeof(#{type.name}));}
 
-        # Check the signedness of the type.
-        test.puts "#{type} x = 0;"
-        test.puts "if (!((#{type})(x - 1) #{comparison} x))"
-        test.puts_indent %Q{error("#{type} sign check failed");}
+      # Check the signedness of the type.
+      test.puts "#{type} x = 0;"
+      test.puts "if (!((#{type})(x - 1) #{comparison} x))"
+      test.puts_indent %Q{error("#{type} sign check failed");}
 
-        # Do additional checks if possible.
-        test.puts "#ifdef __cplusplus"
-        test.puts "if (std::is_pointer<#{type}>::value)"
-        test.puts_indent %Q{error("#{type} is a pointer");}
-        test.puts "#endif"
-      end
+      # Do additional checks if possible.
+      test.puts "#ifdef __cplusplus"
+      test.puts "if (std::is_pointer<#{type}>::value)"
+      test.puts_indent %Q{error("#{type} is a pointer");}
+      test.puts "#endif"
     end
   end
 end
@@ -325,11 +313,9 @@ def write_conversion_test(io, func)
 end
 
 def write_conversion_tests(io)
-  collect_tests(io, 'run_conversion_tests') do |tc|
-    FeatureInfo.each_value do |feature|
-      next unless feature.fetch(:test) && feature.fetch(:operation) == :convert
-      tc << write_conversion_test(io, feature)
-    end
+  FeatureInfo.each_value do |feature|
+    next unless feature.fetch(:test) && feature.fetch(:operation) == :convert
+    write_conversion_test(io, feature)
   end
 end
 
@@ -531,17 +517,15 @@ def write_multiplication_test(io, func_name)
 end
 
 def write_math_tests(io)
-  collect_tests(io, 'run_math_tests') do |tc|
-    FeatureInfo.each do |name, feature|
-      next unless feature.fetch(:test)
-      op = feature.fetch(:operation)
-      if op == :add
-        tc << write_addition_test(io, name)
-      elsif op == :sub
-        tc << write_subtraction_test(io, name)
-      elsif op == :mult
-        tc << write_multiplication_test(io, name)
-      end
+  FeatureInfo.each do |name, feature|
+    next unless feature.fetch(:test)
+    op = feature.fetch(:operation)
+    if op == :add
+      write_addition_test(io, name)
+    elsif op == :sub
+      write_subtraction_test(io, name)
+    elsif op == :mult
+      write_multiplication_test(io, name)
     end
   end
 end
@@ -579,21 +563,17 @@ def write_range_macro_test(io, macro_name)
 end
 
 def write_range_macro_tests(io)
-  collect_tests(io, 'run_range_macro_tests') do |tc|
-    FeatureInfo.each_value do |feature|
-      next unless feature.fetch(:test) && [:min, :max].include?(feature.fetch(:operation))
-      tc << write_range_macro_test(io, feature.fetch(:name))
-    end
+  FeatureInfo.each_value do |feature|
+    next unless feature.fetch(:test) && [:min, :max].include?(feature.fetch(:operation))
+    write_range_macro_test(io, feature.fetch(:name))
   end
 end
 
 def write_tests(io)
-  collect_tests(io, 'run_all_tests') do |tc|
-    tc << write_type_tests(io)
-    tc << write_conversion_tests(io)
-    tc << write_math_tests(io)
-    tc << write_range_macro_tests(io)
-  end
+  write_type_tests(io)
+  write_conversion_tests(io)
+  write_math_tests(io)
+  write_range_macro_tests(io)
 end
 
 def find_redefinitions(intsafe_code)
@@ -741,4 +721,15 @@ File.open('generated.cpp', 'w') do |io|
   io.puts "#endif /* __CHAR_UNSIGNED__ else */"
 
   io.puts "#endif /* _WIN64 else */"
+
+  write_static_void_func(io, "run_all_tests") do |io|
+    CTypeTable.each_value do |type|
+      io.puts "test_type_#{type}();"
+    end
+    FeatureInfo.each_value do |feature|
+      next unless feature.fetch(:test)
+      name = feature.fetch(:name)
+      io.puts "test_#{name}();"
+    end
+  end
 end
