@@ -11,8 +11,6 @@ require 'set'
 
 Dir.chdir(File.dirname(__FILE__))
 
-IntsafeCode = File.read('intsafe.h')
-
 # Define a CType class which is a very convenient way to hold types, and we'll use it everywhere.
 class CType
   attr_reader :name, :camel_name, :essence
@@ -124,25 +122,17 @@ def CType(name)
   CTypeTable.fetch(name.to_sym)
 end
 
-# FuncInfo holds info about all the functions that could potentially exist and
+# FeatureInfo holds info about all the intsafe.h features that could potentially exist and
 # the metadata defining what they do so we can know how to test them.
 #
-# FuncInfo keys are function names as symbols
-# FuncInfo values are hashes with these keys:
+# FeatureInfo keys are function names as symbols
+# FeatureInfo values are hashes with these keys:
 #   :name               => Symbol
-#   :operation          => :add, :mult, :sub, or :convert
-#   :type_src           => CType
+#   :operation          => :add, :mult, :sub, :convert, :min, :max
+#   :type_src           => CType or not set if not applicable
 #   :type_dest          => CType
-#   :defined_by_msft    => true if name found in function_names.txt
-#   :defined_by_intsafe => true if name found in intsafe.h
-FuncInfo = {}
-
-# RangeMacroInfo keys are macro names as symbols (e.g. :DWORD_MAX).
-# RangeMacroInfo values are hashes with these keys:
-#   :name               => Symbol
-#   :type               => CType
-#   :end                => :max or :min
-RangeMacroInfo = {}
+#   :test               => true if we should generate tests for it
+FeatureInfo = {}
 
 Indent = "    "
 
@@ -265,7 +255,7 @@ def write_require_conversion(io, func_name, num)
 end
 
 def write_check_overflow_output(io, func_name)
-  type_dest = FuncInfo.fetch(func_name.to_sym).fetch(:type_dest)
+  type_dest = FeatureInfo.fetch(func_name.to_sym).fetch(:type_dest)
   # This is pretty arbitrary, but it's how the Microsoft header behaves
   if type_dest.name == :UCHAR || type_dest.name == :CHAR && !type_dest.signed?(io.cenv)
     desired = '0'
@@ -329,10 +319,9 @@ end
 
 def write_conversion_tests(io)
   collect_tests(io, 'run_conversion_tests') do |tc|
-    FuncInfo.each_value do |func|
-      next if func.fetch(:operation) != :convert
-      next if !func.fetch(:defined_by_intsafe)
-      tc << write_conversion_test(io, func)
+    FeatureInfo.each_value do |feature|
+      next unless feature.fetch(:test) && feature.fetch(:operation) == :convert
+      tc << write_conversion_test(io, feature)
     end
   end
 end
@@ -408,7 +397,7 @@ def write_binop_test(io, type, func_name)
 end
 
 def write_addition_test(io, func_name)
-  type = FuncInfo.fetch(func_name).fetch(:type_dest)
+  type = FeatureInfo.fetch(func_name).fetch(:type_dest)
   min = type.min(io.cenv)
   max = type.max(io.cenv)
   write_binop_test(io, type, func_name) do |test|
@@ -428,7 +417,7 @@ def write_addition_test(io, func_name)
 end
 
 def write_subtraction_test(io, func_name)
-  type = FuncInfo.fetch(func_name).fetch(:type_dest)
+  type = FeatureInfo.fetch(func_name).fetch(:type_dest)
   min = type.min(io.cenv)
   max = type.max(io.cenv)
   write_binop_test(io, type, func_name) do |test|
@@ -487,7 +476,7 @@ def write_subtraction_test(io, func_name)
 end
 
 def write_multiplication_test(io, func_name)
-  type = FuncInfo.fetch(func_name).fetch(:type_dest)
+  type = FeatureInfo.fetch(func_name).fetch(:type_dest)
   min = type.min(io.cenv)
   max = type.max(io.cenv)
   write_binop_test(io, type, func_name) do |test|
@@ -536,24 +525,24 @@ end
 
 def write_math_tests(io)
   collect_tests(io, 'run_math_tests') do |tc|
-    FuncInfo.each_value do |func|
-      next if !func.fetch(:defined_by_intsafe)
-      op = func.fetch(:operation)
+    FeatureInfo.each do |name, feature|
+      next unless feature.fetch(:test)
+      op = feature.fetch(:operation)
       if op == :add
-        tc << write_addition_test(io, func.fetch(:name))
+        tc << write_addition_test(io, name)
       elsif op == :sub
-        tc << write_subtraction_test(io, func.fetch(:name))
+        tc << write_subtraction_test(io, name)
       elsif op == :mult
-        tc << write_multiplication_test(io, func.fetch(:name))
+        tc << write_multiplication_test(io, name)
       end
     end
   end
 end
 
 def write_range_macro_test(io, macro_name)
-  macro_info = RangeMacroInfo.fetch(macro_name.to_sym)
-  type1 = macro_info.fetch(:type)
-  expected_value = macro_info.fetch(:end) == :max ? type1.max(io.cenv) : type1.min(io.cenv)
+  macro_info = FeatureInfo.fetch(macro_name.to_sym)
+  type1 = macro_info.fetch(:type_dest)
+  expected_value = macro_info.fetch(:operation) == :max ? type1.max(io.cenv) : type1.min(io.cenv)
   type2 = type1.byte_count(io.cenv) < 4 ? CType(:INT) : type1
   write_test(io, "test_#{macro_name}") do |test|
     test.puts "#if #{macro_name} != #{cpp_num_str(expected_value)}"
@@ -582,8 +571,9 @@ end
 
 def write_range_macro_tests(io)
   collect_tests(io, 'run_range_macro_tests') do |tc|
-    RangeMacroInfo.each_value do |macro|
-      tc << write_range_macro_test(io, macro.fetch(:name))
+    FeatureInfo.each_value do |feature|
+      next unless feature.fetch(:test) && [:min, :max].include?(feature.fetch(:operation))
+      tc << write_range_macro_test(io, feature.fetch(:name))
     end
   end
 end
@@ -597,8 +587,8 @@ def write_tests(io)
   end
 end
 
-def find_redefinitions
-  if !IntsafeCode.include?('__MINGW_INTSAFE')
+def find_redefinitions(intsafe_code)
+  if !intsafe_code.include?('__MINGW_INTSAFE')
     # We don't understand the coding of this header enough to find redifintions.
     return
   end
@@ -607,7 +597,7 @@ def find_redefinitions
   defs = Set.new
   redefs = Set.new
   filtered_lines = []
-  IntsafeCode.each_line do |line|
+  intsafe_code.each_line do |line|
     line_number += 1
     reject_line = false
     if (line.match(/#define ([0-9A-Za-z_]+)\b/) \
@@ -623,7 +613,10 @@ def find_redefinitions
         reject_line = true
       else
         defs << name
-        if !FuncInfo[name.to_sym] && !RangeMacroInfo[name.to_sym]
+        feature = FeatureInfo[name.to_sym]
+        if feature
+          raise 'assertion failed' if !feature.fetch(:test)
+        else
           puts "warning: intsafe.h defines something we don't know how to test: #{name}"
         end
       end
@@ -644,12 +637,19 @@ def find_redefinitions
   exit 1
 end
 
-def init_func_info
+def init_feature_info(intsafe_code)
+  CTypeTable.each_value do |type|
+    [:min, :max].each do |operation|
+      name = "#{type.name}_#{operation.to_s.upcase}".to_sym
+      FeatureInfo[name] = { name: name, operation: operation, type_dest: type }
+    end
+  end
+
   CTypeTable.each_value do |type_src|
     CTypeTable.each_value do |type_dest|
       next if type_src == type_dest
       name = "#{type_src.camel_name}To#{type_dest.camel_name}".to_sym
-      FuncInfo[name] = {
+      FeatureInfo[name] = {
         name: name,
         operation: :convert,
         type_src: type_src,
@@ -662,125 +662,48 @@ def init_func_info
     add_sym = "#{type.camel_name}Add".to_sym
     sub_sym = "#{type.camel_name}Sub".to_sym
     mult_sym = "#{type.camel_name}Mult".to_sym
-    FuncInfo[add_sym] = {
+    FeatureInfo[add_sym] = {
       name: add_sym,
       operation: :add,
       type_dest: type,
     }
-    FuncInfo[sub_sym] = {
+    FeatureInfo[sub_sym] = {
       name: sub_sym,
       operation: :sub,
       type_dest: type,
     }
-    FuncInfo[mult_sym] = {
+    FeatureInfo[mult_sym] = {
       name: mult_sym,
       operation: :mult,
       type_dest: type,
     }
   end
 
-  matches = IntsafeCode.scan(/\b[0-9A-Za-z_]+\b/)
-  intsafe_names = Set.new(matches)
-  msft_func_names = Set.new(File.readlines('../function_names.txt').map(&:strip).reject(&:empty?))
+  intsafe_names = Set.new(intsafe_code.scan(/\b[0-9A-Za-z_]+\b/))
+  msft_feature_names = Set.new(File.readlines('../feature_names.txt').map(&:strip).reject(&:empty?))
 
-  FuncInfo.each_value do |func|
-    name = func.fetch(:name).to_s
-    func[:defined_by_intsafe] = intsafe_names.include?(name)
-    func[:defined_by_msft] = msft_func_names.include?(name)
+  msft_feature_names.each do |name|
+    next if FeatureInfo.has_key?(name.to_sym)
+    puts "warning: unrecognized name in feature_names.txt: #{name}"
+  end
 
-    if func.fetch(:defined_by_msft) && !func.fetch(:defined_by_intsafe)
+  FeatureInfo.each_value do |feature|
+    name = feature.fetch(:name).to_s
+    in_ours = intsafe_names.include?(name)
+    in_msft = msft_feature_names.include?(name)
+    feature[:test] = in_ours
+    if in_msft && !in_ours
       puts "warning: missing function will not be tested: #{name}"
     end
-
-    if !func.fetch(:defined_by_msft) && func.fetch(:defined_by_intsafe)
+    if !in_msft && in_ours
       puts "warning: intsafe.h has extra function: #{name}"
     end
   end
 end
 
-def init_range_macro_info
-  msft_range_macro_names = Set.new %w{
-    INT8_MIN
-    SHORT_MIN
-    INT16_MIN
-    INT_MIN
-    INT32_MIN
-    LONG_MIN
-    LONGLONG_MIN
-    LONG64_MIN
-    INT64_MIN
-    INT128_MIN
-    INT_PTR_MIN
-    LONG_PTR_MIN
-    PTRDIFF_T_MIN
-    SSIZE_T_MIN
-    INT8_MAX
-    UINT8_MAX
-    BYTE_MAX
-    SHORT_MAX
-    INT16_MAX
-    USHORT_MAX
-    UINT16_MAX
-    WORD_MAX
-    INT_MAX
-    INT32_MAX
-    UINT_MAX
-    UINT32_MAX
-    LONG_MAX
-    ULONG_MAX
-    DWORD_MAX
-    LONGLONG_MAX
-    LONG64_MAX
-    INT64_MAX
-    ULONGLONG_MAX
-    DWORDLOG_MAX
-    ULONG64_MAX
-    DWORD64_MAX
-    UINT64_MAX
-    INT128_MAX
-    UINT128_MAX
-    SIZE_T_MAX
-    INT_PTR_MAX
-    UINT_PTR_MAX
-    LONG_PTR_MAX
-    ULONG_PTR_MAX
-    DWORD_PTR_MAX
-    PTRDIFF_T_MAX
-    SIZE_T_MAX
-    SSIZE_T_MAX
-    _SIZE_T_MAX
-  }
-
-  matches = IntsafeCode.scan(/\b([0-9A-Za-z_]+_(MIN|MAX))\b/)
-  intsafe_names = Set.new(matches.map(&:first))
-
-  RangeMacroInfo.clear
-  CTypeTable.each_value do |type|
-    ['MIN', 'MAX'].each do |end_type|
-      name = "#{type.name}_#{end_type}"
-      defined_by_intsafe = intsafe_names.include?(name)
-      defined_by_msft = msft_range_macro_names.include?(name)
-      if defined_by_msft && !defined_by_intsafe
-        puts "warning: missing range macro will not be tested: #{name}"
-      end
-      if !defined_by_msft && defined_by_intsafe
-        puts "warning: intsafe.h has extra range macro: #{name}"
-      end
-      if defined_by_intsafe
-        RangeMacroInfo[name.to_sym] = {
-          name: name.to_sym,
-          type: type,
-          end: end_type == 'MAX' ? :max : :min,
-        }
-      end
-    end
-  end
-end
-
-init_func_info
-init_range_macro_info
-
-find_redefinitions
+intsafe_code = File.read('intsafe.h')
+init_feature_info(intsafe_code)
+find_redefinitions(intsafe_code)
 
 File.open('generated.cpp', 'w') do |io|
   io = IndentedIO.new(io)
