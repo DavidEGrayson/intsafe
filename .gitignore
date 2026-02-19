@@ -1,4 +1,5 @@
 sdk*/intsafe.h
+*.obj
 *.exe
 test/intsafe.h
 test/generated.cpp

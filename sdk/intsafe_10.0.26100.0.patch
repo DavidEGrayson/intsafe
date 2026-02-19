@@ -1,7 +1,6 @@
-diff -ur -w sdk10.0.26100.0/intsafe.h sdk/intsafe.h
---- sdk10.0.26100.0/intsafe.h	2024-10-20 11:24:19.146367900 -0700
-+++ sdk/intsafe.h	2024-10-20 11:27:48.259160600 -0700
-@@ -9,6 +9,20 @@
+--- sdk10.0.26100.0/intsafe.h	2026-02-18 22:34:28.039270700 -0800
++++ sdk/intsafe.h	2026-02-19 15:10:07.537950600 -0800
+@@ -9,6 +9,19 @@
  #ifndef _INTSAFE_H_INCLUDED_
  #define _INTSAFE_H_INCLUDED_
  
@@ -16,13 +15,12 @@ diff -ur -w sdk10.0.26100.0/intsafe.h sdk/intsafe.h
 +#endif
 +#define __forceinline   inline
 +#define __inline        inline
-+#define ENABLE_INTSAFE_SIGNED_FUNCTIONS
 +
 +
  #include <winapifamily.h>
  
  
-@@ -173,7 +187,8 @@
+@@ -173,7 +186,8 @@
  #define INTSAFE_E_ARITHMETIC_OVERFLOW   ((HRESULT)0x80070216L)  // 0x216 = 534 = ERROR_ARITHMETIC_OVERFLOW
  #ifndef SORTPP_PASS 
  // compiletime asserts (failure results in error C2118: negative subscript)
@@ -32,58 +30,73 @@ diff -ur -w sdk10.0.26100.0/intsafe.h sdk/intsafe.h
  #else
  #define C_ASSERT(e)
  #endif
-@@ -197,7 +212,7 @@
+@@ -197,26 +211,26 @@
  //
  // Min/Max type values
  //
 -#define INT8_MIN        (-127i8 - 1)
-+#define INT8_MIN        (((INT8)-127) - 1)
++#define INT8_MIN        ((-127) - 1)
  #define SHORT_MIN       (-32768)
- #define INT16_MIN       (-32767i16 - 1)
+-#define INT16_MIN       (-32767i16 - 1)
++#define INT16_MIN       (-32767 - 1)
  #ifndef INT_MIN
-@@ -207,9 +222,9 @@
+ #define INT_MIN         (-2147483647 - 1)
+ #endif
+-#define INT32_MIN       (-2147483647i32 - 1)
++#define INT32_MIN       (-2147483647 - 1)
  #ifndef LONG_MIN
  #define LONG_MIN        (-2147483647L - 1)
  #endif
 -#define LONGLONG_MIN    (-9223372036854775807i64 - 1)
 -#define LONG64_MIN      (-9223372036854775807i64 - 1)
 -#define INT64_MIN       (-9223372036854775807i64 - 1)
-+#define LONGLONG_MIN    ((INT64)-9223372036854775807 - 1)
-+#define LONG64_MIN      ((INT64)-9223372036854775807 - 1)
-+#define INT64_MIN       ((INT64)-9223372036854775807 - 1)
++#define LONGLONG_MIN    (-9223372036854775807 - 1)
++#define LONG64_MIN      (-9223372036854775807 - 1)
++#define INT64_MIN       (-9223372036854775807 - 1)
  #define INT128_MIN      (-170141183460469231731687303715884105727i128 - 1)
  
  #ifdef _WIN64
-@@ -224,22 +239,22 @@
+-#define INT_PTR_MIN     (-9223372036854775807i64 - 1)
+-#define LONG_PTR_MIN    (-9223372036854775807i64 - 1)
+-#define PTRDIFF_T_MIN   (-9223372036854775807i64 - 1)
+-#define SSIZE_T_MIN     (-9223372036854775807i64 - 1)
++#define INT_PTR_MIN     (-9223372036854775807 - 1)
++#define LONG_PTR_MIN    (-9223372036854775807 - 1)
++#define PTRDIFF_T_MIN   (-9223372036854775807 - 1)
++#define SSIZE_T_MIN     (-9223372036854775807 - 1)
+ #else
+ #define INT_PTR_MIN     (-2147483647 - 1)
+ #define LONG_PTR_MIN    (-2147483647L - 1)
+@@ -224,22 +238,22 @@
  #define SSIZE_T_MIN     (-2147483647L - 1)
  #endif
  
 -#define INT8_MAX        127i8
 -#define UINT8_MAX       0xffui8
-+#define INT8_MAX        ((INT8)127)
-+#define UINT8_MAX       ((UINT8)0xff)
++#define INT8_MAX        (127)
++#define UINT8_MAX       (0xff)
  #define BYTE_MAX        0xff
  #define SHORT_MAX       32767
 -#define INT16_MAX       32767i16
-+#define INT16_MAX       ((INT16)32767)
++#define INT16_MAX       (32767)
  #define USHORT_MAX      0xffff
 -#define UINT16_MAX      0xffffui16
-+#define UINT16_MAX      ((UINT16)0xffff)
++#define UINT16_MAX      (0xffff)
  #define WORD_MAX        0xffff
  #ifndef INT_MAX
  #define INT_MAX         2147483647
  #endif
 -#define INT32_MAX       2147483647i32
-+#define INT32_MAX       ((INT32)2147483647)
++#define INT32_MAX       (2147483647)
  #ifndef UINT_MAX
  #define UINT_MAX        0xffffffff
  #endif
 -#define UINT32_MAX      0xffffffffui32
-+#define UINT32_MAX      ((UINT32)0xffffffff)
++#define UINT32_MAX      (0xffffffff)
  #ifndef LONG_MAX
  #define LONG_MAX        2147483647L
  #endif
-@@ -247,29 +262,29 @@
+@@ -247,29 +261,29 @@
  #define ULONG_MAX       0xffffffffUL
  #endif
  #define DWORD_MAX       0xffffffffUL
@@ -95,14 +108,14 @@ diff -ur -w sdk10.0.26100.0/intsafe.h sdk/intsafe.h
 -#define ULONG64_MAX     0xffffffffffffffffui64
 -#define DWORD64_MAX     0xffffffffffffffffui64
 -#define UINT64_MAX      0xffffffffffffffffui64
-+#define LONGLONG_MAX    ((INT64)9223372036854775807)
-+#define LONG64_MAX      ((INT64)9223372036854775807)
-+#define INT64_MAX       ((INT64)9223372036854775807)
-+#define ULONGLONG_MAX   ((UINT64)0xffffffffffffffff)
-+#define DWORDLONG_MAX   ((UINT64)0xffffffffffffffff)
-+#define ULONG64_MAX     ((UINT64)0xffffffffffffffff)
-+#define DWORD64_MAX     ((UINT64)0xffffffffffffffff)
-+#define UINT64_MAX      ((UINT64)0xffffffffffffffff)
++#define LONGLONG_MAX    (9223372036854775807)
++#define LONG64_MAX      (9223372036854775807)
++#define INT64_MAX       (9223372036854775807)
++#define ULONGLONG_MAX   (0xffffffffffffffff)
++#define DWORDLONG_MAX   (0xffffffffffffffff)
++#define ULONG64_MAX     (0xffffffffffffffff)
++#define DWORD64_MAX     (0xffffffffffffffff)
++#define UINT64_MAX      (0xffffffffffffffff)
  #define INT128_MAX      170141183460469231731687303715884105727i128
  #define UINT128_MAX     0xffffffffffffffffffffffffffffffffui128
  
@@ -118,19 +131,19 @@ diff -ur -w sdk10.0.26100.0/intsafe.h sdk/intsafe.h
 -#define SIZE_T_MAX      0xffffffffffffffffui64
 -#define SSIZE_T_MAX     9223372036854775807i64
 -#define _SIZE_T_MAX     0xffffffffffffffffui64
-+#define INT_PTR_MAX     ((INT64)9223372036854775807)
-+#define UINT_PTR_MAX    ((UINT64)0xffffffffffffffff)
++#define INT_PTR_MAX     ((INT64)+9223372036854775807)
++#define UINT_PTR_MAX    ((UINT64)+0xffffffffffffffff)
 +#define LONG_PTR_MAX    ((INT64)9223372036854775807)
-+#define ULONG_PTR_MAX   ((UINT64)0xffffffffffffffff)
-+#define DWORD_PTR_MAX   ((UINT64)0xffffffffffffffff)
-+#define PTRDIFF_T_MAX   ((INT64)9223372036854775807)
-+#define SIZE_T_MAX      ((UINT64)0xffffffffffffffff)
-+#define SSIZE_T_MAX     ((INT64)9223372036854775807)
-+#define _SIZE_T_MAX     ((UINT64)0xffffffffffffffff)
++#define ULONG_PTR_MAX   ((UINT64)+0xffffffffffffffff)
++#define DWORD_PTR_MAX   ((UINT64)+0xffffffffffffffff)
++#define PTRDIFF_T_MAX   ((INT64)+9223372036854775807)
++#define SIZE_T_MAX      ((UINT64)+0xffffffffffffffff)
++#define SSIZE_T_MAX     ((INT64)+9223372036854775807)
++#define _SIZE_T_MAX     ((UINT64)+0xffffffffffffffff)
  #else
  #define INT_PTR_MAX     2147483647 
  #define UINT_PTR_MAX    0xffffffff
-@@ -286,39 +301,39 @@
+@@ -286,39 +300,39 @@
  //
  // It is common for -1 to be used as an error value
  //
@@ -193,16 +206,6 @@ diff -ur -w sdk10.0.26100.0/intsafe.h sdk/intsafe.h
  #else
  #define INT_PTR_ERROR   (-1) 
  #define UINT_PTR_ERROR  0xffffffff
-@@ -7739,8 +7754,7 @@
- //
- // ULONGLONG multiplication
- //
--_Must_inspect_result_
--__inline
-+static inline
- HRESULT
- ULongLongMult(
-     _In_ ULONGLONG ullMultiplicand,
 @@ -7841,7 +7855,7 @@
      {
          *pullResult = ULONGLONG_ERROR;
@@ -212,16 +215,3 @@ diff -ur -w sdk10.0.26100.0/intsafe.h sdk/intsafe.h
  #endif // _USE_INTRINSIC_MULTIPLY128
      return hr;
  }
-@@ -8505,8 +8519,9 @@
- //
- // LONGLONG multiplication
- //
--_Must_inspect_result_
--__inline
-+//_Must_inspect_result_
-+//__inline
-+static inline
- HRESULT
- LongLongMult(
-     _In_ LONGLONG llMultiplicand,
-Only in sdk: intsafe_10.0.26100.0.patch

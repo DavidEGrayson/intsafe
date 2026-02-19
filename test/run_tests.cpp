@@ -1,3 +1,5 @@
+#define ENABLE_INTSAFE_SIGNED_FUNCTIONS
+
 #if INCLUDE_STYLE == 0
 // Include intsafe.h last and expose all its conditional macro definitions.
 #include <limits.h>
@@ -30,11 +32,21 @@
 
 #endif
 
+#if __GNUC__
+#define UNUSED __attribute__((unused))
+#else
+#define UNUSED
+#endif
+
 #define INITIAL_VALUE 78
 
 size_t error_count;
 
-static void error(const char * format, ...) __attribute__((format (printf, 1, 2)));
+static void error(const char * format, ...)
+#if __GNUC__
+__attribute__((format(printf, 1, 2)))
+#endif
+;
 
 #include "generated.cpp"
 

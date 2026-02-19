@@ -283,7 +283,7 @@ end
 
 def write_type_checker(io, func_name, return_type, arg_types)
   write_section(io, "has the right type") do |sec|
-    sec.puts "#{return_type} (*tmp)(#{arg_types}) __attribute__((unused)) = &#{func_name};"
+    sec.puts "#{return_type} (*tmp)(#{arg_types}) UNUSED = &#{func_name};"
     sec.puts "#ifdef __cplusplus"
     type_signature = "#{return_type} (*)(#{arg_types})"
     sec.puts "if (!std::is_same<decltype(&#{func_name}), #{type_signature}>::value)"
@@ -568,9 +568,11 @@ def write_range_macro_test(io, macro_name)
     test.puts "if (#{macro_name} != expected)"
     test.puts_indent %Q{error("#{macro_name} has wrong value");}
     test.puts "#ifdef __cplusplus"
-    test.puts "if (!std::is_same<decltype(#{macro_name}), #{type2.name}>::value)"
-    test.puts "#else"
+    test.puts "if (!std::is_same<decltype(#{macro_name} + 0), #{type2.name}>::value)"
+    test.puts "#elif defined(__GNUC__)"
     test.puts "if (!_Generic(#{macro_name}, #{type2.name}: 1, default: 0))"
+    test.puts "#else"
+    test.puts "if (0)"
     test.puts "#endif"
     test.puts_indent %Q{error("#{macro_name} has wrong type");}
   end
@@ -647,7 +649,7 @@ end
 def init_feature_info(intsafe_code)
   CTypeTable.each_value do |type|
     type_name = type.name
-    type_name = '_SIZE_T' if type_name == :size_t
+    type_name = '_SIZE_T' if type_name == :SIZE_T
     [:min, :max].each do |operation|
       next if operation == :min && !type.always_signed?
       name = "#{type_name.upcase}_#{operation.to_s.upcase}".to_sym

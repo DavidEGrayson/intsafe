@@ -14,7 +14,6 @@
 #include <wtypesbase.h>
 #include <specstrings.h>
 
-// from stdint.h
 #ifndef INT8_MIN
 #define INT8_MIN (-128)
 #endif
@@ -32,7 +31,6 @@
 #define UINT32_MAX 0xffffffffU
 #define UINT64_MAX 0xffffffffffffffffULL
 
-// from limits.h (but GCC and Clang override them in their limits.h)
 #ifndef INT_MIN
 #define INT_MIN (-2147483647 - 1)
 #endif
@@ -64,6 +62,7 @@
 #define DWORD_MAX ULONG_MAX
 #define ULONGLONG_MAX UINT64_MAX
 #define ULONG64_MAX UINT64_MAX
+#define DWORDLONG_MAX UINT64_MAX
 #define DWORD64_MAX UINT64_MAX
 #ifdef _WIN64
 #define INT_PTR_MIN INT64_MIN
@@ -79,10 +78,13 @@
 #define LONG_PTR_MIN LONG_MIN
 #define LONG_PTR_MAX LONG_MAX
 #define ULONG_PTR_MAX ULONG_MAX
-#endif
+#endif /* defined(_WIN64) */
 #define SSIZE_T_MIN LONG_PTR_MIN
 #define SSIZE_T_MAX LONG_PTR_MAX
-#define SIZE_T_MAX ULONG_PTR_MAX
+#define PTRDIFF_T_MIN INT_PTR_MIN
+#define PTRDIFF_T_MAX INT_PTR_MAX
+#define SIZE_T_MAX UINT_PTR_MAX
+#define _SIZE_T_MAX ULONG_PTR_MAX
 #define DWORD_PTR_MAX ULONG_PTR_MAX
 
 #define INTSAFE_E_ARITHMETIC_OVERFLOW ((HRESULT)0x80070216)

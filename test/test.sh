@@ -26,35 +26,11 @@ echo "Generating ninja build file"
 
 stamps=()
 
-# Replace literal $ with $$ for Ninja.
-ninja_escape_dollars() {
-  local s="$1"
-  s=${s//\$/\$\$}
-  printf '%s' "$s"
-}
-
-# For cmd: also collapse newlines to spaces.
-ninja_escape_cmd() {
+ninja_escape() {
   local s="$1"
   s=${s//$'\n'/ }
   s=${s//\$/\$\$}
   printf '%s' "$s"
-}
-
-# Sanitize extra_args into a filename-ish chunk, without spawning tr/sed.
-sanitize_id() {
-  # Keep only [A-Za-z0-9_=-], turn space and / into _
-  local s="$1"
-  s=${s//[\/ ]/_}
-  local out="" c
-  local i
-  for ((i=0; i<${#s}; i++)); do
-    c=${s:i:1}
-    case "$c" in
-      [A-Za-z0-9_=\-]) out+="$c" ;;
-    esac
-  done
-  printf '%s' "$out"
 }
 
 cat > build.ninja <<'EOF'
@@ -66,9 +42,10 @@ rule test
 EOF
 
 add_test() {
-  local machine="$1"
-  local language="$2"
-  local extra_args="$3"
+  local id="$1"
+  local machine="$2"
+  local language="$3"
+  local extra_args="$4"
 
   local compiler runtime_path
   if [ "$machine" = "clangarm64" ]; then
@@ -91,11 +68,6 @@ add_test() {
     cflags+=" -fsanitize=undefined"
   fi
 
-  local id="${machine}_${language}"
-  if [ -n "$extra_args" ]; then
-    id+="_$(sanitize_id "$extra_args")"
-  fi
-
   local exe="$outdir/run_tests_${id}.exe"
   local stamp="$outdir/${id}.stamp"
   stamps+=("$stamp")
@@ -114,8 +86,8 @@ add_test() {
 
   local desc="Compiling${runtime_path:+ and running} tests for $machine $language${extra_args:+ $extra_args}"
 
-  cmd_str="$(ninja_escape_cmd "$cmd_str")"
-  desc="$(ninja_escape_dollars "$desc")"
+  cmd_str="$(ninja_escape "$cmd_str")"
+  desc="$(ninja_escape "$desc")"
 
   {
     echo
@@ -127,10 +99,10 @@ add_test() {
 
 add_machine() {
   local machine="$1"
-  add_test "$machine" "c"   ""
-  add_test "$machine" "c"   "-DINCLUDE_STYLE=1"
-  add_test "$machine" "c"   "-funsigned-char"
-  add_test "$machine" "c++" ""
+  add_test "$machine-c0" "$machine" "c"   ""
+  add_test "$machine-c1" "$machine" "c"   "-DINCLUDE_STYLE=1"
+  add_test "$machine-c2" "$machine" "c"   "-funsigned-char"
+  add_test "$machine-c3" "$machine" "c++" ""
 }
 
 add_machine ucrt64
