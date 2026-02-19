@@ -280,8 +280,8 @@ def write_type_checker(io, func_name, return_type, arg_types)
   end
 end
 
-def write_conversion_test(io, func)
-  func_name = func.fetch(:name)
+def write_conversion_test(io, func_name)
+  func = FeatureInfo.fetch(func_name)
   type_src = func.fetch(:type_src)
   type_dest = func.fetch(:type_dest)
 
@@ -309,13 +309,6 @@ def write_conversion_test(io, func)
     if src_min < dest_min
       write_require_conversion_error(io2, func_name, dest_min - 1)
     end
-  end
-end
-
-def write_conversion_tests(io)
-  FeatureInfo.each_value do |feature|
-    next unless feature.fetch(:test) && feature.fetch(:operation) == :convert
-    write_conversion_test(io, feature)
   end
 end
 
@@ -516,20 +509,6 @@ def write_multiplication_test(io, func_name)
   end
 end
 
-def write_math_tests(io)
-  FeatureInfo.each do |name, feature|
-    next unless feature.fetch(:test)
-    op = feature.fetch(:operation)
-    if op == :add
-      write_addition_test(io, name)
-    elsif op == :sub
-      write_subtraction_test(io, name)
-    elsif op == :mult
-      write_multiplication_test(io, name)
-    end
-  end
-end
-
 def write_range_macro_test(io, macro_name)
   macro_info = FeatureInfo.fetch(macro_name.to_sym)
   type1 = macro_info.fetch(:type_dest)
@@ -562,18 +541,24 @@ def write_range_macro_test(io, macro_name)
   end
 end
 
-def write_range_macro_tests(io)
-  FeatureInfo.each_value do |feature|
-    next unless feature.fetch(:test) && [:min, :max].include?(feature.fetch(:operation))
-    write_range_macro_test(io, feature.fetch(:name))
+def write_feature_tests(io)
+  FeatureInfo.each do |name, feature|
+    next unless feature.fetch(:test)
+    op = feature.fetch(:operation)
+    if op == :add
+      write_addition_test(io, name)
+    elsif op == :sub
+      write_subtraction_test(io, name)
+    elsif op == :mult
+      write_multiplication_test(io, name)
+    elsif op == :convert
+      write_conversion_test(io, name)
+    elsif op == :min || op == :max
+      write_range_macro_test(io, name)
+    else
+      raise "testing #{name} (op #{op}) not implemented"
+    end
   end
-end
-
-def write_tests(io)
-  write_type_tests(io)
-  write_conversion_tests(io)
-  write_math_tests(io)
-  write_range_macro_tests(io)
 end
 
 def find_redefinitions(intsafe_code)
@@ -704,20 +689,24 @@ File.open('generated.cpp', 'w') do |io|
 
   io.puts "#ifdef __CHAR_UNSIGNED__"
   io.cenv = { pointer_size: 8, char_signed: false }
-  write_tests io
+  write_type_tests(io)
+  write_feature_tests(io)
   io.puts "#else /* __CHAR_UNSIGNED__ */"
   io.cenv = { pointer_size: 8, char_signed: true }
-  write_tests io
+  write_type_tests(io)
+  write_feature_tests(io)
   io.puts "#endif /* __CHAR_UNSIGNED__ else */"
 
   io.puts "#else /* _WIN64 */"
 
   io.puts "#ifdef __CHAR_UNSIGNED__"
   io.cenv = { pointer_size: 4, char_signed: false }
-  write_tests io
+  write_type_tests(io)
+  write_feature_tests(io)
   io.puts "#else /* __CHAR_UNSIGNED__ */"
   io.cenv = { pointer_size: 4, char_signed: true }
-  write_tests io
+  write_type_tests(io)
+  write_feature_tests(io)
   io.puts "#endif /* __CHAR_UNSIGNED__ else */"
 
   io.puts "#endif /* _WIN64 else */"
