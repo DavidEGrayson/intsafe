@@ -195,26 +195,23 @@ def write_section(io, comment = nil, &block)
 end
 
 # These tests make sure our database of types is correct.
-def write_type_tests(io)
-  CTypeTable.each_value do |type|
-    comparison = type.signed?(io.cenv) ? '<' : '>';
-    write_test(io, "test_type_#{type}") do |test|
+def write_type_test(io, type)
+  comparison = type.signed?(io.cenv) ? '<' : '>';
+  write_test(io, "test_#{type}") do |test|
 
-      # Check the size of the type.
-      test.puts "if (sizeof(#{type}) != #{type.byte_count(io.cenv)})"
-      test.puts_indent %Q{error("#{type} is actually %d bytes", (int)sizeof(#{type.name}));}
+    # Check the size of the type.
+    test.puts "if (sizeof(#{type}) != #{type.byte_count(io.cenv)})"
+    test.puts_indent %Q{error("#{type} is actually %d bytes", (int)sizeof(#{type.name}));}
 
-      # Check the signedness of the type.
-      test.puts "#{type} x = 0;"
-      test.puts "if (!((#{type})(x - 1) #{comparison} x))"
-      test.puts_indent %Q{error("#{type} sign check failed");}
+    # Check the signedness of the type.
+    test.puts "if (!((#{type})-1 #{comparison} (#{type})0))"
+    test.puts_indent %Q{error("#{type} sign check failed");}
 
-      # Do additional checks if possible.
-      test.puts "#ifdef __cplusplus"
-      test.puts "if (std::is_pointer<#{type}>::value)"
-      test.puts_indent %Q{error("#{type} is a pointer");}
-      test.puts "#endif"
-    end
+    # Do additional checks if possible.
+    test.puts "#ifdef __cplusplus"
+    test.puts "if (std::is_pointer<#{type}>::value)"
+    test.puts_indent %Q{error("#{type} is a pointer");}
+    test.puts "#endif"
   end
 end
 
@@ -511,7 +508,7 @@ end
 
 def write_range_macro_test(io, macro_name)
   macro_info = FeatureInfo.fetch(macro_name.to_sym)
-  type1 = macro_info.fetch(:type_dest)
+  type1 = macro_info.fetch(:type)
   expected_value = macro_info.fetch(:operation) == :max ? type1.max(io.cenv) : type1.min(io.cenv)
   type2 = type1.byte_count(io.cenv) < 4 ? CType(:INT) : type1
   write_test(io, "test_#{macro_name}") do |test|
@@ -539,7 +536,9 @@ def write_feature_tests(io)
   FeatureInfo.each do |name, feature|
     next unless feature.fetch(:test)
     op = feature.fetch(:operation)
-    if op == :add
+    if op == :type
+      write_type_test(io, feature.fetch(:type))
+    elsif op == :add
       write_addition_test(io, name)
     elsif op == :sub
       write_subtraction_test(io, name)
@@ -607,12 +606,17 @@ end
 
 def init_feature_info(intsafe_code)
   CTypeTable.each_value do |type|
+    name = type.name
+    FeatureInfo[name] = { name: name, operation: :type, type: type, test: true }
+  end
+
+  CTypeTable.each_value do |type|
     type_name = type.name
     type_name = '_SIZE_T' if type_name == :SIZE_T
     [:min, :max].each do |operation|
       next if operation == :min && !type.always_signed?
       name = "#{type_name.upcase}_#{operation.to_s.upcase}".to_sym
-      FeatureInfo[name] = { name: name, operation: operation, type_dest: type }
+      FeatureInfo[name] = { name: name, operation: operation, type: type }
     end
   end
 
@@ -666,8 +670,8 @@ def init_feature_info(intsafe_code)
     if in_msft && !in_ours
       puts "warning: missing function will not be tested: #{name}"
     end
-    if !in_msft && in_ours
-      puts "warning: intsafe.h has extra function: #{name}"
+    if !in_msft && in_ours && feature.fetch(:operation) != :type
+      puts "warning: intsafe.h has extra feature: #{name}"
     end
   end
 end
@@ -683,11 +687,9 @@ File.open('generated.cpp', 'w') do |io|
 
   io.puts "#ifdef __CHAR_UNSIGNED__"
   io.cenv = { pointer_size: 8, char_signed: false }
-  write_type_tests(io)
   write_feature_tests(io)
   io.puts "#else /* __CHAR_UNSIGNED__ */"
   io.cenv = { pointer_size: 8, char_signed: true }
-  write_type_tests(io)
   write_feature_tests(io)
   io.puts "#endif /* __CHAR_UNSIGNED__ else */"
 
@@ -695,20 +697,15 @@ File.open('generated.cpp', 'w') do |io|
 
   io.puts "#ifdef __CHAR_UNSIGNED__"
   io.cenv = { pointer_size: 4, char_signed: false }
-  write_type_tests(io)
   write_feature_tests(io)
   io.puts "#else /* __CHAR_UNSIGNED__ */"
   io.cenv = { pointer_size: 4, char_signed: true }
-  write_type_tests(io)
   write_feature_tests(io)
   io.puts "#endif /* __CHAR_UNSIGNED__ else */"
 
   io.puts "#endif /* _WIN64 else */"
 
   write_static_void_func(io, "run_all_tests") do |io|
-    CTypeTable.each_value do |type|
-      io.puts "test_type_#{type}();"
-    end
     FeatureInfo.each_value do |feature|
       next unless feature.fetch(:test)
       name = feature.fetch(:name)
