@@ -52,7 +52,7 @@
 #define DWORDLONG_MAX 0xFFFFFFFFFFFFFFFFULL
 
 #ifdef _WIN64
-#define SIZE_T_MAX 0xffffffffffffffffUL
+#define SIZE_T_MAX 0xffffffffffffffff
 #define PTRDIFF_T_MIN (-0x7fffffffffffffff - 1)
 #define PTRDIFF_T_MAX 0x7fffffffffffffff
 #else
