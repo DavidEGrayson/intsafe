@@ -5,12 +5,15 @@ headers/intsafe: Add missing MIN/MAX macros and fix Cygwin compatibility.
   - The second block was copied from limits.h, but typically GCC overrides them
     by installing its own limits.h, so we use ifndef for these ones.
   - The third block was copied from cfgmgr32.h.
-  - The fourth block consists of definitions that we don't have
+  - The other blocks consist of definitions that we don't have
     in any other headers.
 - In Cygwin (64-bit):
   - "long" is a 64-bit type, so we can't use it for DWORD_MAX
      since DWORD is 32-bit: use __MSABI_LONG to conditionally
 	 add the "l" suffix.
+  - GCC's limits.h provides 64-bit definitions for ULONG_MAX,
+    LONG_MIN, and LONG_MAX.  We should avoid providing
+	definitions that are different.
   - size_t (unsigned long) != UINT_PTR (unsigned long long)
   - ptr_diff_t (long)      != INT_PTR (long long)
 

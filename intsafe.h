@@ -36,6 +36,7 @@
 #ifndef UINT_MAX
 #define UINT_MAX 0xffffffffU
 #endif
+#ifndef __LP64__
 #ifndef LONG_MIN
 #define LONG_MIN (-2147483647L - 1)
 #endif
@@ -45,9 +46,20 @@
 #ifndef ULONG_MAX
 #define ULONG_MAX 0xffffffffUL
 #endif
+#endif
 
 #define DWORD_MAX __MSABI_LONG(0xFFFFFFFFU)
-#define DWORDLONG_MAX 0xFFFFFFFFFFFFFFFF
+#define DWORDLONG_MAX 0xFFFFFFFFFFFFFFFFULL
+
+#ifdef _WIN64
+#define SIZE_T_MAX 0xffffffffffffffffUL
+#define PTRDIFF_T_MIN (-0x7fffffffffffffff - 1)
+#define PTRDIFF_T_MAX 0x7fffffffffffffff
+#else
+#define SIZE_T_MAX 0xffffffff
+#define PTRDIFF_T_MIN (-0x7fffffff - 1)
+#define PTRDIFF_T_MAX 0x7fffffff
+#endif
 
 #define SHORT_MIN INT16_MIN
 #define LONGLONG_MIN INT64_MIN
@@ -78,9 +90,6 @@
 #endif /* defined(_WIN64) */
 #define SSIZE_T_MIN LONG_PTR_MIN
 #define SSIZE_T_MAX LONG_PTR_MAX
-#define PTRDIFF_T_MIN INT_PTR_MIN
-#define PTRDIFF_T_MAX INT_PTR_MAX
-#define SIZE_T_MAX UINT_PTR_MAX
 #define _SIZE_T_MAX ULONG_PTR_MAX
 #define DWORD_PTR_MAX ULONG_PTR_MAX
 

@@ -185,20 +185,30 @@ def write_static_void_func(io, name, &block)
   name
 end
 
-def write_test(io, name, &block)
-  write_static_void_func(io, name, &block)
-end
-
 def write_section(io, comment = nil, &block)
   io.puts "// " + comment if comment
   write_bracketed_section(io, &block)
 end
 
+def write_test(io, feature_name, &block)
+  feature = FeatureInfo.fetch(feature_name)
+  write_static_void_func(io, "test_#{feature.fetch(:name)}") do |io|
+    if feature[:skip_test_if_lp64]
+      io.puts "#ifndef __LP64__"
+      io = io.dup
+      io.cenv = io.cenv.update(lp64: false)
+      yield io
+      io.puts "#endif"
+    else
+      yield io
+    end
+  end
+end
+
 # These tests make sure our database of types is correct.
 def write_type_test(io, type)
   comparison = type.signed?(io.cenv) ? '<' : '>';
-  write_test(io, "test_#{type}") do |test|
-
+  write_static_void_func(io, "test_#{type}") do |test|
     # Check the size of the type.
     test.puts "if (sizeof(#{type}) != #{type.byte_count(io.cenv)})"
     test.puts_indent %Q{error("#{type} is actually %d bytes", (int)sizeof(#{type.name}));}
@@ -289,7 +299,7 @@ def write_conversion_test(io, func_name)
   max = [src_max, dest_max].min
   min = [src_min, dest_min].max
 
-  write_test(io, "test_#{func_name}") do |io2|
+  write_static_void_func(io, "test_#{func_name}") do |io2|
     io2.puts "#{type_dest} out;"
 
     write_type_checker io2, func_name, "HRESULT",
@@ -368,7 +378,7 @@ def write_require_subtraction_error(io, func_name, num1, num2)
 end
 
 def write_binop_test(io, type, func_name)
-  write_test(io, "test_#{func_name}") do |test|
+  write_static_void_func(io, "test_#{func_name}") do |test|
     test.puts "#{type} out;"
     test.puts
 
@@ -511,9 +521,9 @@ def write_range_macro_test(io, macro_name)
   type1 = macro_info.fetch(:type)
   expected_value = macro_info.fetch(:operation) == :max ? type1.max(io.cenv) : type1.min(io.cenv)
   type2 = type1.byte_count(io.cenv) < 4 ? CType(:INT) : type1
-  write_test(io, "test_#{macro_name}") do |test|
-    test.puts "#if #{macro_name} != #{cpp_num_str(expected_value)}"
-    test.puts %Q{error("#{macro_name} has wrong preprocessor value");}
+  write_test(io, macro_name) do |io|
+    io.puts "#if #{macro_name} != #{cpp_num_str(expected_value)}"
+    io.puts %Q{error("#{macro_name} has wrong preprocessor value");}
     extra_tests = [ "#{macro_name} == 0" ]
     if expected_value > -0x8000_0000_0000_0000
       extra_tests << "#{macro_name} == #{cpp_num_str(expected_value - 1)}"
@@ -521,14 +531,14 @@ def write_range_macro_test(io, macro_name)
     if expected_value < 0xFFFF_FFFF_FFFF_FFFF
       extra_tests << "#{macro_name} == #{cpp_num_str(expected_value + 1)}"
     end
-    test.puts "#elif " + extra_tests.join(" || ")
-    test.puts %Q{error("#{macro_name} test confuses the preprocessor");}
-    test.puts "#endif"
-    test.puts "#{type2.name} expected = #{nice_num_str(expected_value)};"
-    test.puts "if (#{macro_name} != expected)"
-    test.puts_indent %Q{error("#{macro_name} has wrong value");}
-    test.puts "if (!TYPE_MATCHES(#{macro_name}, #{type2.name}))"
-    test.puts_indent %Q{error("#{macro_name} has wrong type");}
+    io.puts "#elif " + extra_tests.join(" || ")
+    io.puts %Q{error("#{macro_name} test confuses the preprocessor");}
+    io.puts "#endif"
+    io.puts "#{type2.name} expected = #{nice_num_str(expected_value)};"
+    io.puts "if (#{macro_name} != expected)"
+    io.puts_indent %Q{error("#{macro_name} has wrong value");}
+    io.puts "if (!TYPE_MATCHES(#{macro_name}, #{type2.name}))"
+    io.puts_indent %Q{error("#{macro_name} has wrong type");}
   end
 end
 
@@ -652,6 +662,10 @@ def init_feature_info(intsafe_code)
       operation: :mult,
       type_dest: type,
     }
+
+    %i{ULONG_MAX LONG_MIN LONG_MAX}.each do |name|
+      FeatureInfo.fetch(name)[:skip_test_if_lp64] = true
+    end
   end
 
   intsafe_names = Set.new(intsafe_code.scan(/\b[0-9A-Za-z_]+\b/))
@@ -679,6 +693,12 @@ end
 intsafe_code = File.read('intsafe_under_test.h')
 init_feature_info(intsafe_code)
 find_redefinitions(intsafe_code)
+
+#FeatureInfo.each_value do |feature|  # tmphax
+#  if feature[:name] != :SIZE_T_MAX
+#    feature[:test] = false
+#  end
+#end
 
 File.open('generated.cpp', 'w') do |io|
   io = IndentedIO.new(io)

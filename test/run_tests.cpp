@@ -69,7 +69,6 @@ __attribute__((format(printf, 1, 2)))
 
 #endif
 
-
 #include "generated.cpp"
 
 int main(void)
