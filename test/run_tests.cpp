@@ -48,6 +48,28 @@ __attribute__((format(printf, 1, 2)))
 #endif
 ;
 
+#if defined(__GNUC__)
+
+// Strict type-checking for GCC and Clang.
+#ifdef __cplusplus
+#define TYPE_MATCHES(v, t) (std::is_same<decltype(v), t>::value)
+#else
+#define TYPE_MATCHES(v, t) (_Generic((v), t: 1, default: 0))
+#endif
+
+#else
+
+// Weaker type checking for MSVC because the types for UINT8_MAX etc. are not int.
+// Also it doesn't have _Generic.
+#ifdef __cplusplus
+#define TYPE_MATCHES(v, t) (std::is_same<decltype((v) + 0), t>::value)
+#else
+#define TYPE_MATCHES(v, t) 1
+#endif
+
+#endif
+
+
 #include "generated.cpp"
 
 int main(void)

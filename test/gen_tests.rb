@@ -530,13 +530,7 @@ def write_range_macro_test(io, macro_name)
     test.puts "#{type2.name} expected = #{nice_num_str(expected_value)};"
     test.puts "if (#{macro_name} != expected)"
     test.puts_indent %Q{error("#{macro_name} has wrong value");}
-    test.puts "#ifdef __cplusplus"
-    test.puts "if (!std::is_same<decltype(#{macro_name} + 0), #{type2.name}>::value)"
-    test.puts "#elif defined(__GNUC__)"
-    test.puts "if (!_Generic(#{macro_name}, #{type2.name}: 1, default: 0))"
-    test.puts "#else"
-    test.puts "if (0)"
-    test.puts "#endif"
+    test.puts "if (!TYPE_MATCHES(#{macro_name}, #{type2.name}))"
     test.puts_indent %Q{error("#{macro_name} has wrong type");}
   end
 end
