@@ -14,12 +14,8 @@
 #include <wtypesbase.h>
 #include <specstrings.h>
 
-#ifndef INT8_MIN
 #define INT8_MIN (-128)
-#endif
-#ifndef INT16_MIN
 #define INT16_MIN (-32768)
-#endif
 #define INT32_MIN (-2147483647 - 1)
 #define INT64_MIN  (-9223372036854775807LL - 1)
 #define INT8_MAX 127
@@ -50,6 +46,9 @@
 #define ULONG_MAX 0xffffffffUL
 #endif
 
+#define DWORD_MAX 0xFFFFFFFFUL
+#define DWORDLONG_MAX 0xFFFFFFFFFFFFFFFF
+
 #define SHORT_MIN INT16_MIN
 #define LONGLONG_MIN INT64_MIN
 #define LONG64_MIN INT64_MIN
@@ -59,10 +58,8 @@
 #define BYTE_MAX UINT8_MAX
 #define WORD_MAX UINT16_MAX
 #define USHORT_MAX UINT16_MAX
-#define DWORD_MAX ULONG_MAX
 #define ULONGLONG_MAX UINT64_MAX
 #define ULONG64_MAX UINT64_MAX
-#define DWORDLONG_MAX UINT64_MAX
 #define DWORD64_MAX UINT64_MAX
 #ifdef _WIN64
 #define INT_PTR_MIN INT64_MIN
