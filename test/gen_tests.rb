@@ -114,9 +114,9 @@ CTypeTable = {
   #UINT128: CType.new(:UINT128, :UInt128, 16),
 
   UINT_PTR: CType.new(:UINT_PTR, :UIntPtr, :pointer),
-  size_t: CType.new(:size_t, :SizeT, :pointer),
   DWORD_PTR: CType.new(:DWORD_PTR, :DWordPtr, :pointer),
   ULONG_PTR: CType.new(:ULONG_PTR, :ULongPtr, :pointer),
+  size_t: CType.new(:size_t, :SizeT, :pointer),
   SIZE_T: CType.new(:SIZE_T, :SIZET, :pointer),
 
   INT_PTR: CType.new(:INT_PTR, :IntPtr, :pointer_signed),
@@ -676,7 +676,7 @@ def init_feature_info(intsafe_code)
   end
 end
 
-intsafe_code = File.read('intsafe.h')
+intsafe_code = File.read('intsafe_under_test.h')
 init_feature_info(intsafe_code)
 find_redefinitions(intsafe_code)
 

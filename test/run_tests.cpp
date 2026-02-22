@@ -18,12 +18,12 @@
 #undef LONG_MIN
 #undef LONG_MAX
 #undef ULONG_MAX
-#include "intsafe.h"
+#include <intsafe_under_test.h>
 
 #elif INCLUDE_STYLE == 1
 // Make sure intsafe.h can go first without errors.
 // Also include the compiler's headers, which override some range macros from intsafe.h
-#include "intsafe.h"
+#include <intsafe_under_test.h>
 #if __cplusplus
 #include <type_traits>
 #endif
@@ -59,8 +59,8 @@ __attribute__((format(printf, 1, 2)))
 
 #else
 
-// Weaker type checking for MSVC because the types for UINT8_MAX etc. are not int.
-// Also it doesn't have _Generic.
+// Weaker type checking for MSVC because the types for UINT8_MAX etc. from
+// Microsoft's intsafe.h are not int.  Also MSVC doesn't have _Generic.
 #ifdef __cplusplus
 #define TYPE_MATCHES(v, t) (std::is_same<decltype((v) + 0), t>::value)
 #else

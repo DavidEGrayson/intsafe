@@ -11,7 +11,7 @@ if [ '!' -f "$1" ]; then
   exit 1
 fi
 
-cp "$1" $(dirname $0)/intsafe.h
+cp "$1" $(dirname $0)/intsafe_under_test.h
 cd $(dirname $0)
 
 echo "Generating tests"
@@ -51,6 +51,9 @@ add_test() {
   if [ "$machine" = "clangarm64" ]; then
     compiler="/opt/bin/aarch64-w64-mingw32-"
     runtime_path=""
+  elif [ "$machine" = "msys" ]; then
+    compiler="/usr/bin/"
+    runtime_path="/usr/bin/"
   else
     compiler="/$machine/bin/"
     runtime_path="/$machine/bin/"
@@ -63,7 +66,7 @@ add_test() {
     cc="${compiler}gcc -x c --std=gnu23"
   fi
 
-  local cflags="-Wall -Werror -pedantic -O1"
+  local cflags="-Wall -Werror -pedantic -O1 -isystem ."
   if [[ "$machine" == clang32 || "$machine" == clang64 ]]; then
     cflags+=" -fsanitize=undefined"
   fi
@@ -91,7 +94,7 @@ add_test() {
 
   {
     echo
-    echo "build $stamp: test run_tests.cpp intsafe.h"
+    echo "build $stamp: test run_tests.cpp generated.cpp intsafe_under_test.h"
     echo "  cmd = $cmd_str"
     echo "  desc = $desc"
   } >> build.ninja
@@ -105,6 +108,7 @@ add_machine() {
   add_test "$machine-c3" "$machine" "c++" ""
 }
 
+add_machine msys
 add_machine ucrt64
 add_machine mingw32
 add_machine mingw64

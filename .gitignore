@@ -1,7 +1,7 @@
 sdk*/intsafe.h
 *.obj
 *.exe
-test/intsafe.h
+test/intsafe_under_test.h
 test/generated.cpp
 test/build.ninja
 test/ninja-out
