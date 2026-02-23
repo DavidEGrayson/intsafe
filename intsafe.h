@@ -16,78 +16,67 @@
 
 #define INT8_MIN (-128)
 #define INT16_MIN (-32768)
-#define INT32_MIN (-2147483647 - 1)
-#define INT64_MIN  (-9223372036854775807LL - 1)
+#define INT32_MIN (-0x7fffffff - 1)
+#define INT64_MIN (-0x7fffffffffffffff - 1)
 #define INT8_MAX 127
 #define INT16_MAX 32767
-#define INT32_MAX 2147483647
-#define INT64_MAX 9223372036854775807LL
+#define INT32_MAX 0x7fffffff
+#define INT64_MAX 0x7fffffffffffffff
 #define UINT8_MAX 255
 #define UINT16_MAX 65535
-#define UINT32_MAX 0xffffffffU
-#define UINT64_MAX 0xffffffffffffffffULL
+#define UINT32_MAX 0xffffffff
+#define UINT64_MAX 0xffffffffffffffff
 
-#ifndef INT_MIN
-#define INT_MIN (-2147483647 - 1)
-#endif
-#ifndef INT_MAX
-#define INT_MAX 2147483647
-#endif
-#ifndef UINT_MAX
-#define UINT_MAX 0xffffffffU
-#endif
-#ifndef __LP64__
-#ifndef LONG_MIN
-#define LONG_MIN (-2147483647L - 1)
-#endif
-#ifndef LONG_MAX
-#define LONG_MAX 2147483647L
-#endif
-#ifndef ULONG_MAX
-#define ULONG_MAX 0xffffffffUL
-#endif
+#define INT_MIN (-0x7fffffff - 1)
+#define INT_MAX 0x7fffffff
+#define UINT_MAX 0xffffffff
+#ifdef __LP64__
+#define LONG_MIN (-0x7fffffffffffffff - 1)
+#define LONG_MAX 0x7fffffffffffffff
+#define ULONG_MAX 0xffffffffffffffff
+#else
+#define LONG_MIN (-0x7fffffffl - 1)
+#define LONG_MAX 0x7fffffffl
+#define ULONG_MAX 0xfffffffful
 #endif
 
-#define DWORD_MAX __MSABI_LONG(0xFFFFFFFFU)
-#define DWORDLONG_MAX 0xFFFFFFFFFFFFFFFFULL
+#define DWORD_MAX __MSABI_LONG(0xffffffffu)
+#define DWORDLONG_MAX 0xffffffffffffffffull
+
+#define SHORT_MIN (-32768)
+#define SHORT_MAX 32767
+#define BYTE_MAX 255
+#define WORD_MAX 65535
+#define USHORT_MAX 65535
+#define LONGLONG_MIN (-0x7fffffffffffffffll - 1)
+#define LONG64_MIN (-0x7fffffffffffffffll - 1)
+#define LONGLONG_MAX 0x7fffffffffffffffll
+#define LONG64_MAX 0x7fffffffffffffffll
+#define ULONGLONG_MAX 0xffffffffffffffffull
+#define ULONG64_MAX 0xffffffffffffffffull
+#define DWORD64_MAX 0xffffffffffffffffull
 
 #ifdef _WIN64
-#define SIZE_T_MAX 0xffffffffffffffff
 #define PTRDIFF_T_MIN (-0x7fffffffffffffff - 1)
 #define PTRDIFF_T_MAX 0x7fffffffffffffff
+#define SIZE_T_MAX 0xffffffffffffffff
+#define INT_PTR_MIN (-0x7fffffffffffffffll - 1)
+#define INT_PTR_MAX 0x7fffffffffffffffll
+#define UINT_PTR_MAX 0xffffffffffffffffull
+#define LONG_PTR_MIN (-0x7fffffffffffffffll - 1)
+#define LONG_PTR_MAX 0x7fffffffffffffffll
+#define ULONG_PTR_MAX 0xffffffffffffffffull
 #else
-#define SIZE_T_MAX 0xffffffff
 #define PTRDIFF_T_MIN (-0x7fffffff - 1)
 #define PTRDIFF_T_MAX 0x7fffffff
+#define SIZE_T_MAX 0xffffffff
+#define INT_PTR_MIN (-0x7fffffff - 1)
+#define INT_PTR_MAX 0x7fffffff
+#define UINT_PTR_MAX 0xffffffff
+#define LONG_PTR_MIN (-0x7fffffffl - 1)
+#define LONG_PTR_MAX 0x7fffffffl
+#define ULONG_PTR_MAX 0xfffffffful
 #endif
-
-#define SHORT_MIN INT16_MIN
-#define LONGLONG_MIN INT64_MIN
-#define LONG64_MIN INT64_MIN
-#define SHORT_MAX INT16_MAX
-#define LONGLONG_MAX INT64_MAX
-#define LONG64_MAX INT64_MAX
-#define BYTE_MAX UINT8_MAX
-#define WORD_MAX UINT16_MAX
-#define USHORT_MAX UINT16_MAX
-#define ULONGLONG_MAX UINT64_MAX
-#define ULONG64_MAX UINT64_MAX
-#define DWORD64_MAX UINT64_MAX
-#ifdef _WIN64
-#define INT_PTR_MIN INT64_MIN
-#define INT_PTR_MAX INT64_MAX
-#define UINT_PTR_MAX UINT64_MAX
-#define LONG_PTR_MIN INT64_MIN
-#define LONG_PTR_MAX INT64_MAX
-#define ULONG_PTR_MAX UINT64_MAX
-#else
-#define INT_PTR_MIN INT32_MIN
-#define INT_PTR_MAX INT32_MAX
-#define UINT_PTR_MAX UINT32_MAX
-#define LONG_PTR_MIN LONG_MIN
-#define LONG_PTR_MAX LONG_MAX
-#define ULONG_PTR_MAX ULONG_MAX
-#endif /* defined(_WIN64) */
 #define SSIZE_T_MIN LONG_PTR_MIN
 #define SSIZE_T_MAX LONG_PTR_MAX
 #define _SIZE_T_MAX ULONG_PTR_MAX

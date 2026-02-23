@@ -10,25 +10,18 @@
 #include <winapifamily.h>
 #include <wtypesbase.h>
 #include <specstrings.h>
-#undef INT8_MIN
-#undef INT16_MIN
-#undef INT_MIN
-#undef INT_MAX
-#undef UINT_MAX
-#undef LONG_MIN
-#undef LONG_MAX
-#undef ULONG_MAX
 #include <intsafe_under_test.h>
 
 #elif INCLUDE_STYLE == 1
-// Make sure intsafe.h can go first without errors.
-// Also include the compiler's headers, which override some range macros from intsafe.h
+// Make sure intsafe.h can go first without errors,
+// and that the headers provide definitions that pass our test.
 #include <intsafe_under_test.h>
 #if __cplusplus
 #include <type_traits>
 #endif
 #include <limits.h>
 #include <stdint.h>
+#include <cfgmgr32.h>
 
 #endif
 

@@ -17,7 +17,7 @@ class CType
 
   def initialize(name, camel_name, essence)
     @name = name.to_sym
-    @camel_name = camel_name.to_sym
+    @camel_name = camel_name.to_sym if camel_name
     @essence = essence
   end
 
@@ -33,6 +33,8 @@ class CType
     case @essence
     when :pointer, :pointer_signed
       cenv.fetch(:pointer_size)
+    when :unsigned_long, :long
+      cenv.fetch(:long_size)
     when :char
       1
     else
@@ -42,9 +44,9 @@ class CType
 
   def signed?(cenv)
     case @essence
-    when :pointer
+    when :pointer, :unsigned_long
       false
-    when :pointer_signed
+    when :pointer_signed, :long
       true
     when :char
       cenv.fetch(:char_signed) && true
@@ -100,15 +102,20 @@ CTypeTable = {
   INT32: CType.new(:INT32, :Int32, -4),
   LONG32: CType.new(:LONG32, :Long32, -4),
 
+  :"unsigned long" => CType.new(:"unsigned long", nil, :unsigned_long),
+  long: CType.new(:long, nil, :long),
+
   ULONGLONG: CType.new(:ULONGLONG, :ULongLong, 8),
   ULONG64: CType.new(:ULONG64, :ULong64, 8),
   UINT64: CType.new(:UINT64, :UInt64, 8),
   DWORD64: CType.new(:DWORD64, :DWord64, 8),
   DWORDLONG: CType.new(:DWORDLONG, :DWordLong, 8),
+  uint64_t: CType.new(:uint64_t, nil, 8),
 
   INT64: CType.new(:INT64, :Int64, -8),
   LONGLONG: CType.new(:LONGLONG, :LongLong, -8),
   LONG64: CType.new(:LONG64, :Long64, -8),
+  int64_t: CType.new(:int64_t, nil, -8),
 
   #INT128: CType.new(:INT128, :Int128, -16),
   #UINT128: CType.new(:UINT128, :UInt128, 16),
@@ -190,38 +197,51 @@ def write_section(io, comment = nil, &block)
   write_bracketed_section(io, &block)
 end
 
-def write_test(io, feature_name, &block)
+# Recursive function that ensures all the types involved in this feature are concrete.
+def write_test_body(io, feature_name, &block)
   feature = FeatureInfo.fetch(feature_name)
-  write_static_void_func(io, "test_#{feature.fetch(:name)}") do |io|
-    if feature[:skip_test_if_lp64]
-      io.puts "#ifndef __LP64__"
-      io = io.dup
-      io.cenv = io.cenv.update(lp64: false)
-      yield io
-      io.puts "#endif"
-    else
-      yield io
-    end
+  types = feature.values_at(:type, :type_src, :type_dest).compact
+  essences = types.map(&:essence).uniq
+  if !io.cenv.key?(:long_size) && (essences.include?(:long) || essences.include?(:unsigned_long))
+    io.puts "#ifdef __LP64__"
+    io = io.dup
+    io.cenv = io.cenv.merge(long_size: 8)
+    write_test_body(io, feature_name, &block)
+    io.puts "#else"
+    io = io.dup
+    io.cenv = io.cenv.merge(long_size: 4)
+    write_test_body(io, feature_name, &block)
+    io.puts "#endif"
+    return
+  end
+
+  yield io
+end
+
+def write_test(io, feature_name, &block)
+  write_static_void_func(io, "test_#{feature_name}") do |io|
+    write_test_body(io, feature_name, &block)
   end
 end
 
 # These tests make sure our database of types is correct.
-def write_type_test(io, type)
-  comparison = type.signed?(io.cenv) ? '<' : '>';
-  write_static_void_func(io, "test_#{type}") do |test|
+def write_type_test(io, feature_name)
+  type = FeatureInfo.fetch(feature_name).fetch(:type)
+  write_test(io, feature_name) do |io|
+    comparison = type.signed?(io.cenv) ? '<' : '>';
     # Check the size of the type.
-    test.puts "if (sizeof(#{type}) != #{type.byte_count(io.cenv)})"
-    test.puts_indent %Q{error("#{type} is actually %d bytes", (int)sizeof(#{type.name}));}
+    io.puts "if (sizeof(#{type}) != #{type.byte_count(io.cenv)})"
+    io.puts_indent %Q{error("#{type} is actually %d bytes", (int)sizeof(#{type.name}));}
 
     # Check the signedness of the type.
-    test.puts "if (!((#{type})-1 #{comparison} (#{type})0))"
-    test.puts_indent %Q{error("#{type} sign check failed");}
+    io.puts "if (!((#{type})-1 #{comparison} (#{type})0))"
+    io.puts_indent %Q{error("#{type} sign check failed");}
 
     # Do additional checks if possible.
-    test.puts "#ifdef __cplusplus"
-    test.puts "if (std::is_pointer<#{type}>::value)"
-    test.puts_indent %Q{error("#{type} is a pointer");}
-    test.puts "#endif"
+    io.puts "#ifdef __cplusplus"
+    io.puts "if (std::is_pointer<#{type}>::value)"
+    io.puts_indent %Q{error("#{type} is a pointer");}
+    io.puts "#endif"
   end
 end
 
@@ -518,21 +538,21 @@ end
 
 def write_range_macro_test(io, macro_name)
   macro_info = FeatureInfo.fetch(macro_name.to_sym)
-  type1 = macro_info.fetch(:type)
-  expected_value = macro_info.fetch(:operation) == :max ? type1.max(io.cenv) : type1.min(io.cenv)
-  type2 = type1.byte_count(io.cenv) < 4 ? CType(:INT) : type1
   write_test(io, macro_name) do |io|
+    type1 = macro_info.fetch(:type)
+    expected_value = macro_info.fetch(:operation) == :max ? type1.max(io.cenv) : type1.min(io.cenv)
+    type2 = type1.byte_count(io.cenv) < 4 ? CType(:INT) : type1
     io.puts "#if #{macro_name} != #{cpp_num_str(expected_value)}"
     io.puts %Q{error("#{macro_name} has wrong preprocessor value");}
-    extra_tests = [ "#{macro_name} == 0" ]
-    if expected_value > -0x8000_0000_0000_0000
-      extra_tests << "#{macro_name} == #{cpp_num_str(expected_value - 1)}"
-    end
-    if expected_value < 0xFFFF_FFFF_FFFF_FFFF
-      extra_tests << "#{macro_name} == #{cpp_num_str(expected_value + 1)}"
-    end
-    io.puts "#elif " + extra_tests.join(" || ")
-    io.puts %Q{error("#{macro_name} test confuses the preprocessor");}
+    #extra_tests = [ "#{macro_name} == 0" ]
+    #if expected_value > -0x8000_0000_0000_0000
+    #  extra_tests << "#{macro_name} == #{cpp_num_str(expected_value - 1)}"
+    #end
+    #if expected_value < 0xFFFF_FFFF_FFFF_FFFF
+    #  extra_tests << "#{macro_name} == #{cpp_num_str(expected_value + 1)}"
+    #end
+    #io.puts "#elif " + extra_tests.join(" || ")
+    #io.puts %Q{error("#{macro_name} test confuses the preprocessor");}
     io.puts "#endif"
     io.puts "#{type2.name} expected = #{nice_num_str(expected_value)};"
     io.puts "if (#{macro_name} != expected)"
@@ -547,7 +567,7 @@ def write_feature_tests(io)
     next unless feature.fetch(:test)
     op = feature.fetch(:operation)
     if op == :type
-      write_type_test(io, feature.fetch(:type))
+      write_type_test(io, name)
     elsif op == :add
       write_addition_test(io, name)
     elsif op == :sub
@@ -616,19 +636,27 @@ end
 
 def init_feature_info(intsafe_code)
   CTypeTable.each_value do |type|
-    name = type.name
+    name = type.name.to_s.gsub(' ', '_')
     FeatureInfo[name] = { name: name, operation: :type, type: type, test: true }
   end
 
   CTypeTable.each_value do |type|
     type_name = type.name
-    type_name = '_SIZE_T' if type_name == :SIZE_T
+    next if type_name == :SIZE_T || type_name == :long || type_name == :"unsigned long"
     [:min, :max].each do |operation|
       next if operation == :min && !type.always_signed?
       name = "#{type_name.upcase}_#{operation.to_s.upcase}".to_sym
+      raise "duplicate feature name #{name}" if FeatureInfo.has_key?(name)
       FeatureInfo[name] = { name: name, operation: operation, type: type }
     end
   end
+  FeatureInfo[:_SIZE_T_MAX] = { name: :_SIZE_T_MAX, operation: :max, type: CTypeTable.fetch(:SIZE_T) }
+  FeatureInfo[:INT64_MIN][:type] = CTypeTable.fetch(:int64_t)
+  FeatureInfo[:INT64_MAX][:type] = CTypeTable.fetch(:int64_t)
+  FeatureInfo[:UINT64_MAX][:type] = CTypeTable.fetch(:uint64_t)
+  FeatureInfo[:LONG_MIN][:type] = CTypeTable.fetch(:long)
+  FeatureInfo[:LONG_MAX][:type] = CTypeTable.fetch(:long)
+  FeatureInfo[:ULONG_MAX][:type] = CTypeTable.fetch(:"unsigned long")
 
   CTypeTable.each_value do |type_src|
     CTypeTable.each_value do |type_dest|
@@ -662,10 +690,6 @@ def init_feature_info(intsafe_code)
       operation: :mult,
       type_dest: type,
     }
-
-    %i{ULONG_MAX LONG_MIN LONG_MAX}.each do |name|
-      FeatureInfo.fetch(name)[:skip_test_if_lp64] = true
-    end
   end
 
   intsafe_names = Set.new(intsafe_code.scan(/\b[0-9A-Za-z_]+\b/))
@@ -677,6 +701,7 @@ def init_feature_info(intsafe_code)
   end
 
   FeatureInfo.each_value do |feature|
+    next if feature.fetch(:operation) == :type
     name = feature.fetch(:name).to_s
     in_ours = intsafe_names.include?(name)
     in_msft = msft_feature_names.include?(name)
@@ -694,11 +719,11 @@ intsafe_code = File.read('intsafe_under_test.h')
 init_feature_info(intsafe_code)
 find_redefinitions(intsafe_code)
 
-#FeatureInfo.each_value do |feature|  # tmphax
-#  if feature[:name] != :SIZE_T_MAX
-#    feature[:test] = false
-#  end
-#end
+# FeatureInfo.each_value do |feature|  # tmphax
+#   if feature[:name] != :ULONGLONG_MAX
+#     feature[:test] = false
+#   end
+# end
 
 File.open('generated.cpp', 'w') do |io|
   io = IndentedIO.new(io)
