@@ -1,4 +1,4 @@
-# intsafe.h testing and generation for mingw-w64
+# intsafe.h testing for mingw-w64
 
 These files help the [mingw-w64] project matain its implementation of
 [Microsoft's intsafe.h header], which defines hundreds of inline functions for safe
