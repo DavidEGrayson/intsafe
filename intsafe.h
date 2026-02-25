@@ -45,7 +45,6 @@
 #define DWORD64_MAX 0xffffffffffffffffull
 
 #ifdef __LP64__
-/* These macros are for 64-bit 'long' and 'unsigned long', not 32-bit LONG and ULONG */
 #define LONG_MIN (-0x7fffffffffffffff - 1)
 #define LONG_MAX 0x7fffffffffffffff
 #define ULONG_MAX 0xffffffffffffffff
