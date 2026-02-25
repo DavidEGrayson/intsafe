@@ -92,30 +92,30 @@ CTypeTable = {
   INT16: CType.new(:INT16, :Int16, -2),
   SHORT: CType.new(:SHORT, :Short, -2),
 
+  UINT32: CType.new(:UINT32, :UInt32, 4),
   UINT: CType.new(:UINT, :UInt, 4),
   ULONG: CType.new(:ULONG, :ULong, 4),
   DWORD: CType.new(:DWORD, :DWord, 4),
-  UINT32: CType.new(:UINT32, :UInt32, 4),
 
+  INT32: CType.new(:INT32, :Int32, -4),
   INT: CType.new(:INT, :Int, -4),
   LONG: CType.new(:LONG, :Long, -4),
-  INT32: CType.new(:INT32, :Int32, -4),
   LONG32: CType.new(:LONG32, :Long32, -4),
 
   :"unsigned long" => CType.new(:"unsigned long", nil, :unsigned_long),
   long: CType.new(:long, nil, :long),
 
+  UINT64: CType.new(:UINT64, :UInt64, 8),
+  uint64_t: CType.new(:uint64_t, nil, 8),
   ULONGLONG: CType.new(:ULONGLONG, :ULongLong, 8),
   ULONG64: CType.new(:ULONG64, :ULong64, 8),
-  UINT64: CType.new(:UINT64, :UInt64, 8),
-  DWORD64: CType.new(:DWORD64, :DWord64, 8),
   DWORDLONG: CType.new(:DWORDLONG, :DWordLong, 8),
-  uint64_t: CType.new(:uint64_t, nil, 8),
+  DWORD64: CType.new(:DWORD64, :DWord64, 8),
 
   INT64: CType.new(:INT64, :Int64, -8),
+  int64_t: CType.new(:int64_t, nil, -8),
   LONGLONG: CType.new(:LONGLONG, :LongLong, -8),
   LONG64: CType.new(:LONG64, :Long64, -8),
-  int64_t: CType.new(:int64_t, nil, -8),
 
   #INT128: CType.new(:INT128, :Int128, -16),
   #UINT128: CType.new(:UINT128, :UInt128, 16),

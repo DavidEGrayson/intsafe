@@ -15,22 +15,37 @@
 #include <specstrings.h>
 
 #define INT8_MIN (-128)
-#define INT16_MIN (-32768)
-#define INT32_MIN (-0x7fffffff - 1)
-#define INT64_MIN (-0x7fffffffffffffff - 1)
 #define INT8_MAX 127
-#define INT16_MAX 32767
-#define INT32_MAX 0x7fffffff
-#define INT64_MAX 0x7fffffffffffffff
 #define UINT8_MAX 255
+#define BYTE_MAX 255
+#define INT16_MIN (-32768)
+#define INT16_MAX 32767
+#define SHORT_MIN (-32768)
+#define SHORT_MAX 32767
 #define UINT16_MAX 65535
-#define UINT32_MAX 0xffffffff
-#define UINT64_MAX 0xffffffffffffffff
-
+#define USHORT_MAX 65535
+#define WORD_MAX 65535
+#define INT32_MIN (-0x7fffffff - 1)
+#define INT32_MAX 0x7fffffff
 #define INT_MIN (-0x7fffffff - 1)
 #define INT_MAX 0x7fffffff
+#define UINT32_MAX 0xffffffff
 #define UINT_MAX 0xffffffff
+#define DWORD_MAX __MSABI_LONG(0xffffffffu)
+#define INT64_MIN (-0x7fffffffffffffff - 1)
+#define INT64_MAX 0x7fffffffffffffff
+#define LONGLONG_MIN (-0x7fffffffffffffffll - 1)
+#define LONG64_MIN (-0x7fffffffffffffffll - 1)
+#define LONGLONG_MAX 0x7fffffffffffffffll
+#define LONG64_MAX 0x7fffffffffffffffll
+#define UINT64_MAX 0xffffffffffffffff
+#define ULONGLONG_MAX 0xffffffffffffffffull
+#define ULONG64_MAX 0xffffffffffffffffull
+#define DWORDLONG_MAX 0xffffffffffffffffull
+#define DWORD64_MAX 0xffffffffffffffffull
+
 #ifdef __LP64__
+/* These macros are for 64-bit 'long' and 'unsigned long', not 32-bit LONG and ULONG */
 #define LONG_MIN (-0x7fffffffffffffff - 1)
 #define LONG_MAX 0x7fffffffffffffff
 #define ULONG_MAX 0xffffffffffffffff
@@ -39,22 +54,6 @@
 #define LONG_MAX 0x7fffffffl
 #define ULONG_MAX 0xfffffffful
 #endif
-
-#define DWORD_MAX __MSABI_LONG(0xffffffffu)
-#define DWORDLONG_MAX 0xffffffffffffffffull
-
-#define SHORT_MIN (-32768)
-#define SHORT_MAX 32767
-#define BYTE_MAX 255
-#define WORD_MAX 65535
-#define USHORT_MAX 65535
-#define LONGLONG_MIN (-0x7fffffffffffffffll - 1)
-#define LONG64_MIN (-0x7fffffffffffffffll - 1)
-#define LONGLONG_MAX 0x7fffffffffffffffll
-#define LONG64_MAX 0x7fffffffffffffffll
-#define ULONGLONG_MAX 0xffffffffffffffffull
-#define ULONG64_MAX 0xffffffffffffffffull
-#define DWORD64_MAX 0xffffffffffffffffull
 
 #ifdef _WIN64
 #define PTRDIFF_T_MIN (-0x7fffffffffffffff - 1)
