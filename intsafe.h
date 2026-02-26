@@ -39,7 +39,7 @@
 #define LONG64_MIN (-0x7fffffffffffffffll - 1)
 #define LONGLONG_MAX 0x7fffffffffffffffll
 #define LONG64_MAX 0x7fffffffffffffffll
-#define UINT64_MAX 0xffffffffffffffff
+#define UINT64_MAX 0xffffffffffffffffu
 #define ULONGLONG_MAX 0xffffffffffffffffull
 #define ULONG64_MAX 0xffffffffffffffffull
 #define DWORDLONG_MAX 0xffffffffffffffffull
@@ -48,7 +48,7 @@
 #ifdef __LP64__
 #define LONG_MIN (-0x7fffffffffffffff - 1)
 #define LONG_MAX 0x7fffffffffffffff
-#define ULONG_MAX 0xffffffffffffffff
+#define ULONG_MAX 0xffffffffffffffffu
 #else
 #define LONG_MIN (-0x7fffffffl - 1)
 #define LONG_MAX 0x7fffffffl
