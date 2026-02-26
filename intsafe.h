@@ -11,6 +11,7 @@
 
 #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
 
+#include <_mingw.h>
 #include <wtypesbase.h>
 #include <specstrings.h>
 
