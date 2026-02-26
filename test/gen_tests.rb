@@ -237,8 +237,6 @@ def write_test_body(io, feature_name, &block)
     io.puts "#endif"
     return
   end
-
-  puts "Testing #{feature_name} with cenv #{io.cenv}"
   yield io
 end
 
@@ -569,6 +567,8 @@ def write_range_macro_test(io, macro_name)
     type1 = macro_info.fetch(:type)
     expected_value = macro_info.fetch(:operation) == :max ? type1.max(io.cenv) : type1.min(io.cenv)
     type2 = type1.byte_count(io.cenv) < 4 ? CType(:INT) : type1
+    # This is what the MinGW developers want:
+    expected_preprocessor_signed = type1.signed?(io.cenv) || type1.byte_count(io.cenv) < 4
     io.puts "#if #{macro_name} != #{cpp_num_str(expected_value)}"
     io.puts %Q{error("#{macro_name} has wrong preprocessor value");}
     #extra_tests = [ "#{macro_name} == 0" ]
@@ -580,6 +580,10 @@ def write_range_macro_test(io, macro_name)
     #end
     #io.puts "#elif " + extra_tests.join(" || ")
     #io.puts %Q{error("#{macro_name} test confuses the preprocessor");}
+    io.puts "#endif"
+    cmp = expected_preprocessor_signed ? "<" : ">";
+    io.puts "#if !(#{macro_name} - #{macro_name} - 1 #{cmp} 0)"
+    io.puts %Q{error("#{macro_name} has wrong preprocessor sign");}
     io.puts "#endif"
     io.puts "#{type2.name} expected = #{nice_num_str(expected_value)};"
     io.puts "if (#{macro_name} != expected)"

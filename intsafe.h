@@ -30,8 +30,8 @@
 #define INT32_MAX 0x7fffffff
 #define INT_MIN (-0x7fffffff - 1)
 #define INT_MAX 0x7fffffff
-#define UINT32_MAX 0xffffffff
-#define UINT_MAX 0xffffffff
+#define UINT32_MAX 0xffffffffu
+#define UINT_MAX 0xffffffffu
 #define DWORD_MAX __MSABI_LONG(0xffffffffu)
 #define INT64_MIN (-0x7fffffffffffffff - 1)
 #define INT64_MAX 0x7fffffffffffffff
@@ -58,7 +58,7 @@
 #ifdef _WIN64
 #define PTRDIFF_T_MIN (-0x7fffffffffffffff - 1)
 #define PTRDIFF_T_MAX 0x7fffffffffffffff
-#define SIZE_T_MAX 0xffffffffffffffff
+#define SIZE_T_MAX 0xffffffffffffffffu
 #define INT_PTR_MIN (-0x7fffffffffffffffll - 1)
 #define INT_PTR_MAX 0x7fffffffffffffffll
 #define UINT_PTR_MAX 0xffffffffffffffffull
@@ -68,10 +68,10 @@
 #else
 #define PTRDIFF_T_MIN (-0x7fffffff - 1)
 #define PTRDIFF_T_MAX 0x7fffffff
-#define SIZE_T_MAX 0xffffffff
+#define SIZE_T_MAX 0xffffffffu
 #define INT_PTR_MIN (-0x7fffffff - 1)
 #define INT_PTR_MAX 0x7fffffff
-#define UINT_PTR_MAX 0xffffffff
+#define UINT_PTR_MAX 0xffffffffu
 #define LONG_PTR_MIN (-0x7fffffffl - 1)
 #define LONG_PTR_MAX 0x7fffffffl
 #define ULONG_PTR_MAX 0xfffffffful
