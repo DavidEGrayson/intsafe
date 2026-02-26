@@ -202,19 +202,43 @@ def write_test_body(io, feature_name, &block)
   feature = FeatureInfo.fetch(feature_name)
   types = feature.values_at(:type, :type_src, :type_dest).compact
   essences = types.map(&:essence).uniq
-  if !io.cenv.key?(:long_size) && (essences.include?(:long) || essences.include?(:unsigned_long))
-    io.puts "#ifdef __LP64__"
+  if !io.cenv.key?(:pointer_size) &&
+    (essences.include?(:pointer) || essences.include?(:pointer_signed))
     io = io.dup
+    io.puts "#ifdef _WIN64"
+    io.cenv = io.cenv.merge(pointer_size: 8)
+    write_test_body(io, feature_name, &block)
+    io.puts "#else"
+    io.cenv = io.cenv.merge(pointer_size: 4)
+    write_test_body(io, feature_name, &block)
+    io.puts "#endif"
+    return
+  end
+  if !io.cenv.key?(:long_size) &&
+    (essences.include?(:long) || essences.include?(:unsigned_long))
+    io = io.dup
+    io.puts "#ifdef __LP64__"
     io.cenv = io.cenv.merge(long_size: 8)
     write_test_body(io, feature_name, &block)
     io.puts "#else"
-    io = io.dup
     io.cenv = io.cenv.merge(long_size: 4)
     write_test_body(io, feature_name, &block)
     io.puts "#endif"
     return
   end
+  if !io.cenv.key?(:char_signed) && essences.include?(:char)
+    io = io.dup
+    io.puts "#ifdef __CHAR_UNSIGNED__"
+    io.cenv = io.cenv.merge(char_signed: false)
+    write_test_body(io, feature_name, &block)
+    io.puts "#else"
+    io.cenv = io.cenv.merge(char_signed: true)
+    write_test_body(io, feature_name, &block)
+    io.puts "#endif"
+    return
+  end
 
+  puts "Testing #{feature_name} with cenv #{io.cenv}"
   yield io
 end
 
@@ -312,29 +336,29 @@ def write_conversion_test(io, func_name)
   type_src = func.fetch(:type_src)
   type_dest = func.fetch(:type_dest)
 
-  src_min = type_src.min(io.cenv)
-  src_max = type_src.max(io.cenv)
-  dest_min = type_dest.min(io.cenv)
-  dest_max = type_dest.max(io.cenv)
-  max = [src_max, dest_max].min
-  min = [src_min, dest_min].max
+  write_test(io, func_name) do |io|
+    src_min = type_src.min(io.cenv)
+    src_max = type_src.max(io.cenv)
+    dest_min = type_dest.min(io.cenv)
+    dest_max = type_dest.max(io.cenv)
+    max = [src_max, dest_max].min
+    min = [src_min, dest_min].max
 
-  write_static_void_func(io, "test_#{func_name}") do |io2|
-    io2.puts "#{type_dest} out;"
+    io.puts "#{type_dest} out;"
 
-    write_type_checker io2, func_name, "HRESULT",
+    write_type_checker io, func_name, "HRESULT",
       "_In_ #{type_src.name}, _Out_ #{type_dest} *"
 
-    write_require_conversion(io2, func_name, 0)
-    write_require_conversion(io2, func_name, max)
-    write_require_conversion(io2, func_name, min) if min != 0
+    write_require_conversion(io, func_name, 0)
+    write_require_conversion(io, func_name, max)
+    write_require_conversion(io, func_name, min) if min != 0
 
     if src_max > dest_max
-      write_require_conversion_error(io2, func_name, dest_max + 1)
+      write_require_conversion_error(io, func_name, dest_max + 1)
     end
 
     if src_min < dest_min
-      write_require_conversion_error(io2, func_name, dest_min - 1)
+      write_require_conversion_error(io, func_name, dest_min - 1)
     end
   end
 end
@@ -398,140 +422,143 @@ def write_require_subtraction_error(io, func_name, num1, num2)
 end
 
 def write_binop_test(io, type, func_name)
-  write_static_void_func(io, "test_#{func_name}") do |test|
-    test.puts "#{type} out;"
-    test.puts
+  write_static_void_func(io, "test_#{func_name}") do |io|
+    io.puts "#{type} out;"
+    io.puts
 
-    write_type_checker test, func_name, "HRESULT",
+    write_type_checker io, func_name, "HRESULT",
       "_In_ #{type}, _In_ #{type}, _Out_ #{type} *"
 
-    yield test
+    write_test_body(io, func_name) do |io|
+      yield io
+    end
   end
 end
 
 def write_addition_test(io, func_name)
   type = FeatureInfo.fetch(func_name).fetch(:type_dest)
-  min = type.min(io.cenv)
-  max = type.max(io.cenv)
-  write_binop_test(io, type, func_name) do |test|
-    write_require_addition(test, func_name, 0, 0)
-    write_require_addition(test, func_name, 1, 3)
-    write_require_addition(test, func_name, 0, max)
-    write_require_addition_error(test, func_name, 1, max)
-    write_require_addition_error(test, func_name, max, max)
+  write_binop_test(io, type, func_name) do |io|
+    min = type.min(io.cenv)
+    max = type.max(io.cenv)
+    write_require_addition(io, func_name, 0, 0)
+    write_require_addition(io, func_name, 1, 3)
+    write_require_addition(io, func_name, 0, max)
+    write_require_addition_error(io, func_name, 1, max)
+    write_require_addition_error(io, func_name, max, max)
     if min < 0
-      write_require_addition(test, func_name, 0, min)
-      write_require_addition(test, func_name, -1, -3)
-      write_require_addition_error(test, func_name, -1, min)
-      write_require_addition_error(test, func_name, -1, min)
-      write_require_addition_error(test, func_name, min, min)
+      write_require_addition(io, func_name, 0, min)
+      write_require_addition(io, func_name, -1, -3)
+      write_require_addition_error(io, func_name, -1, min)
+      write_require_addition_error(io, func_name, -1, min)
+      write_require_addition_error(io, func_name, min, min)
     end
   end
 end
 
 def write_subtraction_test(io, func_name)
   type = FeatureInfo.fetch(func_name).fetch(:type_dest)
-  min = type.min(io.cenv)
-  max = type.max(io.cenv)
-  write_binop_test(io, type, func_name) do |test|
+  write_binop_test(io, type, func_name) do |io|
+    min = type.min(io.cenv)
+    max = type.max(io.cenv)
     if min == 0
       # Lower left
-      write_require_subtraction(test, func_name, 0, 0)
-      write_require_subtraction_error(test, func_name, 0, 1)
-      write_require_subtraction(test, func_name, 1, 1)
+      write_require_subtraction(io, func_name, 0, 0)
+      write_require_subtraction_error(io, func_name, 0, 1)
+      write_require_subtraction(io, func_name, 1, 1)
 
       # Lower right
-      write_require_subtraction(test, func_name, max, 0)
+      write_require_subtraction(io, func_name, max, 0)
 
       # Upper left
-      write_require_subtraction_error(test, func_name, 0, max)
+      write_require_subtraction_error(io, func_name, 0, max)
 
       # Upper right
-      write_require_subtraction(test, func_name, max, max)
-      write_require_subtraction_error(test, func_name, max - 1, max)
+      write_require_subtraction(io, func_name, max, max)
+      write_require_subtraction_error(io, func_name, max - 1, max)
     else
       # Center
-      write_require_subtraction(test, func_name, 0, 0)
-      write_require_subtraction(test, func_name, 5, 10)
-      write_require_subtraction(test, func_name, 5, -10)
-      write_require_subtraction(test, func_name, -5, -10)
-      write_require_subtraction(test, func_name, -5, 10)
+      write_require_subtraction(io, func_name, 0, 0)
+      write_require_subtraction(io, func_name, 5, 10)
+      write_require_subtraction(io, func_name, 5, -10)
+      write_require_subtraction(io, func_name, -5, -10)
+      write_require_subtraction(io, func_name, -5, 10)
 
       # Upper left corner
-      write_require_subtraction_error(test, func_name, min, max)
+      write_require_subtraction_error(io, func_name, min, max)
 
       # Lower right corner
-      write_require_subtraction_error(test, func_name, max, min)
+      write_require_subtraction_error(io, func_name, max, min)
 
       # Upper right corner
-      write_require_subtraction(test, func_name, max, max)
+      write_require_subtraction(io, func_name, max, max)
 
       # Lower left corner
-      write_require_subtraction(test, func_name, min, min)
+      write_require_subtraction(io, func_name, min, min)
 
       # Left
-      write_require_subtraction(test, func_name, min, 0)
-      write_require_subtraction_error(test, func_name, min, 1)
+      write_require_subtraction(io, func_name, min, 0)
+      write_require_subtraction_error(io, func_name, min, 1)
 
       # Right
-      write_require_subtraction(test, func_name, max, 0)
-      write_require_subtraction_error(test, func_name, max, -1)
+      write_require_subtraction(io, func_name, max, 0)
+      write_require_subtraction_error(io, func_name, max, -1)
 
       # Top
-      write_require_subtraction(test, func_name, -1, max)
-      write_require_subtraction_error(test, func_name, -2, max)
+      write_require_subtraction(io, func_name, -1, max)
+      write_require_subtraction_error(io, func_name, -2, max)
 
       # Bottom
-      write_require_subtraction(test, func_name, -1, min)
-      write_require_subtraction_error(test, func_name, 0, min)
+      write_require_subtraction(io, func_name, -1, min)
+      write_require_subtraction_error(io, func_name, 0, min)
     end
   end
 end
 
 def write_multiplication_test(io, func_name)
   type = FeatureInfo.fetch(func_name).fetch(:type_dest)
-  min = type.min(io.cenv)
-  max = type.max(io.cenv)
-  write_binop_test(io, type, func_name) do |test|
-    write_require_multiplication(test, func_name, 0, 0)
-    write_require_multiplication(test, func_name, 0, 1)
-    write_require_multiplication(test, func_name, 1, 1)
-    write_require_multiplication(test, func_name, 1, 3)
-    write_require_multiplication(test, func_name, 3, 3)
+  write_binop_test(io, type, func_name) do |io|
+    min = type.min(io.cenv)
+    max = type.max(io.cenv)
 
-    write_require_multiplication(test, func_name, 0, max)
-    write_require_multiplication(test, func_name, 1, max)
-    write_require_multiplication_error(test, func_name, 2, max)
+    write_require_multiplication(io, func_name, 0, 0)
+    write_require_multiplication(io, func_name, 0, 1)
+    write_require_multiplication(io, func_name, 1, 1)
+    write_require_multiplication(io, func_name, 1, 3)
+    write_require_multiplication(io, func_name, 3, 3)
 
-    write_require_multiplication(test, func_name, 10, max / 10)
-    write_require_multiplication_error(test, func_name, 10, max / 10 + 1)
-    write_require_multiplication_error(test, func_name, 11, max / 10)
+    write_require_multiplication(io, func_name, 0, max)
+    write_require_multiplication(io, func_name, 1, max)
+    write_require_multiplication_error(io, func_name, 2, max)
 
-    write_require_multiplication_error(test, func_name, max, max)
+    write_require_multiplication(io, func_name, 10, max / 10)
+    write_require_multiplication_error(io, func_name, 10, max / 10 + 1)
+    write_require_multiplication_error(io, func_name, 11, max / 10)
+
+    write_require_multiplication_error(io, func_name, max, max)
 
     if min < 0
-      write_require_multiplication(test, func_name, -1, max)
-      write_require_multiplication_error(test, func_name, -2, max)
+      write_require_multiplication(io, func_name, -1, max)
+      write_require_multiplication_error(io, func_name, -2, max)
 
-      write_require_multiplication(test, func_name, 1, min)
-      write_require_multiplication(test, func_name, -1, min + 1)
-      write_require_multiplication_error(test, func_name, -2, min + 1)
-      write_require_multiplication_error(test, func_name, -1, min)
+      write_require_multiplication(io, func_name, 1, min)
+      write_require_multiplication(io, func_name, -1, min + 1)
+      write_require_multiplication_error(io, func_name, -2, min + 1)
+      write_require_multiplication_error(io, func_name, -1, min)
 
-      write_require_multiplication_error(test, func_name, min, min)
-      write_require_multiplication_error(test, func_name, min, max)
+      write_require_multiplication_error(io, func_name, min, min)
+      write_require_multiplication_error(io, func_name, min, max)
 
-      write_require_multiplication(test, func_name, 10, -(-min / 10))
-      write_require_multiplication_error(test, func_name, 10, -(-min / 10) - 1)
-      write_require_multiplication_error(test, func_name, 11, -(-min / 10))
+      write_require_multiplication(io, func_name, 10, -(-min / 10))
+      write_require_multiplication_error(io, func_name, 10, -(-min / 10) - 1)
+      write_require_multiplication_error(io, func_name, 11, -(-min / 10))
 
-      write_require_multiplication(test, func_name, -10, (-min / 10))
-      write_require_multiplication_error(test, func_name, -10, (-min / 10) + 1)
-      write_require_multiplication_error(test, func_name, -11, (-min / 10))
+      write_require_multiplication(io, func_name, -10, (-min / 10))
+      write_require_multiplication_error(io, func_name, -10, (-min / 10) + 1)
+      write_require_multiplication_error(io, func_name, -11, (-min / 10))
 
-      write_require_multiplication(test, func_name, -10, -(max / 10))
-      write_require_multiplication_error(test, func_name, -10, -(max / 10) - 1)
-      write_require_multiplication_error(test, func_name, -11, -(max / 10))
+      write_require_multiplication(io, func_name, -10, -(max / 10))
+      write_require_multiplication_error(io, func_name, -10, -(max / 10) - 1)
+      write_require_multiplication_error(io, func_name, -11, -(max / 10))
     end
   end
 end
@@ -727,29 +754,8 @@ find_redefinitions(intsafe_code)
 
 File.open('generated.cpp', 'w') do |io|
   io = IndentedIO.new(io)
-
-  io.puts "#ifdef _WIN64"
-
-  io.puts "#ifdef __CHAR_UNSIGNED__"
-  io.cenv = { pointer_size: 8, char_signed: false }
+  io.cenv = {}
   write_feature_tests(io)
-  io.puts "#else /* __CHAR_UNSIGNED__ */"
-  io.cenv = { pointer_size: 8, char_signed: true }
-  write_feature_tests(io)
-  io.puts "#endif /* __CHAR_UNSIGNED__ else */"
-
-  io.puts "#else /* _WIN64 */"
-
-  io.puts "#ifdef __CHAR_UNSIGNED__"
-  io.cenv = { pointer_size: 4, char_signed: false }
-  write_feature_tests(io)
-  io.puts "#else /* __CHAR_UNSIGNED__ */"
-  io.cenv = { pointer_size: 4, char_signed: true }
-  write_feature_tests(io)
-  io.puts "#endif /* __CHAR_UNSIGNED__ else */"
-
-  io.puts "#endif /* _WIN64 else */"
-
   write_static_void_func(io, "run_all_tests") do |io|
     FeatureInfo.each_value do |feature|
       next unless feature.fetch(:test)
