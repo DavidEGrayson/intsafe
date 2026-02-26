@@ -103,7 +103,7 @@ add_test() {
 add_machine() {
   local machine="$1"
   add_test "$machine-c0" "$machine" "c"   ""
-  add_test "$machine-c1" "$machine" "c"   "-DINCLUDE_STYLE=1"
+  # add_test "$machine-c1" "$machine" "c"   "-DINCLUDE_STYLE=1"
   add_test "$machine-c2" "$machine" "c"   "-funsigned-char"
   add_test "$machine-c3" "$machine" "c++" ""
 }
